@@ -1,0 +1,11 @@
+-- Create dynamic organization hierarchy tables
+CREATE TABLE IF NOT EXISTS org_unit (
+    id VARCHAR(50) PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    type VARCHAR(30) NOT NULL, -- LEGAL_ENTITY, COST_CENTER, DEPARTMENT, TEAM
+    parent_id VARCHAR(50) REFERENCES org_unit(id) ON DELETE SET NULL,
+    manager_id VARCHAR(50) REFERENCES employee(id) ON DELETE SET NULL,
+    cost_code VARCHAR(50),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
+);

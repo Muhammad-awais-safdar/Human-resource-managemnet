@@ -1,0 +1,16 @@
+@import "tailwindcss";
+@import "../styles/variables.css";
+@import "../styles/dashboard.css";
+
+:root {
+  --background: var(--bg-primary);
+  --foreground: var(--text-primary);
+}
+
+body {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  margin: 0;
+  padding: 0;
+}
