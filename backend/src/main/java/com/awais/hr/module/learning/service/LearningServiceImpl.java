@@ -1,5 +1,7 @@
 package com.awais.hr.module.learning.service;
 
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,12 +34,14 @@ public class LearningServiceImpl implements LearningService {
     }
 
     @Override
+    @Cacheable(value = "all_courses", key = "'catalog'")
     public List<Map<String, Object>> getAllCourses() {
         JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
         return jdbcTemplate.queryForList("SELECT id, title, description, category FROM course ORDER BY title");
     }
 
     @Override
+    @CacheEvict(value = "all_courses", allEntries = true)
     public void enrollCourse(String email, String courseId) {
         JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
         String empId = getEmployeeId(jdbcTemplate, email);

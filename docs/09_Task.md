@@ -222,98 +222,51 @@
 
 ---
 
-# 35. Workforce Planning
-
-## Description
-
-Strategic workforce planning for future hiring and staffing needs.
-
-### Features
-
-- Workforce forecasting
-- Headcount planning
-- Position budgeting
-- Vacancy planning
-- Hiring forecasts
-- Department growth planning
-- Workforce demand analysis
-- Workforce supply analysis
-- Scenario planning
-- Capacity planning
+### Phase 35: Workforce Planning
+- `[ ]` **Backend:** Workforce forecasting engine, headcount planning tables, position budgeting, vacancy planning, hiring forecast calculators, department growth planning, demand/supply analysis, scenario planning, capacity planning models.
+- `[ ]` **Backend Test:** Forecast accuracy validation unit tests; capacity constraint checks.
+- `[ ]` **Frontend:** Workforce planning dashboard, headcount charts, scenario comparison view.
+- `[ ]` **Frontend Integration:** Planning API hooks bound to headcount and forecast endpoints.
 
 ---
 
-# 36. Succession Planning
-
-## Features
-
-- Successor identification
-- Talent pools
-- Critical positions
-- Readiness assessment
-- Promotion planning
-- Leadership pipeline
-- Replacement planning
-- Bench strength analysis
+### Phase 36: Succession Planning
+- `[x]` **Backend:** Successor identification engine, talent pool tables, critical position flags, readiness assessment scores, promotion planning workflows, leadership pipeline tracker, replacement planning, bench strength analytics.
+- `[x]` **Backend Test:** Succession planning readiness score checks, succession chain validations.
+- `[x]` **Frontend:** Succession planning dashboard, talent pool grids, leadership pipelines.
+- `[x]` **Frontend Integration:** API endpoints for position management, successor mapping, talent pool creations.
 
 ---
 
-# 37. Compensation Management
-
-## Features
-
-- Salary review cycles
-- Merit increases
-- Compensation bands
-- Pay grades
-- Bonus planning
-- Equity management
-- Salary benchmarking
-- Compensation approval workflow
+### Phase 37: Compensation Management
+- `[x]` **Backend:** Salary review cycle scheduler, merit increase calculator, compensation band tables, pay grade definitions, bonus planning engine, equity management, salary benchmarking integrations, compensation approval workflow.
+- `[x]` **Backend Test:** Merit calculations, salary band compliance validation tests.
+- `[x]` **Frontend:** Compensation review dashboard, pay grade matrices, bonus planning panels.
+- `[x]` **Frontend Integration:** APIs for band mappings, salary reviews, approval transitions.
 
 ---
 
-# 38. Benefits Administration
-
-## Features
-
-- Health insurance
-- Life insurance
-- Retirement plans
-- Allowances
-- Employee benefits
-- Benefit enrollment
-- Benefit eligibility
-- Benefit deductions
+### Phase 38: Benefits Administration
+- `[x]` **Backend:** Benefits catalog (health, life, retirement, allowances), enrollment workflow, eligibility rules engine, benefit deduction scheduler linked to payroll.
+- `[x]` **Backend Test:** Benefits eligibility, cost contribution splitting logic tests.
+- `[x]` **Frontend:** Benefits enrollment portals, benefit plan comparison cards, deduction summaries.
+- `[x]` **Frontend Integration:** Benefit enrollment submissions, plan listings, unenroll requests.
 
 ---
 
-# 39. Workforce Scheduling
-
-> Different from Shift Management.
-
-## Features
-
-- Workforce demand forecasting
-- Auto scheduling
-- Labor optimization
-- Schedule conflict detection
-- Availability management
-- Open shift bidding
+### Phase 39: Workforce Scheduling
+- `[x]` **Backend:** Workforce demand forecasting, auto-scheduling engine, labor optimization algorithm, schedule conflict detection, availability management tables, open shift bidding system.
+- `[x]` **Backend Test:** Schedule conflict checks, shift duration calculations, overlaps detection.
+- `[x]` **Frontend:** Workforce schedule calendars, open shifts boards, bidding controls.
+- `[x]` **Frontend Integration:** Shift bid submissions, schedules publishing, open shifts creation.
 
 ---
 
-# 40. Contractor Management
-
-## Features
-
-- Contractor profiles
-- Vendor companies
-- Contractor onboarding
-- Contractor agreements
-- Contractor timesheets
-- Contractor billing
-- Contractor offboarding
+### Phase 40: Contractor Management
+- `[x]` **Backend:** Contractor profile tables, vendor company registry, contractor onboarding checklists, agreement document storage, contractor timesheet module, billing rate calculator, contractor offboarding workflow.
+- `[x]` **Backend Test:** Weekly billing calculations, timesheet bounds validations.
+- `[x]` **Frontend:** Contractor directories, vendor managers, timesheet log forms.
+- `[x]` **Frontend Integration:** Timesheet submissions, contractor creations, agreement uploads.
 
 ---
 

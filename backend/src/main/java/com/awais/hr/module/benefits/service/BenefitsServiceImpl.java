@@ -1,5 +1,7 @@
 package com.awais.hr.module.benefits.service;
 
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,6 +21,7 @@ public class BenefitsServiceImpl implements BenefitsService {
     }
 
     @Override
+    @Cacheable(value = "benefit_plans", key = "'active'")
     public List<Map<String, Object>> getPlans() {
         JdbcTemplate jdbc = new JdbcTemplate(dataSource);
         return jdbc.queryForList(
@@ -28,6 +31,7 @@ public class BenefitsServiceImpl implements BenefitsService {
     }
 
     @Override
+    @CacheEvict(value = "benefit_plans", allEntries = true)
     public void addPlan(Map<String, Object> body) {
         JdbcTemplate jdbc = new JdbcTemplate(dataSource);
         String id = UUID.randomUUID().toString();
@@ -70,6 +74,7 @@ public class BenefitsServiceImpl implements BenefitsService {
     }
 
     @Override
+    @CacheEvict(value = "benefit_plans", allEntries = true)
     public void enroll(String email, String planId) {
         JdbcTemplate jdbc = new JdbcTemplate(dataSource);
         String employeeId = jdbc.queryForObject(
@@ -92,6 +97,7 @@ public class BenefitsServiceImpl implements BenefitsService {
     }
 
     @Override
+    @CacheEvict(value = "benefit_plans", allEntries = true)
     public void unenroll(String email, String planId) {
         JdbcTemplate jdbc = new JdbcTemplate(dataSource);
         String employeeId = jdbc.queryForObject(

@@ -2,6 +2,8 @@ package com.awais.hr.module.settings.service;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,6 +26,7 @@ public class PlatformSettingsServiceImpl implements PlatformSettingsService {
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(value = "platform_settings", key = "'global'")
     public Map<String, Object> getSettings() {
         JdbcTemplate jdbc = new JdbcTemplate(dataSource);
         List<Map<String, Object>> list = jdbc.queryForList(
@@ -45,6 +48,7 @@ public class PlatformSettingsServiceImpl implements PlatformSettingsService {
     }
 
     @Override
+    @CacheEvict(value = "platform_settings", allEntries = true)
     public void updateSettings(Map<String, String> settings) {
         JdbcTemplate jdbc = new JdbcTemplate(dataSource);
 

@@ -1,5 +1,7 @@
 package com.awais.hr.module.holiday.service;
 
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,6 +19,7 @@ public class HolidayServiceImpl implements HolidayService {
     }
 
     @Override
+    @Cacheable(value = "holidays", key = "'all'")
     public List<Map<String, Object>> getHolidays() {
         JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
         List<Map<String, Object>> holidays = jdbcTemplate.queryForList("SELECT id, name, holiday_date, description FROM holiday");
@@ -29,22 +32,24 @@ public class HolidayServiceImpl implements HolidayService {
     }
 
     @Override
+    @CacheEvict(value = {"holidays", "regional_holidays"}, allEntries = true)
     public void addHoliday(String name, String holidayDate, String description) {
         JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
         jdbcTemplate.update(
-                "INSERT INTO holiday (id, name, holiday_date, description) VALUES (?, ?, CAST(? AS DATE), ?)",
-                UUID.randomUUID().toString(), name, holidayDate, description
+            "INSERT INTO holiday (id, name, holiday_date, description) VALUES (?, ?, CAST(? AS DATE), ?)",
+            UUID.randomUUID().toString(), name, holidayDate, description
         );
     }
 
     @Override
+    @Cacheable(value = "regional_holidays", key = "#region")
     public List<Map<String, Object>> getRegionalHolidays(String region) {
         JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
         return jdbcTemplate.queryForList(
-                "SELECT h.id, h.name, h.holiday_date, h.description, rh.region " +
-                "FROM holiday h JOIN regional_holiday rh ON h.id = rh.holiday_id " +
-                "WHERE rh.region = ?",
-                region
+            "SELECT h.id, h.name, h.holiday_date, h.description, rh.region " +
+            "FROM holiday h JOIN regional_holiday rh ON h.id = rh.holiday_id " +
+            "WHERE rh.region = ?",
+            region
         );
     }
 }

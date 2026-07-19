@@ -3,6 +3,8 @@ package com.awais.hr.module.org.service;
 import com.awais.hr.module.org.model.OrgUnit;
 import com.awais.hr.module.org.repository.OrgUnitRepository;
 import lombok.*;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -28,6 +30,7 @@ public class OrgUnitService {
         private List<OrgUnitNode> children;
     }
 
+    @Cacheable(value = "org_units", key = "'all'")
     public List<OrgUnit> findAll() {
         return orgUnitRepository.findAll();
     }
@@ -36,6 +39,7 @@ public class OrgUnitService {
         return orgUnitRepository.findById(id);
     }
 
+    @CacheEvict(value = {"org_units", "org_chart_tree"}, allEntries = true)
     public OrgUnit save(OrgUnit unit) {
         if (unit.getId() == null) {
             unit.setId(UUID.randomUUID().toString());
@@ -50,6 +54,7 @@ public class OrgUnitService {
         return orgUnitRepository.save(unit);
     }
 
+    @CacheEvict(value = {"org_units", "org_chart_tree"}, allEntries = true)
     public void delete(String id) {
         // Clear parent links for children first
         List<OrgUnit> children = orgUnitRepository.findByParentId(id);
@@ -83,6 +88,7 @@ public class OrgUnitService {
         }
     }
 
+    @Cacheable(value = "org_chart_tree", key = "'tree'")
     public List<OrgUnitNode> getOrgChartTree() {
         List<OrgUnit> allUnits = orgUnitRepository.findAll();
         
