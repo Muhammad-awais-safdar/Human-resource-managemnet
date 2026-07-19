@@ -18,6 +18,14 @@ export const getShifts = () => {
   return apiClient.get('/suite/shifts/schedule');
 };
 
+export const assignShift = (employeeId, shiftId, date) => {
+  return apiClient.post(`/suite/shifts/assign?employeeId=${employeeId}&shiftId=${shiftId}&date=${date}`, {});
+};
+
+export const swapShifts = (firstEmployeeId, secondEmployeeId, date) => {
+  return apiClient.post(`/suite/shifts/swap?firstEmployeeId=${firstEmployeeId}&secondEmployeeId=${secondEmployeeId}&date=${date}`, {});
+};
+
 // Holiday Management
 export const getHolidays = () => {
   return apiClient.get('/suite/holidays');

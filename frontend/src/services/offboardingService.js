@@ -6,5 +6,5 @@ export const submitResignation = (dto) => apiClient.post('/suite/offboarding/res
 
 export const deleteResignation = (id) => apiClient.delete(`/suite/offboarding/resignations/${id}`);
 
-export const settleResignation = (id, dto) =>
-  apiClient.post(`/suite/offboarding/resignations/${id}/settle`, dto);
+export const settleResignation = (id, exitFeedback, settlementAmount) =>
+  apiClient.post(`/suite/offboarding/resignations/${id}/settle?exitFeedback=${encodeURIComponent(exitFeedback)}&settlementAmount=${settlementAmount}`, {});

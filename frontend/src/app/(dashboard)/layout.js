@@ -178,6 +178,36 @@ export default function DashboardLayout({ children }) {
             📦 Asset Management
           </Link>
           <Link 
+            href="/succession" 
+            className={`nav-link ${isActive('/succession') ? 'nav-link-active' : ''}`}
+          >
+            📋 Succession Planning
+          </Link>
+          <Link 
+            href="/compensation" 
+            className={`nav-link ${isActive('/compensation') ? 'nav-link-active' : ''}`}
+          >
+            💸 Compensation
+          </Link>
+          <Link 
+            href="/benefits" 
+            className={`nav-link ${isActive('/benefits') ? 'nav-link-active' : ''}`}
+          >
+            🏥 Benefits Admin
+          </Link>
+          <Link 
+            href="/workforce" 
+            className={`nav-link ${isActive('/workforce') ? 'nav-link-active' : ''}`}
+          >
+            📅 Workforce Scheduling
+          </Link>
+          <Link 
+            href="/contractor" 
+            className={`nav-link ${isActive('/contractor') ? 'nav-link-active' : ''}`}
+          >
+            👷 Contractor Management
+          </Link>
+          <Link 
             href="/settings" 
             className={`nav-link ${isActive('/settings') ? 'nav-link-active' : ''}`}
           >

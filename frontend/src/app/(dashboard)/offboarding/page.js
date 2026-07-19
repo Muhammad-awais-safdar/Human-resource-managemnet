@@ -55,26 +55,18 @@ export default function OffboardingPage() {
 
     startTransition(async () => {
       try {
-        // Fetch to settle endpoint: POST /suite/offboarding/resignations/{id}/settle
-        const response = await fetch(`http://localhost:3000/api/v1/suite/offboarding/resignations/${activeSettleId}/settle?exitFeedback=${encodeURIComponent(exitFeedback)}&settlementAmount=${parseFloat(customSettlement) || 0}`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          }
-        });
-        const data = await response.json();
-        
-        if (data.status === 200 || data.success) {
-          setMessage('Resignation settlement calculations finalized.');
-          setActiveSettleId(null);
-          setExitFeedback('');
-          setCustomSettlement('0');
-          loadData();
-        } else {
-          setError(data.message || 'Failed to settle resignation');
-        }
+        await offboardingService.settleResignation(
+          activeSettleId,
+          exitFeedback,
+          parseFloat(customSettlement) || 0
+        );
+        setMessage('Resignation settlement calculations finalized.');
+        setActiveSettleId(null);
+        setExitFeedback('');
+        setCustomSettlement('0');
+        loadData();
       } catch (err) {
-        setError('Connection failed. Verify API server status.');
+        setError(err.message || 'Failed to settle resignation');
       }
     });
   };

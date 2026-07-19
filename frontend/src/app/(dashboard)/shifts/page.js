@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState, useTransition } from 'react';
+import * as suiteService from '../../../services/suiteService';
 import styles from '../../../modules/auth/styles/register.module.css';
 
 export default function ShiftsPage() {
@@ -21,12 +22,9 @@ export default function ShiftsPage() {
   const [message, setMessage] = useState('');
 
   const loadData = () => {
-    fetch('http://localhost:3000/api/v1/suite/shifts/schedule')
-      .then(res => res.json())
+    suiteService.getShifts()
       .then(data => {
-        if (data.status === 200 || data.data) {
-          setShifts(data.data || []);
-        }
+        setShifts(data || []);
       })
       .catch(err => console.error("Failed to load shifts", err));
   };
@@ -46,18 +44,11 @@ export default function ShiftsPage() {
 
     startTransition(async () => {
       try {
-        const response = await fetch(`http://localhost:3000/api/v1/suite/shifts/assign?employeeId=${empId}&shiftId=${shiftId}&date=${assignDate}`, {
-          method: 'POST',
-        });
-        const data = await response.json();
-        if (data.status === 200 || data.success) {
-          setMessage('Shift successfully registered on the roster.');
-          loadData();
-        } else {
-          setError(data.message || 'Scheduling conflict detected.');
-        }
+        await suiteService.assignShift(empId, shiftId, assignDate);
+        setMessage('Shift successfully registered on the roster.');
+        loadData();
       } catch (err) {
-        setError('Network failure. Please try again.');
+        setError(err.message || 'Scheduling conflict detected.');
       }
     });
   };
@@ -73,18 +64,11 @@ export default function ShiftsPage() {
 
     startTransition(async () => {
       try {
-        const response = await fetch(`http://localhost:3000/api/v1/suite/shifts/swap?firstEmployeeId=${emp1}&secondEmployeeId=${emp2}&date=${swapDate}`, {
-          method: 'POST',
-        });
-        const data = await response.json();
-        if (data.status === 200 || data.success) {
-          setMessage('Shifts successfully swapped between employee calendars.');
-          loadData();
-        } else {
-          setError(data.message || 'Failed to complete swap roster.');
-        }
+        await suiteService.swapShifts(emp1, emp2, swapDate);
+        setMessage('Shifts successfully swapped between employee calendars.');
+        loadData();
       } catch (err) {
-        setError('Network failure. Please try again.');
+        setError(err.message || 'Failed to complete swap roster.');
       }
     });
   };
