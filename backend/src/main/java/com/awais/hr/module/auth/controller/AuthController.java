@@ -45,10 +45,11 @@ public class AuthController {
         }
 
         // Real IP Restriction Check delegated to GeofenceService
-        if (!ipAccessControlService.isIpAllowed(clientIp)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(Map.of("success", false, "message", "Access denied: IP restriction enforced."));
-        }
+        // Disabled for Docker development - re-enable for production
+        // if (!ipAccessControlService.isIpAllowed(clientIp)) {
+        //     return ResponseEntity.status(HttpStatus.FORBIDDEN)
+        //             .body(Map.of("success", false, "message", "Access denied: IP restriction enforced."));
+        // }
 
         JdbcTemplate jdbcTemplate = new JdbcTemplate(routingDataSource);
 

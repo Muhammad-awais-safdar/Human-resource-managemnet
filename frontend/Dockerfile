@@ -17,6 +17,9 @@ COPY . .
 # Learn more here: https://nextjs.org/telemetry
 # Disable telemetry during the build.
 ENV NEXT_TELEMETRY_DISABLED=1
+# Set backend API URL for Docker network
+ARG BACKEND_API_URL=http://backend:8080
+ENV BACKEND_API_URL=${BACKEND_API_URL}
 
 RUN npm run build
 
