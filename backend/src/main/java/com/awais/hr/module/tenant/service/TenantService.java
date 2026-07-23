@@ -223,13 +223,13 @@ public class TenantService {
         log.info("Seeding metadata defaults (permissions, admin user) to tenant database...");
         JdbcTemplate jdbcTemplate = new JdbcTemplate(tenantDataSource);
         
-        // Skip seeding if database is already populated
+        // Skip seeding if admin employee is already populated
         Boolean alreadySeeded = jdbcTemplate.queryForObject(
-                "SELECT EXISTS(SELECT 1 FROM role WHERE name = 'SYSTEM_ADMIN')",
-                Boolean.class
+                "SELECT EXISTS(SELECT 1 FROM employee WHERE email = ?)",
+                Boolean.class, adminEmail
         );
         if (alreadySeeded != null && alreadySeeded) {
-            log.info("Tenant database metadata is already seeded. Skipping seed execution.");
+            log.info("Tenant database metadata for admin '{}' is already seeded. Skipping seed execution.", adminEmail);
             return;
         }
         
@@ -242,33 +242,38 @@ public class TenantService {
         
         // Insert core dynamic permissions
         jdbcTemplate.update(
-                "INSERT INTO permission (id, name, description) VALUES (?, ?, ?)",
+                "INSERT INTO permission (id, name, description) VALUES (?, ?, ?) ON CONFLICT DO NOTHING",
                 p1, "corehr:employee:read", "Read access to employee profiles"
         );
         jdbcTemplate.update(
-                "INSERT INTO permission (id, name, description) VALUES (?, ?, ?)",
+                "INSERT INTO permission (id, name, description) VALUES (?, ?, ?) ON CONFLICT DO NOTHING",
                 p2, "corehr:employee:write", "Write access to employee profiles"
         );
         jdbcTemplate.update(
-                "INSERT INTO permission (id, name, description) VALUES (?, ?, ?)",
+                "INSERT INTO permission (id, name, description) VALUES (?, ?, ?) ON CONFLICT DO NOTHING",
                 p3, "corehr:org:write", "Manage organization structure and tree nodes"
         );
         jdbcTemplate.update(
-                "INSERT INTO permission (id, name, description) VALUES (?, ?, ?)",
+                "INSERT INTO permission (id, name, description) VALUES (?, ?, ?) ON CONFLICT DO NOTHING",
                 p4, "corehr:settings:write", "Modify white-label tenant branding configurations"
         );
         
         // Insert default System Admin role
         jdbcTemplate.update(
-                "INSERT INTO role (id, name, description) VALUES (?, ?, ?)",
+                "INSERT INTO role (id, name, description) VALUES (?, ?, ?) ON CONFLICT DO NOTHING",
                 roleId, "SYSTEM_ADMIN", "Full access administrator"
         );
         
+        List<String> existingRoles = jdbcTemplate.queryForList("SELECT id FROM role WHERE name = 'SYSTEM_ADMIN'", String.class);
+        if (!existingRoles.isEmpty()) {
+            roleId = existingRoles.get(0);
+        }
+        
         // Bind role to permissions
-        jdbcTemplate.update("INSERT INTO role_permission (role_id, permission_id) VALUES (?, ?)", roleId, p1);
-        jdbcTemplate.update("INSERT INTO role_permission (role_id, permission_id) VALUES (?, ?)", roleId, p2);
-        jdbcTemplate.update("INSERT INTO role_permission (role_id, permission_id) VALUES (?, ?)", roleId, p3);
-        jdbcTemplate.update("INSERT INTO role_permission (role_id, permission_id) VALUES (?, ?)", roleId, p4);
+        jdbcTemplate.update("INSERT INTO role_permission (role_id, permission_id) VALUES (?, ?) ON CONFLICT DO NOTHING", roleId, p1);
+        jdbcTemplate.update("INSERT INTO role_permission (role_id, permission_id) VALUES (?, ?) ON CONFLICT DO NOTHING", roleId, p2);
+        jdbcTemplate.update("INSERT INTO role_permission (role_id, permission_id) VALUES (?, ?) ON CONFLICT DO NOTHING", roleId, p3);
+        jdbcTemplate.update("INSERT INTO role_permission (role_id, permission_id) VALUES (?, ?) ON CONFLICT DO NOTHING", roleId, p4);
 
         // Seed additional standard organizational roles
         String empRoleId = UUID.randomUUID().toString();
