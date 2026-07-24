@@ -208,6 +208,36 @@ export default function DashboardLayout({ children }) {
             👷 Contractor Management
           </Link>
           <Link 
+            href="/visitors" 
+            className={`nav-link ${isActive('/visitors') ? 'nav-link-active' : ''}`}
+          >
+            🪪 Visitor Management
+          </Link>
+          <Link 
+            href="/compliance-management" 
+            className={`nav-link ${isActive('/compliance-management') ? 'nav-link-active' : ''}`}
+          >
+            ⚖️ Compliance & Audits
+          </Link>
+          <Link 
+            href="/health-safety" 
+            className={`nav-link ${isActive('/health-safety') ? 'nav-link-active' : ''}`}
+          >
+            🦺 Health & Safety
+          </Link>
+          <Link 
+            href="/engagement" 
+            className={`nav-link ${isActive('/engagement') ? 'nav-link-active' : ''}`}
+          >
+            🎉 Engagement & Recognition
+          </Link>
+          <Link 
+            href="/career-development" 
+            className={`nav-link ${isActive('/career-development') ? 'nav-link-active' : ''}`}
+          >
+            🚀 Career Development
+          </Link>
+          <Link 
             href="/settings" 
             className={`nav-link ${isActive('/settings') ? 'nav-link-active' : ''}`}
           >
