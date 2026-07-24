@@ -32,6 +32,74 @@ public class AuthController {
         this.ipAccessControlService = ipAccessControlService;
     }
 
+    @PostMapping({"/register", "/register-employee"})
+    public ResponseEntity<?> registerEmployee(@RequestBody Map<String, String> body) {
+        String tenantId = TenantContextHolder.getCurrentTenant();
+        if (tenantId == null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("success", false, "message", "Employee registration must be performed on a workspace tenant context. Make sure you access via a tenant subdomain."));
+        }
+
+        String firstName = body.get("firstName");
+        String lastName = body.get("lastName");
+        String email = body.get("email");
+        String password = body.get("password");
+        String employeeCode = body.get("employeeCode");
+
+        if (firstName == null || firstName.isBlank() || email == null || email.isBlank() || password == null || password.isBlank()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("success", false, "message", "First name, email address, and password are required for employee registration."));
+        }
+
+        email = email.trim().toLowerCase();
+        JdbcTemplate jdbcTemplate = new JdbcTemplate(routingDataSource);
+
+        try {
+            // Check if employee with same email already exists
+            Integer count = jdbcTemplate.queryForObject(
+                    "SELECT COUNT(1) FROM employee WHERE LOWER(email) = ?",
+                    Integer.class, email
+            );
+            if (count != null && count > 0) {
+                return ResponseEntity.status(HttpStatus.CONFLICT)
+                        .body(Map.of("success", false, "message", "An employee profile with email '" + email + "' is already registered in this workspace organization."));
+            }
+
+            if (employeeCode == null || employeeCode.isBlank()) {
+                employeeCode = "EMP-" + String.format("%04d", new java.security.SecureRandom().nextInt(10000));
+            }
+
+            String employeeId = UUID.randomUUID().toString();
+            String hashedPassword = passwordEncoder.encode(password);
+
+            jdbcTemplate.update(
+                    "INSERT INTO employee (id, employee_code, first_name, last_name, email, password, status, joining_date) VALUES (?, ?, ?, ?, ?, ?, 'ACTIVE', CURRENT_DATE)",
+                    employeeId, employeeCode, firstName, (lastName != null ? lastName : ""), email, hashedPassword
+            );
+
+            // Assign default EMPLOYEE role
+            List<String> roles = jdbcTemplate.queryForList("SELECT id FROM role WHERE name = 'EMPLOYEE'", String.class);
+            if (!roles.isEmpty()) {
+                jdbcTemplate.update(
+                        "INSERT INTO employee_role (employee_id, role_id) VALUES (?, ?) ON CONFLICT DO NOTHING",
+                        employeeId, roles.get(0)
+                );
+            }
+
+            return ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "message", "Employee account registered successfully. You may now log in to your workspace.",
+                    "employeeId", employeeId,
+                    "employeeCode", employeeCode,
+                    "email", email
+            ));
+
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("success", false, "message", "Failed to register employee account: " + e.getMessage()));
+        }
+    }
+
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody Map<String, String> credentials, HttpServletRequest request) {
         String email = credentials.get("email");
@@ -43,13 +111,6 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(Map.of("success", false, "message", "No workspace tenant context resolved. Make sure you access via a tenant subdomain."));
         }
-
-        // Real IP Restriction Check delegated to GeofenceService
-        // Disabled for Docker development - re-enable for production
-        // if (!ipAccessControlService.isIpAllowed(clientIp)) {
-        //     return ResponseEntity.status(HttpStatus.FORBIDDEN)
-        //             .body(Map.of("success", false, "message", "Access denied: IP restriction enforced."));
-        // }
 
         JdbcTemplate jdbcTemplate = new JdbcTemplate(routingDataSource);
 
@@ -63,7 +124,6 @@ public class AuthController {
             String dbHashedPassword = (String) employee.get("password");
 
             if (passwordEncoder.matches(password, dbHashedPassword)) {
-                // Return multi-step MFA trigger with dynamically generated Secure random OTP
                 String mfaCode = String.format("%06d", new java.security.SecureRandom().nextInt(1000000));
                 
                 jdbcTemplate.update(
@@ -104,7 +164,6 @@ public class AuthController {
 
         JdbcTemplate jdbcTemplate = new JdbcTemplate(routingDataSource);
 
-        // Validate MFA code dynamically against database
         try {
             List<Map<String, Object>> activeCodes = jdbcTemplate.queryForList(
                     "SELECT id, code FROM mfa_code WHERE email = ? AND used = FALSE AND expires_at > CURRENT_TIMESTAMP ORDER BY created_at DESC LIMIT 1",
@@ -124,7 +183,6 @@ public class AuthController {
                         .body(Map.of("success", false, "message", "Invalid MFA verification code."));
             }
 
-            // Mark code as used immediately to prevent replay attacks (ACID atomicity)
             jdbcTemplate.update("UPDATE mfa_code SET used = TRUE WHERE id = ?", mfaRecordId);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
@@ -137,13 +195,9 @@ public class AuthController {
                     email
             );
 
-            // Standard role claims payload
             String roles = "ADMIN";
-
-            // Generate cryptographically signed JWT Token
             String token = jwtUtils.generateToken(email, tenantId, roles);
 
-            // Register session log to database
             String sessionId = UUID.randomUUID().toString();
             jdbcTemplate.update(
                     "INSERT INTO active_session (id, employee_id, token, ip_address, user_agent) VALUES (?, ?, ?, ?, ?)",
@@ -204,7 +258,6 @@ public class AuthController {
 
             String hashedPassword = passwordEncoder.encode(password);
             
-            // Allow activating from INVITED or PENDING status
             int updated = jdbcTemplate.update(
                     "UPDATE employee SET password = ?, status = 'ACTIVE' WHERE email = ? AND status IN ('INVITED', 'PENDING')",
                     hashedPassword, email
@@ -228,4 +281,3 @@ public class AuthController {
         }
     }
 }
-

@@ -23,4 +23,16 @@ public class TenantRegisterRequestDTO {
     @NotBlank(message = "Admin email is required")
     @Email(message = "Invalid email format")
     private String adminEmail;
+
+    private String adminPassword;
+
+    private String logoUrl;
+
+    private String primaryColor;
+
+    private String secondaryColor;
+
+    private String planTier;
+
+    private Boolean paymentConfirmed;
 }

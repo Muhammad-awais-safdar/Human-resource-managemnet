@@ -13,6 +13,10 @@ export const authService = {
     return apiClient.post('/tenants/register', registrationData);
   },
 
+  async registerEmployee(employeeData) {
+    return apiClient.post('/auth/register-employee', employeeData);
+  },
+
   logout() {
     localStorage.removeItem('auth_token');
     window.location.href = '/login';

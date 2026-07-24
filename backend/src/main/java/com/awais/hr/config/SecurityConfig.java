@@ -39,8 +39,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 // Allow dynamic properties API version context paths
                 .requestMatchers("/tenants/register", "/api/*/tenants/register").permitAll()
-                .requestMatchers("/auth/login", "/api/*/auth/login").permitAll()
-                .requestMatchers("/auth/mfa/**", "/api/*/auth/mfa/**").permitAll()
+                .requestMatchers("/auth/**", "/api/*/auth/**").permitAll()
                 .requestMatchers("/tenants/active/**", "/api/*/tenants/active/**").permitAll()
                 .requestMatchers("/recruitment/jobs", "/api/*/recruitment/jobs").permitAll()
                 .requestMatchers("/recruitment/apply", "/api/*/recruitment/apply").permitAll()

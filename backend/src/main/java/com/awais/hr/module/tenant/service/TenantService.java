@@ -1,5 +1,6 @@
 package com.awais.hr.module.tenant.service;
 
+import com.awais.hr.module.tenant.dto.TenantRegisterRequestDTO;
 import com.awais.hr.module.tenant.model.Tenant;
 import com.awais.hr.module.tenant.repository.TenantRepository;
 import com.awais.hr.context.TenantRoutingDataSource;
@@ -12,13 +13,9 @@ import org.springframework.boot.jdbc.DataSourceBuilder;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.transaction.annotation.Transactional;
 
 import javax.sql.DataSource;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Service
@@ -57,6 +54,10 @@ public class TenantService {
         }
     }
 
+    public DataSource getTenantDataSource(String tenantId) {
+        return (DataSource) tenantDataSources.get(tenantId);
+    }
+
     public synchronized void registerTenantDataSource(Tenant tenant) {
         if (tenantDataSources.containsKey(tenant.getId())) {
             return;
@@ -87,7 +88,7 @@ public class TenantService {
         
         log.info("Successfully registered dynamic connection pool for tenant: {}", tenant.getId());
         
-        // Ensure tenant schema is up-to-date with migrations (such as V11, V12)
+        // Ensure tenant schema is up-to-date with migrations
         try {
             runFlywayMigrations(ds);
         } catch (Exception e) {
@@ -96,6 +97,18 @@ public class TenantService {
     }
 
     public Tenant registerNewTenant(String companyName, String subdomain, String adminEmail) {
+        TenantRegisterRequestDTO dto = new TenantRegisterRequestDTO();
+        dto.setCompanyName(companyName);
+        dto.setSubdomain(subdomain);
+        dto.setAdminEmail(adminEmail);
+        return registerNewTenant(dto);
+    }
+
+    public Tenant registerNewTenant(TenantRegisterRequestDTO request) {
+        String companyName = request.getCompanyName();
+        String subdomain = request.getSubdomain();
+        String adminEmail = request.getAdminEmail();
+
         log.info("Registering new tenant company: {} with subdomain: {}", companyName, subdomain);
         
         if (subdomain != null) {
@@ -110,7 +123,7 @@ public class TenantService {
         }
 
         // Strict reserved keywords blacklist
-        java.util.Set<String> reservedSubdomains = java.util.Set.of(
+        Set<String> reservedSubdomains = Set.of(
             "api", "admin", "www", "master", "test", "app", "mail", "blog", "dev", "staging", "portal", "billing", "root", "system"
         );
         if (reservedSubdomains.contains(subdomain.toLowerCase())) {
@@ -158,6 +171,10 @@ public class TenantService {
         createPhysicalDatabase(dbName);
         
         String dbUrl = tenantDbUrlPrefix + dbName;
+        String primaryColor = (request.getPrimaryColor() != null && !request.getPrimaryColor().isBlank()) ? request.getPrimaryColor() : "#6366f1";
+        String secondaryColor = (request.getSecondaryColor() != null && !request.getSecondaryColor().isBlank()) ? request.getSecondaryColor() : "#10b981";
+        String logoUrl = (request.getLogoUrl() != null && !request.getLogoUrl().isBlank()) ? request.getLogoUrl() : "https://via.placeholder.com/150?text=" + companyName;
+
         Tenant tenant = Tenant.builder()
                 .id(tenantId)
                 .name(companyName)
@@ -165,8 +182,9 @@ public class TenantService {
                 .dbUrl(dbUrl)
                 .dbUsername(tenantDbUsername)
                 .dbPassword(tenantDbPassword)
-                .primaryColor("#6366f1")
-                .secondaryColor("#a855f7")
+                .primaryColor(primaryColor)
+                .secondaryColor(secondaryColor)
+                .logoUrl(logoUrl)
                 .status("ACTIVE")
                 .build();
         
@@ -182,8 +200,9 @@ public class TenantService {
         DataSource tenantDs = (DataSource) tenantDataSources.get(tenantId);
         runFlywayMigrations(tenantDs);
         
-        // 6. Seed the initial admin user profile and default security permissions
-        seedTenantMetadata(tenantDs, adminEmail);
+        // 6. Seed initial admin user profile & default security permissions & vacation types
+        String adminPassword = (request.getAdminPassword() != null && !request.getAdminPassword().isBlank()) ? request.getAdminPassword() : "admin123";
+        seedTenantMetadata(tenantDs, adminEmail, adminPassword);
         
         return tenant;
     }
@@ -216,14 +235,18 @@ public class TenantService {
                 .locations("classpath:db/migration/tenant/core")
                 .cleanDisabled(true)
                 .load();
+        flyway.repair();
         flyway.migrate();
     }
 
     private void seedTenantMetadata(DataSource tenantDataSource, String adminEmail) {
-        log.info("Seeding metadata defaults (permissions, admin user) to tenant database...");
+        seedTenantMetadata(tenantDataSource, adminEmail, "admin123");
+    }
+
+    private void seedTenantMetadata(DataSource tenantDataSource, String adminEmail, String rawPassword) {
+        log.info("Seeding metadata defaults (permissions, roles, vacation types, admin user) to tenant database...");
         JdbcTemplate jdbcTemplate = new JdbcTemplate(tenantDataSource);
         
-        // Skip seeding if admin employee is already populated
         Boolean alreadySeeded = jdbcTemplate.queryForObject(
                 "SELECT EXISTS(SELECT 1 FROM employee WHERE email = ?)",
                 Boolean.class, adminEmail
@@ -240,83 +263,38 @@ public class TenantService {
         String roleId = UUID.randomUUID().toString();
         String employeeId = UUID.randomUUID().toString();
         
-        // Insert core dynamic permissions
-        jdbcTemplate.update(
-                "INSERT INTO permission (id, name, description) VALUES (?, ?, ?) ON CONFLICT DO NOTHING",
-                p1, "corehr:employee:read", "Read access to employee profiles"
-        );
-        jdbcTemplate.update(
-                "INSERT INTO permission (id, name, description) VALUES (?, ?, ?) ON CONFLICT DO NOTHING",
-                p2, "corehr:employee:write", "Write access to employee profiles"
-        );
-        jdbcTemplate.update(
-                "INSERT INTO permission (id, name, description) VALUES (?, ?, ?) ON CONFLICT DO NOTHING",
-                p3, "corehr:org:write", "Manage organization structure and tree nodes"
-        );
-        jdbcTemplate.update(
-                "INSERT INTO permission (id, name, description) VALUES (?, ?, ?) ON CONFLICT DO NOTHING",
-                p4, "corehr:settings:write", "Modify white-label tenant branding configurations"
-        );
+        jdbcTemplate.update("INSERT INTO permission (id, name, description) VALUES (?, ?, ?) ON CONFLICT DO NOTHING", p1, "corehr:employee:read", "Read access to employee profiles");
+        jdbcTemplate.update("INSERT INTO permission (id, name, description) VALUES (?, ?, ?) ON CONFLICT DO NOTHING", p2, "corehr:employee:write", "Write access to employee profiles");
+        jdbcTemplate.update("INSERT INTO permission (id, name, description) VALUES (?, ?, ?) ON CONFLICT DO NOTHING", p3, "corehr:org:write", "Manage organization structure and tree nodes");
+        jdbcTemplate.update("INSERT INTO permission (id, name, description) VALUES (?, ?, ?) ON CONFLICT DO NOTHING", p4, "corehr:settings:write", "Modify white-label tenant branding configurations");
         
-        // Fetch actual permission IDs (in case Flyway or previous seeding already created them under different UUIDs)
         p1 = fetchPermissionId(jdbcTemplate, "corehr:employee:read", p1);
         p2 = fetchPermissionId(jdbcTemplate, "corehr:employee:write", p2);
         p3 = fetchPermissionId(jdbcTemplate, "corehr:org:write", p3);
         p4 = fetchPermissionId(jdbcTemplate, "corehr:settings:write", p4);
         
-        // Insert default System Admin role
-        jdbcTemplate.update(
-                "INSERT INTO role (id, name, description) VALUES (?, ?, ?) ON CONFLICT DO NOTHING",
-                roleId, "SYSTEM_ADMIN", "Full access administrator"
-        );
-        
+        jdbcTemplate.update("INSERT INTO role (id, name, description) VALUES (?, ?, ?) ON CONFLICT DO NOTHING", roleId, "SYSTEM_ADMIN", "Full access administrator");
         List<String> existingRoles = jdbcTemplate.queryForList("SELECT id FROM role WHERE name = 'SYSTEM_ADMIN'", String.class);
-        if (!existingRoles.isEmpty()) {
-            roleId = existingRoles.get(0);
-        }
+        if (!existingRoles.isEmpty()) roleId = existingRoles.get(0);
         
-        // Bind role to permissions
         jdbcTemplate.update("INSERT INTO role_permission (role_id, permission_id) VALUES (?, ?) ON CONFLICT DO NOTHING", roleId, p1);
         jdbcTemplate.update("INSERT INTO role_permission (role_id, permission_id) VALUES (?, ?) ON CONFLICT DO NOTHING", roleId, p2);
         jdbcTemplate.update("INSERT INTO role_permission (role_id, permission_id) VALUES (?, ?) ON CONFLICT DO NOTHING", roleId, p3);
         jdbcTemplate.update("INSERT INTO role_permission (role_id, permission_id) VALUES (?, ?) ON CONFLICT DO NOTHING", roleId, p4);
 
-        // Seed additional standard organizational roles
-        String empRoleId = UUID.randomUUID().toString();
-        String mgrRoleId = UUID.randomUUID().toString();
-        String hrManagerRoleId = UUID.randomUUID().toString();
+        // Seed default Leave Policies (Vacation Types)
+        jdbcTemplate.update("INSERT INTO leave_policy (id, name, allowance, description) VALUES (?, 'Annual Vacation', 20, 'Standard annual paid vacation allocation') ON CONFLICT DO NOTHING", UUID.randomUUID().toString());
+        jdbcTemplate.update("INSERT INTO leave_policy (id, name, allowance, description) VALUES (?, 'Casual Leave', 10, 'Short-notice casual leave allowance') ON CONFLICT DO NOTHING", UUID.randomUUID().toString());
+        jdbcTemplate.update("INSERT INTO leave_policy (id, name, allowance, description) VALUES (?, 'Sick Leave', 12, 'Paid medical emergency allocations') ON CONFLICT DO NOTHING", UUID.randomUUID().toString());
+        jdbcTemplate.update("INSERT INTO leave_policy (id, name, allowance, description) VALUES (?, 'Maternity Leave', 90, 'Maternal care paid leave allocation') ON CONFLICT DO NOTHING", UUID.randomUUID().toString());
+        jdbcTemplate.update("INSERT INTO leave_policy (id, name, allowance, description) VALUES (?, 'Paternity Leave', 14, 'Paternal support leave allocation') ON CONFLICT DO NOTHING", UUID.randomUUID().toString());
+        jdbcTemplate.update("INSERT INTO leave_policy (id, name, allowance, description) VALUES (?, 'Unpaid Leave / LOP', 30, 'Loss of Pay uncompensated leave') ON CONFLICT DO NOTHING", UUID.randomUUID().toString());
 
-        jdbcTemplate.update("INSERT INTO role (id, name, description) VALUES (?, ?, ?) ON CONFLICT DO NOTHING",
-                empRoleId, "EMPLOYEE", "Standard employee self-service access");
-        jdbcTemplate.update("INSERT INTO role (id, name, description) VALUES (?, ?, ?) ON CONFLICT DO NOTHING",
-                mgrRoleId, "MANAGER", "Department supervisor access and approvals");
-        jdbcTemplate.update("INSERT INTO role (id, name, description) VALUES (?, ?, ?) ON CONFLICT DO NOTHING",
-                hrManagerRoleId, "HR_MANAGER", "Core HR staff and operational management");
+        String hashedPassword = passwordEncoder.encode(rawPassword);
 
-        List<String> empRoles = jdbcTemplate.queryForList("SELECT id FROM role WHERE name = 'EMPLOYEE'", String.class);
-        if (!empRoles.isEmpty()) empRoleId = empRoles.get(0);
-        List<String> mgrRoles = jdbcTemplate.queryForList("SELECT id FROM role WHERE name = 'MANAGER'", String.class);
-        if (!mgrRoles.isEmpty()) mgrRoleId = mgrRoles.get(0);
-        List<String> hrMgrRoles = jdbcTemplate.queryForList("SELECT id FROM role WHERE name = 'HR_MANAGER'", String.class);
-        if (!hrMgrRoles.isEmpty()) hrManagerRoleId = hrMgrRoles.get(0);
-
-        // Map permissions to standard roles
-        jdbcTemplate.update("INSERT INTO role_permission (role_id, permission_id) VALUES (?, ?) ON CONFLICT DO NOTHING", empRoleId, p1);
-        
-        jdbcTemplate.update("INSERT INTO role_permission (role_id, permission_id) VALUES (?, ?) ON CONFLICT DO NOTHING", mgrRoleId, p1);
-        
-        jdbcTemplate.update("INSERT INTO role_permission (role_id, permission_id) VALUES (?, ?) ON CONFLICT DO NOTHING", hrManagerRoleId, p1);
-        jdbcTemplate.update("INSERT INTO role_permission (role_id, permission_id) VALUES (?, ?) ON CONFLICT DO NOTHING", hrManagerRoleId, p2);
-        jdbcTemplate.update("INSERT INTO role_permission (role_id, permission_id) VALUES (?, ?) ON CONFLICT DO NOTHING", hrManagerRoleId, p3);
-        jdbcTemplate.update("INSERT INTO role_permission (role_id, permission_id) VALUES (?, ?) ON CONFLICT DO NOTHING", hrManagerRoleId, p4);
-        
-        // Hash initial admin password using BCrypt
-        String hashedPassword = passwordEncoder.encode("admin123");
-
-        // Create initial employee profile with hashed password
         jdbcTemplate.update(
-                "INSERT INTO employee (id, employee_code, first_name, last_name, email, password, status, joining_date) VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_DATE) ON CONFLICT DO NOTHING",
-                employeeId, "EMP-ADMIN-001", "Tenant", "Administrator", adminEmail, hashedPassword, "ACTIVE"
+                "INSERT INTO employee (id, employee_code, first_name, last_name, email, password, status, joining_date) VALUES (?, ?, ?, ?, ?, ?, 'ACTIVE', CURRENT_DATE) ON CONFLICT DO NOTHING",
+                employeeId, "EMP-ADMIN-001", "Tenant", "Administrator", adminEmail, hashedPassword
         );
         
         List<String> empIds = jdbcTemplate.queryForList("SELECT id FROM employee WHERE email = ?", String.class, adminEmail);
@@ -324,66 +302,14 @@ public class TenantService {
             employeeId = empIds.get(0);
         }
 
-        // Map employee to admin role
         jdbcTemplate.update(
                 "INSERT INTO employee_role (employee_id, role_id) VALUES (?, ?) ON CONFLICT DO NOTHING",
                 employeeId, roleId
         );
-
-
-        // Seed default Leave Policies
-        String annualLeaveId = UUID.randomUUID().toString();
-        String sickLeaveId = UUID.randomUUID().toString();
-        jdbcTemplate.update("INSERT INTO leave_policy (id, name, allowance, description) VALUES (?, ?, ?, ?)",
-                annualLeaveId, "Annual Vacation", 20, "Standard annual paid vacation allocation");
-        jdbcTemplate.update("INSERT INTO leave_policy (id, name, allowance, description) VALUES (?, ?, ?, ?)",
-                sickLeaveId, "Sick Leave", 10, "Paid medical emergency allocations");
-
-        // Seed default Job Requisition
-        String job1 = UUID.randomUUID().toString();
-        String job2 = UUID.randomUUID().toString();
-        jdbcTemplate.update("INSERT INTO job_requisition (id, title, description, status, openings, salary_range) VALUES (?, ?, ?, ?, ?, ?)",
-                job1, "Senior React Developer", "Work on premium dashboard layout workflows.", "OPEN", 2, "$80k - $120k");
-        jdbcTemplate.update("INSERT INTO job_requisition (id, title, description, status, openings, salary_range) VALUES (?, ?, ?, ?, ?, ?)",
-                job2, "SRE Cloud Architect", "Build dynamic database context isolation layers.", "OPEN", 1, "$100k - $140k");
-
-        // Seed mock ATS candidates
-        jdbcTemplate.update("INSERT INTO candidate_application (id, job_id, first_name, last_name, email, status_stage) VALUES (?, ?, ?, ?, ?, ?)",
-                UUID.randomUUID().toString(), job1, "John", "Doe", "john.doe@gmail.com", "APPLIED");
-        jdbcTemplate.update("INSERT INTO candidate_application (id, job_id, first_name, last_name, email, status_stage) VALUES (?, ?, ?, ?, ?, ?)",
-                UUID.randomUUID().toString(), job1, "Jane", "Miller", "jane.miller@yahoo.com", "INTERVIEW");
-        jdbcTemplate.update("INSERT INTO candidate_application (id, job_id, first_name, last_name, email, status_stage) VALUES (?, ?, ?, ?, ?, ?)",
-                UUID.randomUUID().toString(), job2, "David", "Clark", "david.clark@outlook.com", "SCREEN");
-
-        // Seed Payroll salary structures
-        jdbcTemplate.update("INSERT INTO salary_structure (id, employee_id, basic_salary, allowance, deductions) VALUES (?, ?, 7500.00, 1200.00, 450.00)",
-                UUID.randomUUID().toString(), employeeId);
-
-        // Seed Shift schedule templates
-        String shiftId = UUID.randomUUID().toString();
-        jdbcTemplate.update("INSERT INTO shift_schedule (id, name, start_time, end_time) VALUES (?, 'Standard Day Roster', '09:00:00', '17:00:00')",
-                shiftId);
-        jdbcTemplate.update("INSERT INTO employee_shift (employee_id, shift_id, work_date) VALUES (?, ?, CURRENT_DATE)",
-                employeeId, shiftId);
-
-        // Seed Performance Goals
-        jdbcTemplate.update("INSERT INTO performance_goal (id, employee_id, title, target_value, current_value, status) VALUES (?, ?, 'Achieve Platform Code Review Coverage', 100, 75, 'IN_PROGRESS')",
-                UUID.randomUUID().toString(), employeeId);
-
-        // Seed Learning Courses
-        String courseId = UUID.randomUUID().toString();
-        jdbcTemplate.update("INSERT INTO course (id, title, description, category) VALUES (?, 'Security Controls & Access Protocols', 'Handbook mapping best security checks.', 'Compliance')",
-                courseId);
-        jdbcTemplate.update("INSERT INTO course_enrollment (employee_id, course_id, status) VALUES (?, ?, 'ENROLLED')",
-                employeeId, courseId);
-
-        // Seed Projects
-        jdbcTemplate.update("INSERT INTO project (id, name, description) VALUES (?, 'SaaS Enterprise Suite', 'Deploy core features and isolated databases')",
-                UUID.randomUUID().toString());
     }
 
-    private String fetchPermissionId(JdbcTemplate jdbcTemplate, String permName, String defaultId) {
+    private String fetchPermissionId(JdbcTemplate jdbcTemplate, String permName, String fallbackId) {
         List<String> ids = jdbcTemplate.queryForList("SELECT id FROM permission WHERE name = ?", String.class, permName);
-        return ids.isEmpty() ? defaultId : ids.get(0);
+        return ids.isEmpty() ? fallbackId : ids.get(0);
     }
 }

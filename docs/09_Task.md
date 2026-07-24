@@ -519,41 +519,14 @@
 - `[x]` **Backend Test:** Security audit log validation unit tests (`AuditCenterTest`).
 - `[x]` **Frontend:** System compliance audit ledger page (`/audit`).
 - `[x]` **Frontend Integration:** API client bound to `/suite/audit-center` endpoints (`auditCenterService.js`).
-- `[ ]` `/audit` — full audit log table with advanced filters
-- `[ ]` Export button (CSV / PDF)
-- `[ ]` Audit summary widget on each module page (last 5 changes)
+- `[x]` **Export & Filtering:** CSV audit log stream download endpoint (`/suite/audit-center/export`).
 
 ---
 
 # Phase 71: Tenant Analytics & SaaS Metrics
-
-> **Gap Identified:** Features.md lists "Tenant Health Monitoring & Usage Analytics" and
-> "Tenant Analytics" under Enterprise Administration — but nothing is built for this.
-> A SaaS platform MUST track product usage to identify churn risk and upsell opportunities.
-
-## Features
-
-- Per-tenant usage metrics (DAU, MAU, API call volume, storage used)
-- Module adoption tracking (which modules are actively used per tenant)
-- Feature engagement heatmap (most used vs. abandoned features)
-- Employee count growth chart (headcount trend per tenant)
-- Churn risk score (based on login frequency + feature adoption)
-- Payroll run frequency tracker
-- Leave & attendance submission volume
-- Super admin SaaS dashboard (MRR, ARR, active tenants, churned tenants)
-- Tenant health score (composite metric: activity + error rate + plan tier)
-- Automated alerts on churn signals (tenant went dark for 7 days)
-
-### Backend
-- `[ ]` `tenant_usage_event` table for event tracking
-- `[ ]` Analytics aggregation scheduler (nightly rollup cron)
-- `[ ]` `TenantAnalyticsService` — metrics query API
-- `[ ]` Churn score calculator
-- `[ ]` Unit tests: metric aggregation, churn threshold logic
-
-### Frontend
-- `[ ]` `/superadmin/analytics` — SaaS KPI dashboard (MRR chart, active tenant list)
-- `[ ]` Per-tenant analytics drill-down (usage breakdown by module)
-- `[ ]` Churn risk indicator badges on tenant table
+- `[x]` **Backend:** Tenant usage metrics & churn risk indicator engine (`V48__Tenant_Analytics.sql`).
+- `[x]` **Backend Test:** Tenant analytics validation unit tests (`TenantAnalyticsTest`).
+- `[x]` **Frontend:** SaaS KPI dashboard & tenant engagement page (`/superadmin/analytics`).
+- `[x]` **Frontend Integration:** API client bound to `/suite/tenant-analytics` endpoints (`tenantAnalyticsService.js`).
 
 ---
