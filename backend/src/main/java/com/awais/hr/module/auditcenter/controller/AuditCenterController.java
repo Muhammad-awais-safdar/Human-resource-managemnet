@@ -2,6 +2,8 @@ package com.awais.hr.module.auditcenter.controller;
 
 import com.awais.hr.config.HasPermission;
 import com.awais.hr.module.auditcenter.service.AuditCenterService;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -37,9 +39,10 @@ public class AuditCenterController {
     @GetMapping("/export")
     @HasPermission("corehr:employee:read")
     public ResponseEntity<String> exportCsv() {
+        String csv = auditCenterService.exportCsv();
         return ResponseEntity.ok()
-                .header("Content-Type", "text/csv")
-                .header("Content-Disposition", "attachment; filename=\"audit-log.csv\"")
-                .body(auditCenterService.exportCsv());
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=audit_ledger.csv")
+                .contentType(MediaType.TEXT_PLAIN)
+                .body(csv);
     }
 }

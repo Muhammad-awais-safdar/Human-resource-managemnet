@@ -59,13 +59,15 @@ public class AuditCenterServiceImpl implements AuditCenterService {
     @Transactional(readOnly = true)
     public String exportCsv() {
         List<Map<String, Object>> logs = getLogs();
-        StringBuilder sb = new StringBuilder("Actor,Action,Entity,Details,IPAddress,PerformedAt\n");
-        for (Map<String, Object> l : logs) {
-            sb.append(l.getOrDefault("actor_email", l.get("actorEmail"))).append(",")
-              .append(l.getOrDefault("action_type", l.get("actionType"))).append(",")
-              .append(l.getOrDefault("entity_name", l.get("entityName"))).append(",")
-              .append("\"").append(l.get("details")).append("\",")
-              .append(l.getOrDefault("ip_address", l.get("ipAddress"))).append("\n");
+        StringBuilder sb = new StringBuilder();
+        sb.append("ID,Actor Email,Action Type,Entity Name,Details,IP Address\n");
+        for (Map<String, Object> row : logs) {
+            sb.append(row.getOrDefault("id", "")).append(",")
+              .append(row.getOrDefault("actor_email", row.getOrDefault("actorEmail", ""))).append(",")
+              .append(row.getOrDefault("action_type", row.getOrDefault("actionType", ""))).append(",")
+              .append(row.getOrDefault("entity_name", row.getOrDefault("entityName", ""))).append(",")
+              .append("\"").append(row.getOrDefault("details", "")).append("\",")
+              .append(row.getOrDefault("ip_address", row.getOrDefault("ipAddress", "127.0.0.1"))).append("\n");
         }
         return sb.toString();
     }

@@ -1,7 +1,7 @@
-package com.awais.hr.module.tenantanalytics;
+package com.awais.hr.module.analytics;
 
-import com.awais.hr.module.tenantanalytics.service.TenantAnalyticsService;
-import com.awais.hr.module.tenantanalytics.service.TenantAnalyticsServiceImpl;
+import com.awais.hr.module.analytics.service.TenantAnalyticsService;
+import com.awais.hr.module.analytics.service.TenantAnalyticsServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -27,8 +27,8 @@ public class TenantAnalyticsTest {
     }
 
     @Test
-    public void recordMetric_shouldThrowException_whenTenantIdIsBlank() {
-        Map<String, Object> body = Map.of("tenantId", " ");
+    public void recordMetric_shouldThrowException_whenSubdomainIsBlank() {
+        Map<String, Object> body = Map.of("tenantSubdomain", " ");
         assertThrows(IllegalArgumentException.class, () -> analyticsService.recordMetric(body));
     }
 }

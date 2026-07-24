@@ -2,18 +2,18 @@
 
 CREATE TABLE IF NOT EXISTS tenant_usage_metric (
     id              VARCHAR(36) PRIMARY KEY DEFAULT gen_random_uuid()::text,
-    tenant_id       VARCHAR(36) NOT NULL,
-    active_users    INT NOT NULL DEFAULT 0,
-    api_calls_count INT NOT NULL DEFAULT 0,
-    storage_mb      NUMERIC(10,2) NOT NULL DEFAULT 0.00,
-    mrr_amount      NUMERIC(10,2) NOT NULL DEFAULT 0.00,
+    tenant_subdomain VARCHAR(100) NOT NULL,
+    active_users    INT NOT NULL DEFAULT 1,
+    monthly_users   INT NOT NULL DEFAULT 1,
+    api_calls_count INT NOT NULL DEFAULT 100,
+    storage_mb      NUMERIC(10,2) NOT NULL DEFAULT 10.50,
     recorded_at     TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
-CREATE TABLE IF NOT EXISTS tenant_churn_risk_log (
+CREATE TABLE IF NOT EXISTS tenant_health_score (
     id              VARCHAR(36) PRIMARY KEY DEFAULT gen_random_uuid()::text,
-    tenant_name     VARCHAR(100) NOT NULL,
-    churn_risk_score NUMERIC(5,2) NOT NULL DEFAULT 0.00, -- 0.00 to 100.00%
-    risk_level      VARCHAR(20) NOT NULL DEFAULT 'LOW', -- LOW, MEDIUM, HIGH, CRITICAL
+    tenant_subdomain VARCHAR(100) NOT NULL,
+    health_score    INT NOT NULL DEFAULT 95, -- 0 to 100
+    churn_risk_level VARCHAR(30) NOT NULL DEFAULT 'LOW', -- LOW, MEDIUM, HIGH
     updated_at      TIMESTAMP NOT NULL DEFAULT NOW()
 );

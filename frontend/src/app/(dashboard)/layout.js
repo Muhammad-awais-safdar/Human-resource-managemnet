@@ -340,12 +340,6 @@ export default function DashboardLayout({ children }) {
             🛡️ Super Admin Control
           </Link>
           <Link 
-            href="/superadmin/analytics" 
-            className={`nav-link ${isActive('/superadmin/analytics') ? 'nav-link-active' : ''}`}
-          >
-            📈 SaaS Tenant Analytics
-          </Link>
-          <Link 
             href="/settings/sso" 
             className={`nav-link ${isActive('/settings/sso') ? 'nav-link-active' : ''}`}
           >
@@ -392,6 +386,12 @@ export default function DashboardLayout({ children }) {
             className={`nav-link ${isActive('/audit') ? 'nav-link-active' : ''}`}
           >
             📋 Audit Center
+          </Link>
+          <Link 
+            href="/superadmin/analytics" 
+            className={`nav-link ${isActive('/superadmin/analytics') ? 'nav-link-active' : ''}`}
+          >
+            📈 SaaS Analytics
           </Link>
           <Link 
             href="/settings" 
