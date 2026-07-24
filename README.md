@@ -2,7 +2,52 @@
 
 Awais HR is a state-of-the-art, high-performance, enterprise-grade SaaS Human Resource Management System (HRMS) built using a **Modular Monolith** architecture with a **Database-per-Tenant** isolation strategy. 
 
-The platform supports 40 fully-integrated functional phases ranging from core onboarding and payroll processing to succession planning, ATS, shift calendars, asset management, and AI anomaly detection.
+The platform supports 64 fully-integrated functional phases ranging from core onboarding, HR analytics, and automated multi-currency payroll processing to succession planning, ATS, shift calendars, asset management, AI resume parsing, and an **Enterprise Payment Integration Framework**.
+
+---
+
+## 💳 Enterprise Payment Integration Framework
+
+The platform includes a provider-agnostic, dual-domain payment architecture supporting **both Worldwide International Tenants and Pakistan Local Tenants**:
+
+### 1. SaaS Subscription Billing Engine (Payment Domain 1)
+* **Dynamic Per-Seat Add-on Seat Calculation**: Base plan price + extra seat overage calculation (`Base Price + (Requested Seats - Included Seats) * PerSeatRate`).
+* **Seeded Market-Leading Tiers**:
+  * **STARTER** ($49/mo base, 15 included seats, $4/seat add-on, 25 GB storage)
+  * **GROWTH PROFESSIONAL** ($199/mo base, 50 included seats, $7/seat add-on, 100 GB storage)
+  * **ENTERPRISE SUITE** ($499/mo base, 100 included seats, $10/seat add-on, 500 GB storage)
+* **Supported Gateways**:
+  * 🌍 **Worldwide**: Stripe, Paddle (Merchant of Record), Lemon Squeezy, PayPal.
+  * 🇵🇰 **Pakistan Local**: JazzCash Mobile Wallet/Cards, EasyPaisa OTC/Wallet, State Bank Raast / 1-Link.
+
+### 2. Payroll Salary Disbursement Engine (Payment Domain 2)
+* **Non-Custodial Batch Payout Pipeline**: AES-256-GCM encrypted tenant credential storage with MFA verification code requirements and `X-Idempotency-Key` headers.
+* **Supported Disbursement Networks**:
+  * 🌍 **Worldwide**: Wise Business Batch API (50+ currencies), Payoneer, US NACHA ACH Direct Deposit.
+  * 🇵🇰 **Pakistan Local**: State Bank Raast Instant IBAN-to-IBAN Transfer, Habib Bank Limited (HBL) Corporate Direct Clearance.
+
+---
+
+## 🔐 Repository Privileges & Role-Based Access Control (RBAC)
+
+Access control across backend endpoints and frontend views is enforced via custom annotation-driven aspects (`@HasPermission`) and JWT tenant context tokens:
+
+```java
+@PostMapping("/plans")
+@HasPermission("SUPER_ADMIN")
+public ApiResponse<Map<String, Object>> savePlan(@RequestBody Map<String, Object> body) {
+    return ApiResponse.success(paymentGatewayService.saveOrUpdatePlan(body));
+}
+```
+
+### Privileges & Role Hierarchy
+
+| Role Tier | Required Permission | Access Privileges & Functional Boundaries |
+| :--- | :--- | :--- |
+| **👑 Super Admin** | `SUPER_ADMIN` | Master DB tenant provisioning, global subscription plan creation, platform pricing control (`/superadmin/pricing-plans`), system health & audit monitoring. |
+| **🏢 Tenant Admin** | `MANAGE_TENANT_SETTINGS`, `MANAGE_PAYROLL` | Self-service subscription upgrades (`/settings/billing`), seat add-ons, payroll batch creation, MFA salary disbursement execution, bank gateway configuration. |
+| **👥 HR Manager** | `MANAGE_EMPLOYEE`, `MANAGE_LEAVE`, `MANAGE_ATTENDANCE` | Employee onboarding, shift assignments, leave approvals, recruitment job postings, performance appraisals. |
+| **🧑‍💻 Employee (ESS)** | `VIEW_ESS`, `SUBMIT_LEAVE`, `SUBMIT_EXPENSE` | Self-service profile, clock-in/out, leave requests, expense reimbursements, payslip downloads. |
 
 ---
 
@@ -11,14 +56,14 @@ The platform supports 40 fully-integrated functional phases ranging from core on
 ### Backend
 - **Core Engine:** Spring Boot 3.3.1 (Java 21 LTS)
 - **Security:** Spring Security (Stateless JWT Authentication)
-- **Database Access:** Spring JDBC Template (Optimized raw SQL queries avoiding heavy Hibernate ORM overhead where speed is critical)
-- **Database Migrations:** Flyway (Supports dual-schema separation: Master metadata schema + dynamic per-tenant schemas)
+- **Database Access:** Spring JDBC Template (Optimized raw SQL queries avoiding heavy ORM overhead where speed is critical)
+- **Database Migrations:** Flyway (Master metadata schema + dynamic per-tenant schema migrations V1 to V50)
 - **Aspects (AOP):** AspectJ for declarative permission-gating (`@HasPermission`) and RLS tenant routing.
 
 ### Frontend
 - **Framework:** Next.js 16 (App Router) / React 19
-- **Styling:** TailwindCSS v4
-- **HTTP Client:** Custom Fetch Wrapper with token & tenant header injection interceptors
+- **Styling:** Vanilla CSS & TailwindCSS v4
+- **HTTP Client:** Custom Fetch Wrapper with automatic Bearer JWT & `X-Tenant` header injection interceptors.
 
 ### Infrastructure, Database & Cache
 - **Database:** PostgreSQL 16
@@ -31,7 +76,7 @@ The platform supports 40 fully-integrated functional phases ranging from core on
 
 ```
 ┌────────────────────────────────────────────────────────┐
-│               Client browser / Mobile PWA              │
+│               Client Browser / Mobile PWA              │
 │  Subdomain (e.g. acme.localhost) maps to Tenant context│
 └──────┬─────────────────────────────────────────────────┘
        │ HTTP Request + X-Tenant Header + Bearer JWT
@@ -49,7 +94,7 @@ The platform supports 40 fully-integrated functional phases ranging from core on
 │  - Select connection from DynamicRoutingDataSource     │
 │  - @Cacheable reads from Redis (tenant-prefixed keys)  │
 └──────┬─────────────────────────┬───────────────────────┘
-       │ Cache Miss              │ Dynamic DB connection
+       │ Cache Miss              │ Dynamic DB Connection
        ▼                         ▼
 ┌──────────────┐          ┌──────────────────────────────┐
 │  Redis Cache │          │      PostgreSQL Cluster       │
@@ -60,60 +105,64 @@ The platform supports 40 fully-integrated functional phases ranging from core on
 └──────────────┘
 ```
 
-### 1. Database-Per-Tenant Isolation
-When a new organization registers:
-1. The backend automatically creates a new physical database in PostgreSQL (e.g. `awais_hr_tenant_acme`).
-2. Flyway dynamically migrates the new database to the latest schema using migration scripts.
-3. Default roles (`EMPLOYEE`, `MANAGER`, `HR_MANAGER`) are seeded.
-4. Incoming API requests are parsed for the `X-Tenant` header or the URL subdomain context. The `TenantRoutingDataSource` routes the connection pool dynamically to that tenant's database context.
-
-### 2. Modular Monolith Design
-The code is divided into 40 distinct business domains inside `com.awais.hr.module`. Each module maintains its own controllers, services, database tables, and tests:
-- `auth`, `tenant`, `org`, `employee` (Core Context)
-- `attendance`, `leave`, `shifts`, `holidays` (Workforce Control)
-- `payroll`, `expense`, `travel`, `benefits`, `compensation` (Financials Suite)
-- `recruitment`, `onboarding`, `offboarding`, `contractor` (Talent lifecycle)
-- `assets`, `learning`, `performance`, `workflow`, `ai` (Enterprise opserations)
-
 ---
 
 ## 🚀 How to Run the Project
 
 ### Option 1: Using Docker (Recommended — Single Command)
-The entire project (Postgres DB, Redis cache, Spring Boot backend, and Next.js frontend) is dockerized with optimized multi-stage images.
-
-1. Ensure **Docker** and **Docker Compose** are installed and running.
-2. In the root directory of the project, run:
-   ```bash
-   docker-compose up --build
-   ```
-3. This command will:
-   - Compile the Spring Boot engine from source using Java 21 JRE.
-   - Build the Next.js production bundles.
-   - Launch PostgreSQL on port `5432` and initialize the master database `awais_hr_master`.
-   - Spin up Redis server on port `6379`.
-   - Start the backend on port `8080`.
-   - Start the frontend on port `3000`.
+```bash
+docker-compose up --build
+```
+1. Builds the Spring Boot backend JAR artifact using Java 21 JRE.
+2. Builds the Next.js production bundle.
+3. Launches PostgreSQL (`5432`) and Redis (`6379`).
 4. Access the application at **`http://localhost:3000`**.
 
 ### Option 2: Running Locally for Development
-
-#### Prerequisites
-- Java 21 JDK
-- Maven 3.9+
-- Node.js 20+ & npm
-
-#### Step 1: Configure Database
-1. Run a local PostgreSQL instance.
-2. Create a database named `awais_hr_master`.
-3. Configure `backend/src/main/resources/application.properties` with your local database credentials (e.g., username/password).
-
-#### Step 2: Run Using Helper Script
-We provide a helper shell script that stops any blocking ports and launches both servers in separate terminal windows (or as background threads if no graphical environment is detected):
-
 ```bash
 ./run.sh
 ```
+
+---
+
+## ⚡ Stress Testing & Capacity Benchmarking (`scripts/stress_test.py`)
+
+The platform includes a custom multi-threaded Python stress-testing suite [`scripts/stress_test.py`](file:///home/awais/awais/projects/spring-boot/Human-resource-managemnet/scripts/stress_test.py) to measure backend throughput, latencies, response status codes, and P95/P99 metrics under concurrent tenant load.
+
+### How to Run Stress Tests
+
+#### Prerequisites
+- Python 3.8+ (No external third-party library installations required; relies on Python standard libraries).
+
+#### Command Syntax
+```bash
+python3 scripts/stress_test.py [CONCURRENCY_THREADS] [TOTAL_REQUESTS]
+```
+
+#### Execution Examples
+
+1. **Quick Smoke Test (20 Concurrent Threads, 200 Total Requests)**:
+   ```bash
+   python3 scripts/stress_test.py 20 200
+   ```
+
+2. **Medium Workload Test (50 Concurrent Threads, 1,000 Total Requests)**:
+   ```bash
+   python3 scripts/stress_test.py 50 1000
+   ```
+
+3. **Heavy Enterprise Load Test (100 Concurrent Threads, 5,000 Total Requests)**:
+   ```bash
+   python3 scripts/stress_test.py 100 5000
+   ```
+
+#### Output Metrics Provided
+- **Total Execution Time (Seconds)**
+- **Throughput (Requests Per Second — RPS)**
+- **Average Latency (ms)**
+- **Min / Max Latency (ms)**
+- **Percentile Benchmarks**: P50 (Median), P95, and P99 latency percentiles
+- **HTTP Status Code Breakdown & Success/Failure Rates**
 
 ---
 
@@ -123,41 +172,30 @@ We provide a helper shell script that stops any blocking ports and launches both
 Human-resource-managemnet/
 ├── backend/
 │   ├── src/main/java/com/awais/hr/
-│   │   ├── config/              # Security and DB routing configs
+│   │   ├── config/              # Security, AOP Aspect, and DB routing configs
+│   │   ├── context/             # TenantContextHolder & TenantResolutionFilter
 │   │   ├── common/              # API payload wraps (ApiResponse)
-│   │   └── module/              # 40 business modules
+│   │   └── module/              # 64 business modules (billing, bankpayroll, etc.)
 │   ├── src/main/resources/
 │   │   ├── db/migration/
 │   │   │   ├── master/          # Tenant database registry schema
-│   │   │   └── tenant/core/     # Core HRMS tenant schemas (V1 to V16)
+│   │   │   └── tenant/core/     # Core HRMS tenant schemas (V1 to V50)
 │   │   └── application.properties
 │   ├── Dockerfile
 │   └── pom.xml
 │
 ├── frontend/
 │   ├── src/
-│   │   ├── app/                 # Next.js Pages router (dashboard, ess, suite, etc.)
+│   │   ├── app/                 # Next.js Pages router (superadmin, settings/billing, etc.)
 │   │   ├── services/            # Axios API wrappers (api.js, suiteService.js, etc.)
 │   │   └── modules/             # JSX components and styling systems
 │   ├── Dockerfile
 │   └── package.json
 │
-├── docs/                        # Complete technical specification and product backlogs
+├── scripts/
+│   └── stress_test.py           # Multi-threaded backend stress benchmark runner
+│
+├── docs/                        # Specifications, QA Reports, Capacity & Stress Test Reports
 ├── docker-compose.yml           # Multi-container orchestration
 └── run.sh                       # Local helper script
 ```
-
----
-
-## 🔒 Security & Authorization
-
-Declarative access control is implemented using custom annotation-driven aspects:
-```java
-@PostMapping("/positions")
-@HasPermission("MANAGE_ORGANIZATION")
-public ApiResponse<String> addPosition(@RequestBody Map<String, Object> body) {
-    successionService.addPosition(body);
-    return ApiResponse.success("Position added.");
-}
-```
-Every endpoint maps permissions like `MANAGE_PAYROLL`, `VIEW_TIMELINE`, or `MANAGE_ORGANIZATION` dynamically checking against the active tenant DB user configuration on request.
