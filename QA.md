@@ -14,3 +14,11 @@ This project maintains a central Quality Assurance & Audit Tracker documenting a
 - 🔵 **5 Low Severity Refactoring Items:** Code formatting, unused imports cleanup, documentation sync.
 
 Refer to [`docs/QA_Issues.md`](docs/QA_Issues.md) for the full detailed audit matrix, remediation plans, and step-by-step action checklist.
+
+---
+
+## Recently Resolved Issues
+
+- ✅ **Fixed Tenant Metadata Seeding (`TenantService.java`):** Added `fetchPermissionId()` lookup logic and `ON CONFLICT DO NOTHING` for role/permission seeding, resolving the foreign key constraint error (`role_permission_permission_id_fkey`) when binding roles to pre-seeded permissions from Flyway migrations (`V15`).
+- ✅ **Fixed Suite Controller Route Paths (9 Controllers):** Removed duplicate `/api/v1` prefixes from `@RequestMapping` in Phase 26–34 controllers (`WorkflowController`, `CommunicationController`, `ReportController`, `IntegrationController`, `MobileSyncController`, `AiAutomationController`, `ComplianceController`, `PlatformSettingsController`, `EnterpriseFeaturesController`), eliminating 500 server errors when fetching suite resources.
+- ✅ **Fixed Invite Employee UI Overflow (`lifecycle/page.js` & `globals.css`):** Applied universal `box-sizing: border-box` reset and flex-basis wrapping (`flex: '1 1 140px'`) on input groups, resolving input field overflow out of form cards on the `/lifecycle` page.

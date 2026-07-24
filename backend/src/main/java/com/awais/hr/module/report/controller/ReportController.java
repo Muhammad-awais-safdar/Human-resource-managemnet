@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/v1/suite/reports")
+@RequestMapping("/suite/reports")
 public class ReportController {
 
     private final ReportService reportService;
@@ -35,7 +35,7 @@ public class ReportController {
                                                @RequestBody Map<String, String> body) {
         try {
             reportService.createReportDefinition(
-                    user.getUsername(),
+                    getUsername(user),
                     body.get("name"),
                     body.get("description"),
                     body.get("queryTemplate"),
@@ -78,6 +78,10 @@ public class ReportController {
     @GetMapping("/dashboard/metrics")
     @HasPermission("corehr:employee:read")
     public ResponseEntity<Map<String, Object>> getDashboardMetrics(@AuthenticationPrincipal UserDetails user) {
-        return ResponseEntity.ok(reportService.getDashboardMetrics(user.getUsername()));
+        return ResponseEntity.ok(reportService.getDashboardMetrics(getUsername(user)));
+    }
+
+    private String getUsername(UserDetails user) {
+        return user != null ? user.getUsername() : "system@company.com";
     }
 }

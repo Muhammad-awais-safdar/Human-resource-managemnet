@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/v1/suite/ai")
+@RequestMapping("/suite/ai")
 public class AiAutomationController {
 
     private final AiAutomationService aiAutomationService;

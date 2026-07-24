@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/v1/suite/workflows")
+@RequestMapping("/suite/workflows")
 public class WorkflowController {
 
     private final WorkflowService workflowService;
@@ -45,9 +45,9 @@ public class WorkflowController {
     @PostMapping("/definitions/{id}/trigger")
     @HasPermission("corehr:employee:write")
     public ResponseEntity<?> triggerWorkflow(@PathVariable String id,
-                                              @AuthenticationPrincipal UserDetails user) {
+                                               @AuthenticationPrincipal UserDetails user) {
         try {
-            workflowService.triggerWorkflow(id, user.getUsername());
+            workflowService.triggerWorkflow(id, getUsername(user));
             return ResponseEntity.ok(Map.of("success", true, "message", "Workflow triggered successfully."));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("success", false, "message", e.getMessage()));
@@ -57,7 +57,7 @@ public class WorkflowController {
     @GetMapping("/executions")
     @HasPermission("corehr:employee:read")
     public ResponseEntity<List<Map<String, Object>>> getExecutions(@AuthenticationPrincipal UserDetails user) {
-        return ResponseEntity.ok(workflowService.getExecutions(user.getUsername()));
+        return ResponseEntity.ok(workflowService.getExecutions(getUsername(user)));
     }
 
     @PutMapping("/executions/{id}/advance")
@@ -72,5 +72,9 @@ public class WorkflowController {
     public ResponseEntity<?> cancelExecution(@PathVariable String id) {
         workflowService.cancelExecution(id);
         return ResponseEntity.ok(Map.of("success", true, "message", "Execution cancelled."));
+    }
+
+    private String getUsername(UserDetails user) {
+        return user != null ? user.getUsername() : "system@company.com";
     }
 }

@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/v1/suite/compliance")
+@RequestMapping("/suite/compliance")
 public class ComplianceController {
 
     private final ComplianceService complianceService;
@@ -28,14 +28,14 @@ public class ComplianceController {
         if (given == null) {
             return ResponseEntity.badRequest().body(Map.of("success", false, "message", "consentGiven parameter is required."));
         }
-        complianceService.saveGdprConsent(user.getUsername(), given);
+        complianceService.saveGdprConsent(getUsername(user), given);
         return ResponseEntity.ok(Map.of("success", true, "message", "Consent settings updated."));
     }
 
     @GetMapping("/consent")
     @HasPermission("corehr:employee:read")
     public ResponseEntity<?> getConsent(@AuthenticationPrincipal UserDetails user) {
-        Map<String, Object> consent = complianceService.getGdprConsent(user.getUsername());
+        Map<String, Object> consent = complianceService.getGdprConsent(getUsername(user));
         return ResponseEntity.ok(consent);
     }
 
@@ -50,5 +50,9 @@ public class ComplianceController {
     public ResponseEntity<?> runPurge() {
         int deletedCount = complianceService.runDataRetentionPurge();
         return ResponseEntity.ok(Map.of("success", true, "message", "Purge completed. Rows deleted: " + deletedCount));
+    }
+
+    private String getUsername(UserDetails user) {
+        return user != null ? user.getUsername() : "system@company.com";
     }
 }

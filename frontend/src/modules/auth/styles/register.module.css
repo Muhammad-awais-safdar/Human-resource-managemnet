@@ -44,6 +44,8 @@
 }
 
 .input {
+  width: 100%;
+  box-sizing: border-box;
   background: var(--bg-tertiary);
   border: 1px solid var(--border-light);
   border-radius: var(--radius-md);

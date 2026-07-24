@@ -6,6 +6,7 @@ import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import javax.sql.DataSource;
@@ -28,16 +29,36 @@ public class PermissionAspect {
         HasPermission hasPermission = method.getAnnotation(HasPermission.class);
         String requiredPermission = hasPermission.value();
 
-        // Retrieve current authenticated user email principal
-        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        if ("anonymousUser".equals(principal) || !(principal instanceof String)) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null) {
             throw new SecurityException("Unauthorized: User not authenticated.");
         }
-        String email = (String) principal;
+
+        Object principal = authentication.getPrincipal();
+        String email;
+        if (principal instanceof org.springframework.security.core.userdetails.UserDetails userDetails) {
+            email = userDetails.getUsername();
+        } else if (principal instanceof String str && !"anonymousUser".equals(str)) {
+            email = str;
+        } else {
+            throw new SecurityException("Unauthorized: User not authenticated.");
+        }
 
         String tenantId = TenantContextHolder.getCurrentTenant();
         if (tenantId == null) {
             throw new SecurityException("Unauthorized: Tenant context not resolved.");
+        }
+
+        // Admin role bypass check
+        if (authentication.getAuthorities() != null) {
+            boolean isAdmin = authentication.getAuthorities().stream()
+                    .anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()) ||
+                                   "ROLE_SYSTEM_ADMIN".equals(a.getAuthority()) ||
+                                   "ADMIN".equals(a.getAuthority()) ||
+                                   "SYSTEM_ADMIN".equals(a.getAuthority()));
+            if (isAdmin) {
+                return;
+            }
         }
 
         // Query the database to check if the user has the required permission mapping

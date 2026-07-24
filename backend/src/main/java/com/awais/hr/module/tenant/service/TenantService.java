@@ -258,6 +258,12 @@ public class TenantService {
                 p4, "corehr:settings:write", "Modify white-label tenant branding configurations"
         );
         
+        // Fetch actual permission IDs (in case Flyway or previous seeding already created them under different UUIDs)
+        p1 = fetchPermissionId(jdbcTemplate, "corehr:employee:read", p1);
+        p2 = fetchPermissionId(jdbcTemplate, "corehr:employee:write", p2);
+        p3 = fetchPermissionId(jdbcTemplate, "corehr:org:write", p3);
+        p4 = fetchPermissionId(jdbcTemplate, "corehr:settings:write", p4);
+        
         // Insert default System Admin role
         jdbcTemplate.update(
                 "INSERT INTO role (id, name, description) VALUES (?, ?, ?) ON CONFLICT DO NOTHING",
@@ -280,35 +286,47 @@ public class TenantService {
         String mgrRoleId = UUID.randomUUID().toString();
         String hrManagerRoleId = UUID.randomUUID().toString();
 
-        jdbcTemplate.update("INSERT INTO role (id, name, description) VALUES (?, ?, ?)",
+        jdbcTemplate.update("INSERT INTO role (id, name, description) VALUES (?, ?, ?) ON CONFLICT DO NOTHING",
                 empRoleId, "EMPLOYEE", "Standard employee self-service access");
-        jdbcTemplate.update("INSERT INTO role (id, name, description) VALUES (?, ?, ?)",
+        jdbcTemplate.update("INSERT INTO role (id, name, description) VALUES (?, ?, ?) ON CONFLICT DO NOTHING",
                 mgrRoleId, "MANAGER", "Department supervisor access and approvals");
-        jdbcTemplate.update("INSERT INTO role (id, name, description) VALUES (?, ?, ?)",
+        jdbcTemplate.update("INSERT INTO role (id, name, description) VALUES (?, ?, ?) ON CONFLICT DO NOTHING",
                 hrManagerRoleId, "HR_MANAGER", "Core HR staff and operational management");
 
+        List<String> empRoles = jdbcTemplate.queryForList("SELECT id FROM role WHERE name = 'EMPLOYEE'", String.class);
+        if (!empRoles.isEmpty()) empRoleId = empRoles.get(0);
+        List<String> mgrRoles = jdbcTemplate.queryForList("SELECT id FROM role WHERE name = 'MANAGER'", String.class);
+        if (!mgrRoles.isEmpty()) mgrRoleId = mgrRoles.get(0);
+        List<String> hrMgrRoles = jdbcTemplate.queryForList("SELECT id FROM role WHERE name = 'HR_MANAGER'", String.class);
+        if (!hrMgrRoles.isEmpty()) hrManagerRoleId = hrMgrRoles.get(0);
+
         // Map permissions to standard roles
-        jdbcTemplate.update("INSERT INTO role_permission (role_id, permission_id) VALUES (?, ?)", empRoleId, p1);
+        jdbcTemplate.update("INSERT INTO role_permission (role_id, permission_id) VALUES (?, ?) ON CONFLICT DO NOTHING", empRoleId, p1);
         
-        jdbcTemplate.update("INSERT INTO role_permission (role_id, permission_id) VALUES (?, ?)", mgrRoleId, p1);
+        jdbcTemplate.update("INSERT INTO role_permission (role_id, permission_id) VALUES (?, ?) ON CONFLICT DO NOTHING", mgrRoleId, p1);
         
-        jdbcTemplate.update("INSERT INTO role_permission (role_id, permission_id) VALUES (?, ?)", hrManagerRoleId, p1);
-        jdbcTemplate.update("INSERT INTO role_permission (role_id, permission_id) VALUES (?, ?)", hrManagerRoleId, p2);
-        jdbcTemplate.update("INSERT INTO role_permission (role_id, permission_id) VALUES (?, ?)", hrManagerRoleId, p3);
-        jdbcTemplate.update("INSERT INTO role_permission (role_id, permission_id) VALUES (?, ?)", hrManagerRoleId, p4);
+        jdbcTemplate.update("INSERT INTO role_permission (role_id, permission_id) VALUES (?, ?) ON CONFLICT DO NOTHING", hrManagerRoleId, p1);
+        jdbcTemplate.update("INSERT INTO role_permission (role_id, permission_id) VALUES (?, ?) ON CONFLICT DO NOTHING", hrManagerRoleId, p2);
+        jdbcTemplate.update("INSERT INTO role_permission (role_id, permission_id) VALUES (?, ?) ON CONFLICT DO NOTHING", hrManagerRoleId, p3);
+        jdbcTemplate.update("INSERT INTO role_permission (role_id, permission_id) VALUES (?, ?) ON CONFLICT DO NOTHING", hrManagerRoleId, p4);
         
         // Hash initial admin password using BCrypt
         String hashedPassword = passwordEncoder.encode("admin123");
 
         // Create initial employee profile with hashed password
         jdbcTemplate.update(
-                "INSERT INTO employee (id, employee_code, first_name, last_name, email, password, status, joining_date) VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_DATE)",
+                "INSERT INTO employee (id, employee_code, first_name, last_name, email, password, status, joining_date) VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_DATE) ON CONFLICT DO NOTHING",
                 employeeId, "EMP-ADMIN-001", "Tenant", "Administrator", adminEmail, hashedPassword, "ACTIVE"
         );
         
+        List<String> empIds = jdbcTemplate.queryForList("SELECT id FROM employee WHERE email = ?", String.class, adminEmail);
+        if (!empIds.isEmpty()) {
+            employeeId = empIds.get(0);
+        }
+
         // Map employee to admin role
         jdbcTemplate.update(
-                "INSERT INTO employee_role (employee_id, role_id) VALUES (?, ?)",
+                "INSERT INTO employee_role (employee_id, role_id) VALUES (?, ?) ON CONFLICT DO NOTHING",
                 employeeId, roleId
         );
 
@@ -362,5 +380,10 @@ public class TenantService {
         // Seed Projects
         jdbcTemplate.update("INSERT INTO project (id, name, description) VALUES (?, 'SaaS Enterprise Suite', 'Deploy core features and isolated databases')",
                 UUID.randomUUID().toString());
+    }
+
+    private String fetchPermissionId(JdbcTemplate jdbcTemplate, String permName, String defaultId) {
+        List<String> ids = jdbcTemplate.queryForList("SELECT id FROM permission WHERE name = ?", String.class, permName);
+        return ids.isEmpty() ? defaultId : ids.get(0);
     }
 }

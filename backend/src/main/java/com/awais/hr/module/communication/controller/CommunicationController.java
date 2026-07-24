@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/v1/suite/communication")
+@RequestMapping("/suite/communication")
 public class CommunicationController {
 
     private final CommunicationService communicationService;
@@ -34,7 +34,7 @@ public class CommunicationController {
                                                @RequestBody Map<String, String> body) {
         try {
             communicationService.postAnnouncement(
-                    user.getUsername(),
+                    getUsername(user),
                     body.get("title"),
                     body.get("content"),
                     body.get("targetAudience"),
@@ -58,13 +58,13 @@ public class CommunicationController {
     @GetMapping("/notifications")
     @HasPermission("corehr:employee:read")
     public ResponseEntity<List<Map<String, Object>>> getNotifications(@AuthenticationPrincipal UserDetails user) {
-        return ResponseEntity.ok(communicationService.getNotifications(user.getUsername()));
+        return ResponseEntity.ok(communicationService.getNotifications(getUsername(user)));
     }
 
     @GetMapping("/notifications/unread-count")
     @HasPermission("corehr:employee:read")
     public ResponseEntity<?> getUnreadCount(@AuthenticationPrincipal UserDetails user) {
-        long count = communicationService.getUnreadCount(user.getUsername());
+        long count = communicationService.getUnreadCount(getUsername(user));
         return ResponseEntity.ok(Map.of("count", count));
     }
 
@@ -73,5 +73,9 @@ public class CommunicationController {
     public ResponseEntity<?> markRead(@PathVariable String id) {
         communicationService.markNotificationRead(id);
         return ResponseEntity.ok(Map.of("success", true));
+    }
+
+    private String getUsername(UserDetails user) {
+        return user != null ? user.getUsername() : "system@company.com";
     }
 }

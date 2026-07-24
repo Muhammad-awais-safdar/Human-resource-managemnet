@@ -113,14 +113,37 @@ public class ReportServiceImpl implements ReportService {
     public Map<String, Object> getDashboardMetrics(String email) {
         JdbcTemplate jdbc = new JdbcTemplate(dataSource);
 
-        long totalEmployees = Optional.ofNullable(jdbc.queryForObject(
-                "SELECT COUNT(1) FROM employee WHERE deleted = FALSE", Long.class)).orElse(0L);
-        long openLeaves = Optional.ofNullable(jdbc.queryForObject(
-                "SELECT COUNT(1) FROM leave_request WHERE status = 'PENDING' AND deleted = FALSE", Long.class)).orElse(0L);
-        long openTickets = Optional.ofNullable(jdbc.queryForObject(
-                "SELECT COUNT(1) FROM support_ticket WHERE status = 'OPEN' AND deleted = FALSE", Long.class)).orElse(0L);
-        long pendingExpenses = Optional.ofNullable(jdbc.queryForObject(
-                "SELECT COUNT(1) FROM expense_claim WHERE status = 'PENDING' AND deleted = FALSE", Long.class)).orElse(0L);
+        long totalEmployees = 0L;
+        try {
+            totalEmployees = Optional.ofNullable(jdbc.queryForObject(
+                    "SELECT COUNT(1) FROM employee WHERE status = 'ACTIVE'", Long.class)).orElse(0L);
+        } catch (Exception e) {
+            log.warn("Failed to fetch totalEmployees metric: {}", e.getMessage());
+        }
+
+        long openLeaves = 0L;
+        try {
+            openLeaves = Optional.ofNullable(jdbc.queryForObject(
+                    "SELECT COUNT(1) FROM leave_request WHERE status = 'PENDING' AND deleted = FALSE", Long.class)).orElse(0L);
+        } catch (Exception e) {
+            log.warn("Failed to fetch openLeaves metric: {}", e.getMessage());
+        }
+
+        long openTickets = 0L;
+        try {
+            openTickets = Optional.ofNullable(jdbc.queryForObject(
+                    "SELECT COUNT(1) FROM support_ticket WHERE status = 'OPEN' AND deleted = FALSE", Long.class)).orElse(0L);
+        } catch (Exception e) {
+            log.warn("Failed to fetch openTickets metric: {}", e.getMessage());
+        }
+
+        long pendingExpenses = 0L;
+        try {
+            pendingExpenses = Optional.ofNullable(jdbc.queryForObject(
+                    "SELECT COUNT(1) FROM expense_claim WHERE status = 'PENDING' AND deleted = FALSE", Long.class)).orElse(0L);
+        } catch (Exception e) {
+            log.warn("Failed to fetch pendingExpenses metric: {}", e.getMessage());
+        }
 
         return Map.of(
                 "totalEmployees", totalEmployees,

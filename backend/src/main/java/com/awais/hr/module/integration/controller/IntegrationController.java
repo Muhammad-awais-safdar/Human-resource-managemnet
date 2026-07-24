@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/v1/suite/integrations")
+@RequestMapping("/suite/integrations")
 public class IntegrationController {
 
     private final IntegrationService integrationService;

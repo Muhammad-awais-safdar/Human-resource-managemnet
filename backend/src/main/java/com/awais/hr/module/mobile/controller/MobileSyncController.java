@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/v1/suite/mobile")
+@RequestMapping("/suite/mobile")
 public class MobileSyncController {
 
     private final MobileSyncService mobileSyncService;
@@ -26,7 +26,7 @@ public class MobileSyncController {
                                              @RequestBody Map<String, String> body) {
         try {
             mobileSyncService.registerDevice(
-                    user.getUsername(),
+                    getUsername(user),
                     body.get("deviceToken"),
                     body.get("platform"),
                     body.get("clientVersion")
@@ -41,7 +41,7 @@ public class MobileSyncController {
     @HasPermission("corehr:employee:read")
     public ResponseEntity<?> syncDelta(@AuthenticationPrincipal UserDetails user,
                                         @RequestParam String deviceToken) {
-        Map<String, Object> delta = mobileSyncService.syncDelta(deviceToken, user.getUsername());
+        Map<String, Object> delta = mobileSyncService.syncDelta(deviceToken, getUsername(user));
         return ResponseEntity.ok(Map.of("success", true, "data", delta));
     }
 
@@ -59,7 +59,7 @@ public class MobileSyncController {
     @GetMapping("/devices")
     @HasPermission("corehr:employee:read")
     public ResponseEntity<List<Map<String, Object>>> getDevices(@AuthenticationPrincipal UserDetails user) {
-        return ResponseEntity.ok(mobileSyncService.getDevicesForEmployee(user.getUsername()));
+        return ResponseEntity.ok(mobileSyncService.getDevicesForEmployee(getUsername(user)));
     }
 
     @DeleteMapping("/deregister")
@@ -67,5 +67,9 @@ public class MobileSyncController {
     public ResponseEntity<?> deregister(@RequestParam String deviceToken) {
         mobileSyncService.deregisterDevice(deviceToken);
         return ResponseEntity.ok(Map.of("success", true, "message", "Device deregistered."));
+    }
+
+    private String getUsername(UserDetails user) {
+        return user != null ? user.getUsername() : "system@company.com";
     }
 }

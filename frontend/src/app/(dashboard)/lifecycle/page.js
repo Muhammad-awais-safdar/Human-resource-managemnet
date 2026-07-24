@@ -210,7 +210,7 @@ export default function LifecycleDashboardPage() {
       <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap', marginBottom: '32px' }}>
         
         {/* Invite Employee Form */}
-        <form onSubmit={handleInviteEmployee} className="form-card" style={{ flex: 1, minWidth: '320px', margin: 0 }} noValidate>
+        <form onSubmit={handleInviteEmployee} className="form-card" style={{ flex: '1 1 300px', minWidth: 0, margin: 0 }} noValidate>
           <h3>Invite New Employee</h3>
           <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '12px', lineHeight: '1.4' }}>
             Enter details to generate a secure activation token. The invitee can establish their password using this token.
@@ -228,8 +228,8 @@ export default function LifecycleDashboardPage() {
             />
           </div>
 
-          <div style={{ display: 'flex', gap: '12px', marginBottom: '12px' }}>
-            <div className={styles.formGroup} style={{ flex: 1 }}>
+          <div style={{ display: 'flex', gap: '12px', marginBottom: '12px', flexWrap: 'wrap' }}>
+            <div className={styles.formGroup} style={{ flex: '1 1 140px', minWidth: 0 }}>
               <label className={styles.label}>First Name</label>
               <input 
                 type="text" 
@@ -240,7 +240,7 @@ export default function LifecycleDashboardPage() {
                 disabled={isPending}
               />
             </div>
-            <div className={styles.formGroup} style={{ flex: 1 }}>
+            <div className={styles.formGroup} style={{ flex: '1 1 140px', minWidth: 0 }}>
               <label className={styles.label}>Last Name</label>
               <input 
                 type="text" 
@@ -271,7 +271,7 @@ export default function LifecycleDashboardPage() {
               className={styles.input}
               value={regRoleId}
               onChange={(e) => setRegRoleId(e.target.value)}
-              style={{ background: 'var(--bg-tertiary)' }}
+              style={{ background: 'var(--bg-tertiary)', width: '100%' }}
               disabled={isPending}
             >
               {roles.map(r => (
@@ -301,7 +301,7 @@ export default function LifecycleDashboardPage() {
 
 
         {/* Log Milestone Form */}
-        <form onSubmit={handleLogTimeline} className="form-card" style={{ flex: 1, minWidth: '320px', margin: 0 }} noValidate>
+        <form onSubmit={handleLogTimeline} className="form-card" style={{ flex: '1 1 300px', minWidth: 0, margin: 0 }} noValidate>
           <h3>Log Lifecycle Event</h3>
           
           <div className={styles.formGroup} style={{ marginBottom: '16px' }}>
@@ -310,7 +310,7 @@ export default function LifecycleDashboardPage() {
               className={styles.input}
               value={selectedEmp}
               onChange={(e) => setSelectedEmp(e.target.value)}
-              style={{ background: 'var(--bg-tertiary)' }}
+              style={{ background: 'var(--bg-tertiary)', width: '100%' }}
               disabled={isPending}
             >
               {employees.map(emp => (
@@ -325,7 +325,7 @@ export default function LifecycleDashboardPage() {
               className={styles.input}
               value={eventType}
               onChange={(e) => setEventType(e.target.value)}
-              style={{ background: 'var(--bg-tertiary)' }}
+              style={{ background: 'var(--bg-tertiary)', width: '100%' }}
               disabled={isPending}
             >
               <option value="PROMOTION">Promotion</option>
@@ -363,7 +363,7 @@ export default function LifecycleDashboardPage() {
         </form>
 
         {/* Initiate Clearance Form */}
-        <form onSubmit={handleStartClearance} className="form-card" style={{ flex: 1, minWidth: '320px', margin: 0 }} noValidate>
+        <form onSubmit={handleStartClearance} className="form-card" style={{ flex: '1 1 300px', minWidth: 0, margin: 0 }} noValidate>
           <h3>Initiate Exit Clearance</h3>
           <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '20px', lineHeight: '1.6' }}>
             Trigger IT, Finance, and HR clearance checksheets for resigning employee departures.
@@ -375,7 +375,7 @@ export default function LifecycleDashboardPage() {
               className={styles.input}
               value={clearanceEmp}
               onChange={(e) => setClearanceEmp(e.target.value)}
-              style={{ background: 'var(--bg-tertiary)' }}
+              style={{ background: 'var(--bg-tertiary)', width: '100%' }}
               disabled={isPending}
             >
               {employees.map(emp => (
