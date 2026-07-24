@@ -16,8 +16,8 @@
 }
 
 .sidebar {
-  width: 260px;
-  min-width: 260px;
+  width: 291px;
+  min-width: 291px;
   height: 100vh;
   max-height: 100vh;
   background-color: var(--bg-secondary);
@@ -25,7 +25,8 @@
   display: flex;
   flex-direction: column;
   padding: 24px 16px;
-  overflow: hidden; /* Sidebar container is fixed; sidebar-nav handles scrolling */
+  overflow: hidden;
+  /* Sidebar container is fixed; sidebar-nav handles scrolling */
   box-sizing: border-box;
   flex-shrink: 0;
 }
@@ -109,10 +110,13 @@
   flex-direction: column;
   gap: 6px;
   flex: 1;
-  min-height: 0; /* CRITICAL: Enables flex child overflow scrolling inside 100vh container */
-  overflow-y: auto; /* Independent smooth scroll for sidebar items */
+  min-height: 0;
+  /* CRITICAL: Enables flex child overflow scrolling inside 100vh container */
+  overflow-y: auto;
+  /* Independent smooth scroll for sidebar items */
   overflow-x: hidden;
-  overscroll-behavior: contain; /* Prevents mouse wheel scrolling from affecting main page */
+  overscroll-behavior: contain;
+  /* Prevents mouse wheel scrolling from affecting main page */
   padding-right: 6px;
 }
 
@@ -183,7 +187,8 @@
   padding: 40px;
   overflow-y: auto;
   overflow-x: hidden;
-  overscroll-behavior: contain; /* Prevents main content scroll from affecting sidebar */
+  overscroll-behavior: contain;
+  /* Prevents main content scroll from affecting sidebar */
   box-sizing: border-box;
 }
 
@@ -384,10 +389,21 @@
 }
 
 /* Node Types Colors */
-.badge-legal_entity { background-color: #a855f7; }
-.badge-cost_center { background-color: #f97316; }
-.badge-department { background-color: #3b82f6; }
-.badge-team { background-color: #14b8a6; }
+.badge-legal_entity {
+  background-color: #a855f7;
+}
+
+.badge-cost_center {
+  background-color: #f97316;
+}
+
+.badge-department {
+  background-color: #3b82f6;
+}
+
+.badge-team {
+  background-color: #14b8a6;
+}
 
 .org-children {
   display: flex;
@@ -453,7 +469,7 @@
 }
 
 .kanban-column-count {
-  background-color: rgba(255,255,255,0.06);
+  background-color: rgba(255, 255, 255, 0.06);
   padding: 2px 8px;
   border-radius: 999px;
   font-size: 0.75rem;
@@ -521,9 +537,17 @@
 }
 
 @keyframes scanLaser {
-  0% { top: 0%; }
-  50% { top: 100%; }
-  100% { top: 0%; }
+  0% {
+    top: 0%;
+  }
+
+  50% {
+    top: 100%;
+  }
+
+  100% {
+    top: 0%;
+  }
 }
 
 /* Signature Pad Input */
@@ -542,4 +566,3 @@
   justify-content: center;
   letter-spacing: 2px;
 }
-
