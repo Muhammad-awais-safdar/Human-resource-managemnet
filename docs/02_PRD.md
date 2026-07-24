@@ -63,6 +63,8 @@ Core HR is the baseline mandatory module. All other modules are toggled at the t
 | **Performance Management** | OKR tracking, 360-degree reviews, Performance reviews, Calibration. | Optional |
 | **Expense & Asset Management**| Asset assignment, Expense claims, Approval chains, Receipt OCR scan. | Optional |
 | **Workflow Engine** | Dynamic approval logic, Conditional triggers (e.g. Leave approval chain by salary grade).| Core |
+| **SaaS Subscription Billing** | Multi-tier plans, Usage/Seat pricing, Provider-agnostic gateway integration, Invoicing, Refunds. | Core (Master) |
+| **Payroll Disbursement** | Multi-bank API adapters, Wise/Payoneer/ACH/SEPA routing, Batch approval workflows, Reconciliation.| Optional (Tenant)|
 
 ---
 
@@ -83,6 +85,18 @@ Core HR is the baseline mandatory module. All other modules are toggled at the t
 ### 5.4. Global Payroll Engine
 *   **Salary Components:** Base Salary, Custom Allowances (taxable/non-taxable), Deductions (statutory & voluntary).
 *   **Tax Formula Engine:** A configurable syntax compiler (using simple scripting or expressions) to define payroll tax calculation logic based on local jurisdiction.
+
+### 5.5. Enterprise SaaS Subscription Billing (Payment Domain 1)
+*   **Multi-Tier Plan Matrix:** Supports Free Trial (14-day), Starter, Professional, Enterprise, Custom Quotation, and Build Your Own (modular) pricing models.
+*   **Billing Models:** Employee/seat-based pricing, module-based add-ons, and usage-based overage metering (API calls, document storage).
+*   **Billing Lifecycle:** Supports monthly/annual cycles, auto-renewals, 7-day grace periods, immediate/end-of-cycle upgrades & downgrades, pause/resume, cancellations, coupons, taxes (VAT/GST/reverse charge), invoices, refunds, and credit notes.
+*   **Provider-Agnostic Integration:** Decoupled billing framework supporting Stripe, Paddle, Lemon Squeezy, PayPal, and regional gateways via adapter interfaces with full webhook, status sync, idempotency, and audit trail support.
+
+### 5.6. Tenant Payroll Salary Disbursement Framework (Payment Domain 2)
+*   **Non-Financial Custody:** The HR SaaS engine never holds or directly transfers tenant funds. It acts strictly as an orchestrator and monitoring integration hub.
+*   **Tenant Provider Autonomy & Isolation:** Each tenant independently configures their preferred disbursement provider (Bank APIs, Wise Business, Payoneer, ACH, SEPA, Local ISO 20022 Bank APIs, Digital Wallets) with encrypted credentials stored in isolated tenant key vaults.
+*   **Batch Orchestration Workflow:** Standardized 9-step pipeline: `Generate Payroll` $\rightarrow$ `Approve Payroll (MFA)` $\rightarrow$ `Create Payment Batch` $\rightarrow$ `Send Batch to Provider API` $\rightarrow$ `Receive Provider Response` $\rightarrow$ `Track Payment Status` $\rightarrow$ `Reconcile Transactions` $\rightarrow$ `Generate Payslips` $\rightarrow$ `Notify Employees`.
+*   **Enterprise Resilience & Security:** Provider abstraction layer utilizing Adapter & Strategy design patterns, circuit breakers, queue-based background processing (RabbitMQ), idempotency keys, OAuth token refresh, MFA approval enforcement, and audit logs.
 
 ---
 

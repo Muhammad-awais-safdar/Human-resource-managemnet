@@ -235,3 +235,122 @@ CREATE INDEX idx_audit_employee ON audit_trail(employee_id);
     *   `db/migration/tenant/core/`: Baseline schema for all tenants.
     *   `db/migration/tenant/modules/{module_name}/`: Module-specific migrations.
 *   **Migration Execution:** When a new tenant is provisioned, the provisioning engine runs Flyway against the newly created database target point. If an existing tenant purchases a new module, only the migrations inside `db/migration/tenant/modules/{module_name}/` are executed.
+
+---
+
+## 7. Enterprise Payment Framework Database Schemas
+
+### 7.1. Master DB Schema: SaaS Subscription Billing (Payment Domain 1)
+
+```sql
+CREATE TABLE subscription_plan (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    code VARCHAR(50) NOT NULL UNIQUE, -- FREE_TRIAL, STARTER, PROFESSIONAL, ENTERPRISE, BUILD_YOUR_OWN
+    name VARCHAR(100) NOT NULL,
+    base_price_usd NUMERIC(12, 2) NOT NULL,
+    per_seat_price_usd NUMERIC(12, 2) DEFAULT 0.00,
+    billing_cycle VARCHAR(20) NOT NULL, -- MONTHLY, ANNUAL
+    max_employees INT,
+    max_storage_gb INT,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+
+CREATE TABLE billing_credit_note (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id UUID NOT NULL,
+    credit_note_number VARCHAR(100) NOT NULL UNIQUE,
+    amount NUMERIC(12, 2) NOT NULL,
+    currency VARCHAR(10) DEFAULT 'USD',
+    reason TEXT,
+    status VARCHAR(30) DEFAULT 'ISSUED', -- ISSUED, APPLIED, VOID
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+
+CREATE TABLE billing_refund (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id UUID NOT NULL,
+    invoice_id UUID NOT NULL,
+    amount NUMERIC(12, 2) NOT NULL,
+    provider_refund_id VARCHAR(255),
+    status VARCHAR(30) DEFAULT 'PROCESSED',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+
+CREATE TABLE tenant_usage_metric (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id UUID NOT NULL,
+    metric_type VARCHAR(50) NOT NULL, -- ACTIVE_SEATS, STORAGE_BYTES, API_CALLS
+    quantity BIGINT NOT NULL,
+    recorded_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+```
+
+### 7.2. Tenant DB Schema: Payroll Salary Disbursement (Payment Domain 2)
+
+```sql
+CREATE TABLE tenant_payment_credential (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    provider_code VARCHAR(50) NOT NULL, -- WISE, PAYONEER, ACH_DIRECT, SEPA_ISO20022, LOCAL_BANK
+    environment VARCHAR(20) DEFAULT 'PRODUCTION', -- SANDBOX, PRODUCTION
+    encrypted_api_key TEXT,
+    encrypted_secret_key TEXT,
+    encrypted_oauth_token TEXT,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+
+CREATE TABLE tenant_bank_account (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    bank_name VARCHAR(100) NOT NULL,
+    account_number_encrypted TEXT NOT NULL,
+    routing_number_encrypted TEXT,
+    iban_encrypted TEXT,
+    swift_bic VARCHAR(20),
+    currency VARCHAR(10) NOT NULL DEFAULT 'USD',
+    is_primary BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+
+CREATE TABLE payroll_disbursement_batch (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    batch_name VARCHAR(150) NOT NULL,
+    payroll_run_id UUID NOT NULL,
+    provider_code VARCHAR(50) NOT NULL,
+    total_amount NUMERIC(14, 2) NOT NULL,
+    currency VARCHAR(10) NOT NULL DEFAULT 'USD',
+    item_count INT NOT NULL,
+    status VARCHAR(30) NOT NULL DEFAULT 'PENDING_APPROVAL', -- PENDING_APPROVAL, SUBMITTED, PROCESSING, COMPLETED, FAILED, PARTIAL
+    idempotency_key VARCHAR(128) NOT NULL UNIQUE,
+    approved_by UUID,
+    approved_at TIMESTAMP WITH TIME ZONE,
+    provider_batch_ref VARCHAR(255),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+
+CREATE TABLE payroll_disbursement_item (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    batch_id UUID NOT NULL REFERENCES payroll_disbursement_batch(id) ON DELETE CASCADE,
+    employee_id UUID NOT NULL,
+    recipient_name VARCHAR(150) NOT NULL,
+    bank_account_number_encrypted TEXT NOT NULL,
+    bank_routing_code VARCHAR(50),
+    amount NUMERIC(12, 2) NOT NULL,
+    currency VARCHAR(10) DEFAULT 'USD',
+    status VARCHAR(30) DEFAULT 'PENDING', -- PENDING, DISBURSED, FAILED, RETURNED
+    provider_transaction_ref VARCHAR(255),
+    failure_reason TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+
+CREATE TABLE payroll_transaction_log (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    batch_id UUID NOT NULL REFERENCES payroll_disbursement_batch(id),
+    event_type VARCHAR(50) NOT NULL, -- BATCH_CREATED, APPROVED, SUBMITTED_TO_PROVIDER, CALLBACK_RECEIVED, RECONCILED
+    payload JSONB,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+```
+

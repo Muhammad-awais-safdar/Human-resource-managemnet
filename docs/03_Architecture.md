@@ -156,3 +156,58 @@ graph LR
 2.  **Step 2: Package Extraction:** Move `com.awais.hr.module.payroll` into a separate Spring Boot application.
 3.  **Step 3: Protocol Swap:** Replace the local Spring injection of `PayrollModuleService` in the monolithic application with a REST or gRPC client (e.g., `FeignClient` or WebClient) pointing to the new service endpoint.
 4.  **Step 4: Frontend Split:** The self-contained `/src/modules/payroll/` directory can be packaged as a separate micro-frontend or dynamic module and integrated via Next.js Multi-Zones or module federation.
+
+---
+
+## 8. Enterprise Payment Integration Framework Architecture
+
+To support enterprise-scale multi-tenancy, global operations, and financial security, the platform embeds a provider-agnostic, decoupled payment architecture covering two isolated domains:
+
+```mermaid
+graph TD
+    subgraph Payment Domain 1: SaaS Subscription Billing (Platform Context)
+        MasterApp[Platform Master Billing Core] --> SubscriptionStrategy[Subscription Provider Strategy Factory]
+        SubscriptionStrategy --> StripeAdapter[Stripe Subscription Adapter]
+        SubscriptionStrategy --> PaddleAdapter[Paddle Subscription Adapter]
+        SubscriptionStrategy --> LemonAdapter[Lemon Squeezy Adapter]
+        SubscriptionStrategy --> PaypalAdapter[PayPal Subscription Adapter]
+    end
+
+    subgraph Payment Domain 2: Payroll Salary Disbursement (Tenant Context)
+        TenantApp[Tenant Payroll Engine] --> DisbursementStrategy[Payroll Disbursement Provider Factory]
+        DisbursementStrategy --> WiseAdapter[Wise Business Adapter]
+        DisbursementStrategy --> PayoneerAdapter[Payoneer Batch Adapter]
+        DisbursementStrategy --> AchAdapter[ACH / Direct Deposit Adapter]
+        DisbursementStrategy --> SepaAdapter[SEPA ISO 20022 Adapter]
+        DisbursementStrategy --> LocalBankAdapter[Local Bank API Adapter]
+    end
+```
+
+### 8.1. Payment Domain 1 — SaaS Subscription Billing
+*   **Design Pattern:** Strategy & Adapter Patterns (`SubscriptionPaymentProvider` interface).
+*   **Provider Agnosticism:** Core subscription logic operates against generic DTOs (`SubscriptionRequest`, `CheckoutSession`, `InvoiceRecord`). Adding a new payment provider (e.g., Razorpay, Adyen) requires creating a single adapter class implementing `SubscriptionPaymentProvider`.
+*   **Webhook & Synchronization Pipeline:** Webhooks from payment gateways hit `/api/${api.version}/suite/billing/webhooks/{provider}`. Webhook signatures are validated using HMAC-SHA256 before emitting `SubscriptionUpdatedEvent` or `InvoicePaidEvent` to update tenant schema limits asynchronously.
+
+### 8.2. Payment Domain 2 — Payroll Salary Disbursement
+*   **Non-Custodial Architecture:** The platform never touches, holds, or transfers funds directly. All monetary movements occur strictly via direct client-to-bank API calls or authorized OAuth payment gateway endpoints.
+*   **Tenant Credential Isolation:** Provider credentials (API keys, secret tokens, OAuth refresh tokens, bank account numbers) are stored in tenant-isolated databases (`tenant_payment_credential`) encrypted with Envelope Encryption (AES-256-GCM + KMS Key). Cross-tenant credential access is physically impossible.
+*   **9-Step Batch Orchestration Workflow:**
+```mermaid
+sequenceDiagram
+    autonumber
+    Tenant Admin->>Payroll Engine: 1. Generate Monthly Payroll Run
+    Tenant Admin->>Workflow Engine: 2. Submit for Approval (Enforces MFA & Role Rules)
+    Approver->>Payroll Engine: 3. Approve Payroll (MFA Verified)
+    Payroll Engine->>Disbursement Engine: 4. Create Payment Batch (LOCKED)
+    Disbursement Engine->>Provider Adapter: 5. Send Payment Batch to Provider API (Wise/Bank/ACH)
+    Provider Adapter-->>Disbursement Engine: 6. Receive Immediate API ACK & Batch Ref ID
+    Provider API-->>Webhook Controller: 7. Asynchronous Callbacks (Payment Status Updates)
+    Disbursement Engine->>Ledger Service: 8. Reconcile Transactions & Update Status
+    Ledger Service->>Employee Portal: 9. Generate Encrypted Payslips & Dispatch Alerts
+```
+
+### 8.3. Resilience, Security & Compliance
+*   **Idempotency Guarantee:** All disbursement API payloads include a unique `X-Idempotency-Key` (`UUIDv4` composed of `tenant_id` + `batch_id` + `payroll_run_id`). Duplicate batch submissions are safely rejected by providers without double-paying employees.
+*   **Circuit Breaker & Queueing:** High-volume batch requests are dispatched asynchronously via RabbitMQ (`payroll.disbursement.queue`). Resilience4j Circuit Breakers prevent cascading failures if a bank API experiences downtime.
+*   **Compliance:** Fully PCI-DSS compliant (no credit card data stored locally; tokenized checkout sessions used exclusively) and GDPR compliant (bank account details stored in isolated encrypted tenant databases).
+

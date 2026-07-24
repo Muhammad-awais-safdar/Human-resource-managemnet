@@ -530,3 +530,20 @@
 - `[x]` **Frontend Integration:** API client bound to `/suite/tenant-analytics` endpoints (`tenantAnalyticsService.js`).
 
 ---
+
+# Phase 72: Enterprise Payment Framework — SaaS Subscription Billing (Payment Domain 1)
+- `[x]` **Architecture Review:** Provider-agnostic Strategy & Adapter architecture (`SubscriptionPaymentProvider`).
+- `[x]` **Provider Adapters:** Integrations designed for Stripe, Paddle, Lemon Squeezy, PayPal, and custom local gateways.
+- `[x]` **Billing Lifecycle:** Multi-tier plans (Free Trial, Starter, Pro, Enterprise, BYO), usage/seat metering, upgrades/downgrades, coupons, taxes, invoices, refunds, and credit notes.
+- `[x]` **Webhook Pipeline:** HMAC-SHA256 signature verification & idempotent event handling (`/suite/billing/webhooks/{provider}`).
+
+---
+
+# Phase 73: Enterprise Payment Framework — Payroll Salary Disbursement (Payment Domain 2)
+- `[x]` **Non-Custodial Architecture:** Direct tenant-to-bank API orchestration without holding customer funds.
+- `[x]` **Tenant Credential Isolation:** AES-256-GCM envelope-encrypted tenant credential vault (`tenant_payment_credential`).
+- `[x]` **Multi-Bank Adapters:** Abstraction layer for Wise Business, Payoneer, ACH, SEPA ISO 20022, and Local Bank APIs.
+- `[x]` **9-Step Workflow Pipeline:** `Generate Payroll` $\rightarrow$ `Approve (MFA)` $\rightarrow$ `Create Batch` $\rightarrow$ `Send API` $\rightarrow$ `ACK` $\rightarrow$ `Track Status` $\rightarrow$ `Reconcile` $\rightarrow$ `Payslips` $\rightarrow$ `Notify`.
+- `[x]` **Resilience & Security:** Idempotency keys (`X-Idempotency-Key`), RabbitMQ background batch queues, Resilience4j circuit breakers, and PCI/GDPR compliance.
+
+

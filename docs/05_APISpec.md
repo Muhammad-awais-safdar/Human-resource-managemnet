@@ -244,3 +244,83 @@ Updates biometric and geolocation timestamps.
   "timestamp": "2026-07-17T23:37:00Z"
 }
 ```
+
+### 4.7. SaaS Subscription Billing & Checkout (Payment Domain 1)
+
+#### 4.7.1. Initiate Checkout Session
+*   **Endpoint:** `POST https://awais-hr.com/api/${api.version}/suite/billing/checkout`
+*   **Request Payload:**
+```json
+{
+  "planCode": "ENTERPRISE",
+  "billingCycle": "ANNUAL",
+  "seatCount": 150,
+  "provider": "STRIPE",
+  "successUrl": "https://company.awais-hr.com/billing?status=success",
+  "cancelUrl": "https://company.awais-hr.com/billing?status=cancelled"
+}
+```
+*   **Response (200 OK):**
+```json
+{
+  "success": true,
+  "data": {
+    "sessionId": "cs_test_a1B2c3D4e5F6",
+    "checkoutUrl": "https://checkout.stripe.com/pay/cs_test_a1B2c3D4e5F6",
+    "amountTotal": 1499.00,
+    "currency": "USD"
+  },
+  "timestamp": "2026-07-24T14:15:00Z"
+}
+```
+
+#### 4.7.2. Payment Gateway Webhook Receiver
+*   **Endpoint:** `POST https://awais-hr.com/api/${api.version}/suite/billing/webhooks/{provider}`
+*   **Headers:** `X-Webhook-Signature: t=1784900,v1=9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08`
+*   **Response (200 OK):** `{"received": true}`
+
+---
+
+### 4.8. Payroll Salary Disbursement Management (Payment Domain 2)
+
+#### 4.8.1. Configure Tenant Disbursement Gateway
+*   **Endpoint:** `POST https://{tenant}.awais-hr.com/api/${api.version}/suite/payroll-disbursement/config`
+*   **Request Payload:**
+```json
+{
+  "providerCode": "WISE",
+  "environment": "PRODUCTION",
+  "apiKey": "wise_live_key_9988776655",
+  "secretKey": "sec_key_1122334455",
+  "defaultBankAccountId": "b812b19e-4e4f-4d43-9877-e6f9a0c20111"
+}
+```
+*   **Response (200 OK):** `{"success": true, "message": "Disbursement provider configured successfully."}`
+
+#### 4.8.2. Create & Execute Payroll Payment Batch
+*   **Endpoint:** `POST https://{tenant}.awais-hr.com/api/${api.version}/suite/payroll-disbursement/batches/{batchId}/disburse`
+*   **Headers:** `X-Idempotency-Key: idemp-awais-batch-701-20260724`
+*   **Request Payload:**
+```json
+{
+  "mfaVerificationCode": "286206",
+  "disbursementNotes": "July 2026 Global Payroll Salary Payment"
+}
+```
+*   **Response (202 Accepted):**
+```json
+{
+  "success": true,
+  "data": {
+    "batchId": "batch-701",
+    "providerCode": "WISE",
+    "providerBatchRef": "WISE-BATCH-998877",
+    "totalAmount": 145000.00,
+    "currency": "USD",
+    "status": "SUBMITTED",
+    "idempotencyKey": "idemp-awais-batch-701-20260724"
+  },
+  "timestamp": "2026-07-24T14:15:00Z"
+}
+```
+
