@@ -223,10 +223,10 @@
 ---
 
 ### Phase 35: Workforce Planning
-- `[ ]` **Backend:** Workforce forecasting engine, headcount planning tables, position budgeting, vacancy planning, hiring forecast calculators, department growth planning, demand/supply analysis, scenario planning, capacity planning models.
-- `[ ]` **Backend Test:** Forecast accuracy validation unit tests; capacity constraint checks.
-- `[ ]` **Frontend:** Workforce planning dashboard, headcount charts, scenario comparison view.
-- `[ ]` **Frontend Integration:** Planning API hooks bound to headcount and forecast endpoints.
+- `[x]` **Backend:** Workforce forecasting engine, headcount planning tables, position budgeting, vacancy planning, hiring forecast calculators, department growth planning, demand/supply analysis, scenario planning, capacity planning models.
+- `[x]` **Backend Test:** Forecast accuracy validation unit tests; capacity constraint checks.
+- `[x]` **Frontend:** Workforce planning dashboard, headcount charts, scenario comparison view.
+- `[x]` **Frontend Integration:** Planning API hooks bound to headcount and forecast endpoints.
 
 ---
 

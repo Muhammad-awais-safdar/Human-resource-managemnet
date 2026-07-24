@@ -5,13 +5,15 @@ import * as workforceService from '../../../services/workforceService';
 import styles from '../../../modules/auth/styles/register.module.css';
 
 export default function WorkforcePage() {
-  const [activeTab, setActiveTab] = useState('schedule'); // schedule, open-shifts
+  const [activeTab, setActiveTab] = useState('schedule'); // schedule, open-shifts, planning-plans
   const [schedules, setSchedules] = useState([]);
   const [openShifts, setOpenShifts] = useState([]);
+  const [plans, setPlans] = useState([]);
 
   // Form states
   const [newSchedule, setNewSchedule] = useState({ employeeId: '', scheduleDate: '', startTime: '09:00', endTime: '17:00', status: 'SCHEDULED' });
   const [newOpenShift, setNewOpenShift] = useState({ departmentId: '', shiftDate: '', startTime: '09:00', endTime: '17:00', requiredCount: 1, status: 'OPEN' });
+  const [newPlan, setNewPlan] = useState({ title: '', planningYear: new Date().getFullYear(), targetHeadcount: 10, allocatedBudget: 100000, currency: 'USD', status: 'DRAFT' });
 
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState('');
@@ -24,6 +26,10 @@ export default function WorkforcePage() {
 
     workforceService.getOpenShifts()
       .then(res => setOpenShifts(res || []))
+      .catch(err => console.error(err));
+
+    workforceService.getPlans()
+      .then(res => setPlans(res || []))
       .catch(err => console.error(err));
   };
 
@@ -71,6 +77,26 @@ export default function WorkforcePage() {
     });
   };
 
+  const handleCreatePlan = (e) => {
+    e.preventDefault();
+    setError('');
+    setMessage('');
+    if (!newPlan.title) {
+      return setError('Plan Title is required.');
+    }
+
+    startTransition(async () => {
+      try {
+        await workforceService.createPlan(newPlan);
+        setMessage('Workforce plan created successfully.');
+        setNewPlan({ title: '', planningYear: new Date().getFullYear(), targetHeadcount: 10, allocatedBudget: 100000, currency: 'USD', status: 'DRAFT' });
+        loadData();
+      } catch (err) {
+        setError(err.message || 'Failed to create workforce plan.');
+      }
+    });
+  };
+
   const handleBidOnShift = (openShiftId) => {
     setError('');
     setMessage('');
@@ -89,8 +115,8 @@ export default function WorkforcePage() {
   return (
     <div>
       <header className="page-header">
-        <h1 className="page-title">Workforce Scheduling</h1>
-        <p className="page-subtitle">Allocate working shifts, bid on open calendars, and verify scheduled hours rosters</p>
+        <h1 className="page-title">Workforce Management</h1>
+        <p className="page-subtitle">Workforce planning, headcount forecasting, scheduling, and shift bidding</p>
       </header>
 
       {error && <div className={`${styles.alert} ${styles.alertDanger}`} style={{ marginBottom: '24px' }}>{error}</div>}
@@ -103,6 +129,9 @@ export default function WorkforcePage() {
         </button>
         <button className={`tab-btn ${activeTab === 'open-shifts' ? 'active' : ''}`} onClick={() => setActiveTab('open-shifts')} style={{ background: activeTab === 'open-shifts' ? 'var(--bg-tertiary)' : 'none', border: 'none', color: '#fff', padding: '8px 16px', borderRadius: '4px', cursor: 'pointer' }}>
           Available Open Shifts
+        </button>
+        <button className={`tab-btn ${activeTab === 'planning-plans' ? 'active' : ''}`} onClick={() => setActiveTab('planning-plans')} style={{ background: activeTab === 'planning-plans' ? 'var(--bg-tertiary)' : 'none', border: 'none', color: '#fff', padding: '8px 16px', borderRadius: '4px', cursor: 'pointer' }}>
+          Workforce Planning (Phase 35)
         </button>
       </div>
 
@@ -203,6 +232,51 @@ export default function WorkforcePage() {
                 <input type="number" min="1" className={styles.input} value={newOpenShift.requiredCount} onChange={e => setNewOpenShift({ ...newOpenShift, requiredCount: parseInt(e.target.value) || 1 })} disabled={isPending} />
               </div>
               <button type="submit" className={`${styles.btn} ${styles.btnPrimary}`} disabled={isPending}>Post Open Shift</button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'planning-plans' && (
+        <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap' }}>
+          <div style={{ flex: 2, minWidth: '350px' }} className="form-card">
+            <h3>Headcount Plans & Capacity Models</h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '16px' }}>
+              {plans.map((p, idx) => (
+                <div key={idx} style={{ padding: '16px', background: 'var(--bg-tertiary)', border: '1px solid var(--border-light)', borderRadius: 'var(--radius-md)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div>
+                    <strong style={{ color: 'var(--accent-primary)', fontSize: '0.95rem' }}>{p.title} ({p.planningYear || p.planning_year})</strong>
+                    <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '4px' }}>
+                      Target Headcount: {p.targetHeadcount || p.target_headcount} | Budget: ${(p.allocatedBudget || p.allocated_budget || 0).toLocaleString()} {p.currency}
+                    </div>
+                  </div>
+                  <span style={{ fontSize: '0.75rem', background: 'rgba(16, 185, 129, 0.1)', color: 'var(--accent-success)', padding: '4px 10px', borderRadius: '4px', fontWeight: 'bold' }}>{p.status}</span>
+                </div>
+              ))}
+              {plans.length === 0 && <p style={{ textAlign: 'center', color: 'var(--text-muted)' }}>No workforce planning scenarios found.</p>}
+            </div>
+          </div>
+
+          <div style={{ flex: 1, minWidth: '300px' }} className="form-card">
+            <h3>Create Workforce Plan</h3>
+            <form onSubmit={handleCreatePlan} style={{ marginTop: '16px' }}>
+              <div className={styles.formGroup} style={{ marginBottom: '12px' }}>
+                <label className={styles.label}>Plan Title</label>
+                <input type="text" className={styles.input} placeholder="e.g. FY2027 Engineering Expansion" value={newPlan.title} onChange={e => setNewPlan({ ...newPlan, title: e.target.value })} disabled={isPending} />
+              </div>
+              <div className={styles.formGroup} style={{ marginBottom: '12px' }}>
+                <label className={styles.label}>Planning Year</label>
+                <input type="number" className={styles.input} value={newPlan.planningYear} onChange={e => setNewPlan({ ...newPlan, planningYear: parseInt(e.target.value) || 2027 })} disabled={isPending} />
+              </div>
+              <div className={styles.formGroup} style={{ marginBottom: '12px' }}>
+                <label className={styles.label}>Target Headcount</label>
+                <input type="number" className={styles.input} value={newPlan.targetHeadcount} onChange={e => setNewPlan({ ...newPlan, targetHeadcount: parseInt(e.target.value) || 0 })} disabled={isPending} />
+              </div>
+              <div className={styles.formGroup} style={{ marginBottom: '20px' }}>
+                <label className={styles.label}>Allocated Budget ($)</label>
+                <input type="number" className={styles.input} value={newPlan.allocatedBudget} onChange={e => setNewPlan({ ...newPlan, allocatedBudget: parseFloat(e.target.value) || 0 })} disabled={isPending} />
+              </div>
+              <button type="submit" className={`${styles.btn} ${styles.btnPrimary}`} disabled={isPending}>Create Plan</button>
             </form>
           </div>
         </div>
