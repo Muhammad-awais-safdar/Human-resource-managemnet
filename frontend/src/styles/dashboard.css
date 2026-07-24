@@ -1,7 +1,15 @@
 /* Dashboard Layout Styles */
 .dashboard-layout {
   display: flex;
-  min-height: 100vh;
+  width: 100vw;
+  height: 100vh;
+  max-height: 100vh;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow: hidden;
   background-color: var(--bg-primary);
   color: var(--text-primary);
   font-family: var(--font-sans);
@@ -9,18 +17,26 @@
 
 .sidebar {
   width: 260px;
+  min-width: 260px;
+  height: 100vh;
+  max-height: 100vh;
   background-color: var(--bg-secondary);
   border-right: 1px solid var(--border-light);
   display: flex;
   flex-direction: column;
-  padding: 24px;
+  padding: 24px 16px;
+  overflow: hidden; /* Sidebar container is fixed; sidebar-nav handles scrolling */
+  box-sizing: border-box;
+  flex-shrink: 0;
 }
 
 .sidebar-header {
   display: flex;
   align-items: center;
   gap: 12px;
-  margin-bottom: 36px;
+  margin-bottom: 24px;
+  padding-left: 8px;
+  flex-shrink: 0;
 }
 
 .sidebar-logo {
@@ -33,6 +49,7 @@
   justify-content: center;
   font-weight: 700;
   color: #ffffff;
+  flex-shrink: 0;
 }
 
 .sidebar-title {
@@ -41,11 +58,89 @@
   color: var(--text-primary);
 }
 
+.sidebar-role-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.sidebar-role-badge.system-admin {
+  background: rgba(234, 179, 8, 0.12);
+  color: #facc15;
+  border: 1px solid rgba(234, 179, 8, 0.3);
+  box-shadow: 0 0 12px rgba(234, 179, 8, 0.2);
+}
+
+.sidebar-role-badge.tenant-admin {
+  background: rgba(99, 102, 241, 0.12);
+  color: #818cf8;
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  box-shadow: 0 0 12px rgba(99, 102, 241, 0.2);
+}
+
+.sidebar-role-badge.hr-manager {
+  background: rgba(168, 85, 247, 0.12);
+  color: #c084fc;
+  border: 1px solid rgba(168, 85, 247, 0.3);
+}
+
+.sidebar-role-badge.employee {
+  background: rgba(16, 185, 129, 0.12);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.nav-section-label {
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  padding: 8px 12px 4px 12px;
+}
+
 .sidebar-nav {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
   flex: 1;
+  min-height: 0; /* CRITICAL: Enables flex child overflow scrolling inside 100vh container */
+  overflow-y: auto; /* Independent smooth scroll for sidebar items */
+  overflow-x: hidden;
+  overscroll-behavior: contain; /* Prevents mouse wheel scrolling from affecting main page */
+  padding-right: 6px;
+}
+
+/* Dedicated Fancy Glassmorphic Thin Scrollbar for Sidebar Navigation */
+.sidebar-nav::-webkit-scrollbar {
+  width: 6px;
+  transition: width 0.3s ease;
+}
+
+.sidebar-nav:hover::-webkit-scrollbar {
+  width: 8px;
+}
+
+.sidebar-nav::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 10px;
+}
+
+.sidebar-nav::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, var(--accent-primary, #6366f1), var(--accent-secondary, #a855f7));
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(99, 102, 241, 0.4);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sidebar-nav::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #818cf8, #c084fc);
+  box-shadow: 0 0 16px rgba(129, 140, 248, 0.7);
 }
 
 .nav-link {
@@ -59,6 +154,7 @@
   font-weight: 500;
   font-size: 0.95rem;
   transition: var(--transition-smooth);
+  flex-shrink: 0;
 }
 
 .nav-link:hover {
@@ -75,15 +171,49 @@
 .sidebar-footer {
   border-top: 1px solid var(--border-light);
   padding-top: 16px;
-  margin-top: auto;
-  font-size: 0.8rem;
-  color: var(--text-muted);
+  margin-top: 16px;
+  padding-left: 8px;
+  flex-shrink: 0;
 }
 
 .main-content {
   flex: 1;
+  height: 100vh;
+  max-height: 100vh;
   padding: 40px;
   overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain; /* Prevents main content scroll from affecting sidebar */
+  box-sizing: border-box;
+}
+
+/* Dedicated Fancy Glassmorphic Scrollbar for Main Content Viewport */
+.main-content::-webkit-scrollbar {
+  width: 8px;
+  transition: width 0.3s ease;
+}
+
+.main-content:hover::-webkit-scrollbar {
+  width: 10px;
+}
+
+.main-content::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.4);
+  border-radius: 10px;
+  margin: 6px 0;
+}
+
+.main-content::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(99, 102, 241, 0.5), rgba(168, 85, 247, 0.5));
+  border: 2px solid var(--bg-primary, #09090b);
+  border-radius: 10px;
+  box-shadow: 0 0 12px rgba(99, 102, 241, 0.3);
+  transition: all 0.3s ease;
+}
+
+.main-content::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, var(--accent-primary, #6366f1), var(--accent-secondary, #a855f7));
+  box-shadow: 0 0 18px rgba(99, 102, 241, 0.7);
 }
 
 /* Page Headers */

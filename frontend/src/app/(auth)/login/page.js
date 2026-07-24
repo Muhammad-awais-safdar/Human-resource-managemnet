@@ -15,6 +15,7 @@ export default function LoginPage() {
   // MFA Step States
   const [mfaEmail, setMfaEmail] = useState('');
   const [mfaCode, setMfaCode] = useState('');
+  const [resolvedTenantId, setResolvedTenantId] = useState('');
   
   const [errors, setErrors] = useState({});
   const [isPending, startTransition] = useTransition();
@@ -33,6 +34,9 @@ export default function LoginPage() {
         if (response.success && response.mfaRequired) {
           // Transit to MFA Verification step
           setMfaEmail(response.email);
+          if (response.tenantId) {
+            setResolvedTenantId(response.tenantId);
+          }
         }
       } catch (err) {
         setErrors({ submit: err.message || 'Authentication failed. Please verify your credentials.' });
@@ -51,6 +55,7 @@ export default function LoginPage() {
         const response = await apiClient.post('/auth/mfa/verify', {
           email: mfaEmail,
           code: mfaCode,
+          tenantId: resolvedTenantId,
         });
 
         if (response.success && response.token) {
@@ -58,6 +63,8 @@ export default function LoginPage() {
           if (typeof window !== 'undefined') {
             localStorage.setItem('auth_token', response.token);
             localStorage.setItem('user', JSON.stringify(response.user));
+            if (response.tenantId) localStorage.setItem('tenant_id', response.tenantId);
+            if (response.subdomain) localStorage.setItem('tenant_subdomain', response.subdomain);
           }
           // Redirect directly to dashboard workspace home
           router.push('/dashboard');

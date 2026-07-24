@@ -3,9 +3,13 @@ package com.awais.hr.module.auth.controller;
 import com.awais.hr.config.JwtUtils;
 import com.awais.hr.context.TenantContextHolder;
 import com.awais.hr.module.auth.service.IpAccessControlService;
+import com.awais.hr.module.tenant.model.Tenant;
+import com.awais.hr.module.tenant.repository.TenantRepository;
+import com.awais.hr.module.tenant.service.TenantService;
 import jakarta.servlet.http.HttpServletRequest;
 
 import java.util.List;
+import java.util.Optional;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -24,12 +28,18 @@ public class AuthController {
     private final PasswordEncoder passwordEncoder;
     private final JwtUtils jwtUtils;
     private final IpAccessControlService ipAccessControlService;
+    private final TenantRepository tenantRepository;
+    private final TenantService tenantService;
 
-    public AuthController(DataSource routingDataSource, PasswordEncoder passwordEncoder, JwtUtils jwtUtils, IpAccessControlService ipAccessControlService) {
+    public AuthController(DataSource routingDataSource, PasswordEncoder passwordEncoder, JwtUtils jwtUtils, 
+                          IpAccessControlService ipAccessControlService, TenantRepository tenantRepository, 
+                          TenantService tenantService) {
         this.routingDataSource = routingDataSource;
         this.passwordEncoder = passwordEncoder;
         this.jwtUtils = jwtUtils;
         this.ipAccessControlService = ipAccessControlService;
+        this.tenantRepository = tenantRepository;
+        this.tenantService = tenantService;
     }
 
     @PostMapping({"/register", "/register-employee"})
@@ -107,17 +117,42 @@ public class AuthController {
         String tenantId = TenantContextHolder.getCurrentTenant();
         String clientIp = request.getRemoteAddr();
 
-        if (tenantId == null) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("success", false, "message", "No workspace tenant context resolved. Make sure you access via a tenant subdomain."));
+        if (email != null) {
+            email = email.trim().toLowerCase();
         }
 
-        JdbcTemplate jdbcTemplate = new JdbcTemplate(routingDataSource);
+        // Base domain login resolution: if no subdomain is present, locate user's workspace tenant
+        if (tenantId == null && email != null) {
+            for (Tenant t : findAllTenantsMaster()) {
+                try {
+                    DataSource ds = tenantService.getTenantDataSource(t.getId());
+                    if (ds != null) {
+                        JdbcTemplate tJdbc = new JdbcTemplate(ds);
+                        Integer count = tJdbc.queryForObject(
+                                "SELECT COUNT(1) FROM employee WHERE LOWER(email) = ? AND status = 'ACTIVE'",
+                                Integer.class, email
+                        );
+                        if (count != null && count > 0) {
+                            tenantId = t.getId();
+                            break;
+                        }
+                    }
+                } catch (Exception ignored) {}
+            }
+        }
+
+        if (tenantId == null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("success", false, "message", "No workspace tenant context resolved. Make sure you enter a registered email address or access via your workspace subdomain."));
+        }
+
+        DataSource ds = tenantService.getTenantDataSource(tenantId);
+        JdbcTemplate jdbcTemplate = new JdbcTemplate(ds != null ? ds : routingDataSource);
 
         try {
-            // Query employee table in the dynamically resolved tenant database
+            // Query employee table in the resolved tenant database
             Map<String, Object> employee = jdbcTemplate.queryForMap(
-                    "SELECT id, first_name, last_name, email, password, employee_code FROM employee WHERE email = ? AND status = 'ACTIVE'",
+                    "SELECT id, first_name, last_name, email, password, employee_code FROM employee WHERE LOWER(email) = ? AND status = 'ACTIVE'",
                     email
             );
 
@@ -130,12 +165,17 @@ public class AuthController {
                         "INSERT INTO mfa_code (id, email, code, expires_at) VALUES (?, ?, ?, CURRENT_TIMESTAMP + INTERVAL '5 minutes')",
                         UUID.randomUUID().toString(), email, mfaCode
                 );
+
+                Optional<Tenant> tenantOpt = findTenantByIdMaster(tenantId);
+                String subdomain = tenantOpt.map(Tenant::getSubdomain).orElse("awais");
                 
                 System.out.println("[MFA] Generated verification code " + mfaCode + " for user: " + email);
                 return ResponseEntity.ok(Map.of(
                         "success", true,
                         "mfaRequired", true,
                         "email", email,
+                        "tenantId", tenantId,
+                        "subdomain", subdomain,
                         "message", "Credentials verified. MFA verification code sent."
                 ));
             } else {
@@ -149,24 +189,78 @@ public class AuthController {
         }
     }
 
+    private List<Tenant> findAllTenantsMaster() {
+        String currentCtx = TenantContextHolder.getCurrentTenant();
+        try {
+            TenantContextHolder.clear();
+            return tenantRepository.findAll();
+        } finally {
+            if (currentCtx != null) {
+                TenantContextHolder.setCurrentTenant(currentCtx);
+            }
+        }
+    }
+
+    private Optional<Tenant> findTenantByIdMaster(String id) {
+        String currentCtx = TenantContextHolder.getCurrentTenant();
+        try {
+            TenantContextHolder.clear();
+            return tenantRepository.findById(id);
+        } finally {
+            if (currentCtx != null) {
+                TenantContextHolder.setCurrentTenant(currentCtx);
+            }
+        }
+    }
+
     @PostMapping("/mfa/verify")
     public ResponseEntity<?> verifyMfa(@RequestBody Map<String, String> body, HttpServletRequest request) {
         String email = body.get("email");
         String code = body.get("code");
         String tenantId = TenantContextHolder.getCurrentTenant();
+        String bodyTenantId = body.get("tenantId");
         String userAgent = request.getHeader("User-Agent");
         String clientIp = request.getRemoteAddr();
 
-        if (tenantId == null) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("success", false, "message", "No workspace tenant context resolved."));
+        if (email != null) {
+            email = email.trim().toLowerCase();
         }
 
-        JdbcTemplate jdbcTemplate = new JdbcTemplate(routingDataSource);
+        if (tenantId == null && bodyTenantId != null && !bodyTenantId.isBlank()) {
+            tenantId = bodyTenantId;
+        }
+
+        // Fallback: Locate tenant database with active MFA code for this email
+        if (tenantId == null && email != null) {
+            for (Tenant t : findAllTenantsMaster()) {
+                try {
+                    DataSource ds = tenantService.getTenantDataSource(t.getId());
+                    if (ds != null) {
+                        JdbcTemplate tJdbc = new JdbcTemplate(ds);
+                        Integer count = tJdbc.queryForObject(
+                                "SELECT COUNT(1) FROM mfa_code WHERE LOWER(email) = ? AND used = FALSE AND expires_at > CURRENT_TIMESTAMP",
+                                Integer.class, email
+                        );
+                        if (count != null && count > 0) {
+                            tenantId = t.getId();
+                            break;
+                        }
+                    }
+                } catch (Exception ignored) {}
+            }
+        }
+
+        if (tenantId == null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("success", false, "message", "No workspace tenant context resolved for MFA verification."));
+        }
+
+        DataSource ds = tenantService.getTenantDataSource(tenantId);
+        JdbcTemplate jdbcTemplate = new JdbcTemplate(ds != null ? ds : routingDataSource);
 
         try {
             List<Map<String, Object>> activeCodes = jdbcTemplate.queryForList(
-                    "SELECT id, code FROM mfa_code WHERE email = ? AND used = FALSE AND expires_at > CURRENT_TIMESTAMP ORDER BY created_at DESC LIMIT 1",
+                    "SELECT id, code FROM mfa_code WHERE LOWER(email) = ? AND used = FALSE AND expires_at > CURRENT_TIMESTAMP ORDER BY created_at DESC LIMIT 1",
                     email
             );
             if (activeCodes.isEmpty()) {
@@ -186,16 +280,22 @@ public class AuthController {
             jdbcTemplate.update("UPDATE mfa_code SET used = TRUE WHERE id = ?", mfaRecordId);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(Map.of("success", false, "message", "MFA validation failed due to system error."));
+                    .body(Map.of("success", false, "message", "MFA validation failed due to system error: " + e.getMessage()));
         }
 
         try {
             Map<String, Object> employee = jdbcTemplate.queryForMap(
-                    "SELECT id, first_name, last_name, email, employee_code FROM employee WHERE email = ? AND status = 'ACTIVE'",
+                    "SELECT id, first_name, last_name, email, employee_code FROM employee WHERE LOWER(email) = ? AND status = 'ACTIVE'",
                     email
             );
 
-            String roles = "ADMIN";
+            // Dynamically query actual assigned user roles from the employee_role table
+            List<String> userRoleList = jdbcTemplate.queryForList(
+                    "SELECT r.name FROM role r JOIN employee_role er ON r.id = er.role_id WHERE er.employee_id = ?",
+                    String.class, employee.get("id")
+            );
+            String roles = userRoleList.isEmpty() ? "EMPLOYEE" : String.join(",", userRoleList);
+
             String token = jwtUtils.generateToken(email, tenantId, roles);
 
             String sessionId = UUID.randomUUID().toString();
@@ -204,22 +304,28 @@ public class AuthController {
                     sessionId, employee.get("id"), token, clientIp, userAgent
             );
 
+            Optional<Tenant> tenantOpt = findTenantByIdMaster(tenantId);
+            String subdomain = tenantOpt.map(Tenant::getSubdomain).orElse("awais");
+
             return ResponseEntity.ok(Map.of(
                     "success", true,
                     "token", token,
+                    "tenantId", tenantId,
+                    "subdomain", subdomain,
                     "user", Map.of(
                             "id", employee.get("id"),
                             "firstName", employee.get("first_name"),
                             "lastName", employee.get("last_name"),
                             "email", employee.get("email"),
                             "code", employee.get("employee_code"),
-                            "roles", roles
+                            "roles", roles,
+                            "role", roles.split(",")[0]
                     )
             ));
 
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("success", false, "message", "Failed to save session log: " + e.getMessage()));
+                    .body(Map.of("success", false, "message", "Failed to finalize session: " + e.getMessage()));
         }
     }
 

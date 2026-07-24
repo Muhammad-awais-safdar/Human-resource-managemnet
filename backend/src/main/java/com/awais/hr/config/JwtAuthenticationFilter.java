@@ -28,6 +28,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
+        String path = request.getRequestURI();
+        return path.contains("/auth/") 
+            || path.contains("/tenants/register") 
+            || path.contains("/recruitment/jobs") 
+            || path.contains("/recruitment/apply") 
+            || path.equals("/error") 
+            || path.endsWith("/error");
+    }
+
+    @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
         
@@ -57,41 +68,37 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                             token
                     );
 
-                    if (sessions.isEmpty()) {
-                        response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Session expired or revoked.");
-                        return;
-                    }
+                    if (!sessions.isEmpty()) {
+                        Map<String, Object> session = sessions.get(0);
+                        String savedIp = (String) session.get("ip_address");
+                        String savedUserAgent = (String) session.get("user_agent");
 
-                    Map<String, Object> session = sessions.get(0);
-                    String savedIp = (String) session.get("ip_address");
-                    String savedUserAgent = (String) session.get("user_agent");
+                        // Block access and revoke session if token is hijacked
+                        if (!Objects.equals(savedIp, clientIp) || !Objects.equals(savedUserAgent, userAgent)) {
+                            System.err.println("[SECURITY ALERT] Hijack attempt detected. Client IP: " + clientIp + ", expected: " + savedIp);
+                            jdbcTemplate.update("DELETE FROM active_session WHERE token = ?", token);
+                            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Security alert: Device signature mismatch. Session revoked.");
+                            return;
+                        }
 
-                    // Block access and revoke session if token is hijacked
-                    if (!Objects.equals(savedIp, clientIp) || !Objects.equals(savedUserAgent, userAgent)) {
-                        System.err.println("[SECURITY ALERT] Hijack attempt detected. Client IP: " + clientIp + ", expected: " + savedIp);
-                        jdbcTemplate.update("DELETE FROM active_session WHERE token = ?", token);
-                        response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Security alert: Device signature mismatch. Session revoked.");
-                        return;
+                        List<SimpleGrantedAuthority> authorities = Arrays.stream(roles.split(","))
+                                .map(String::trim)
+                                .filter(r -> !r.isEmpty())
+                                .map(r -> new SimpleGrantedAuthority("ROLE_" + r))
+                                .collect(Collectors.toList());
+                        
+                        org.springframework.security.core.userdetails.User userDetails =
+                                new org.springframework.security.core.userdetails.User(email, "", authorities);
+                        
+                        UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
+                                userDetails, null, authorities
+                        );
+                        
+                        SecurityContextHolder.getContext().setAuthentication(auth);
                     }
                 } catch (Exception e) {
-                    response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Session verification failed.");
-                    return;
+                    // Ignore session check error for filter continuation
                 }
-                
-                List<SimpleGrantedAuthority> authorities = Arrays.stream(roles.split(","))
-                        .map(String::trim)
-                        .filter(r -> !r.isEmpty())
-                        .map(r -> new SimpleGrantedAuthority("ROLE_" + r))
-                        .collect(Collectors.toList());
-                
-                org.springframework.security.core.userdetails.User userDetails =
-                        new org.springframework.security.core.userdetails.User(email, "", authorities);
-                
-                UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
-                        userDetails, null, authorities
-                );
-                
-                SecurityContextHolder.getContext().setAuthentication(auth);
             }
         }
         

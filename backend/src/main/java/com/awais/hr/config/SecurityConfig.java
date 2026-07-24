@@ -43,7 +43,9 @@ public class SecurityConfig {
                 .requestMatchers("/tenants/active/**", "/api/*/tenants/active/**").permitAll()
                 .requestMatchers("/recruitment/jobs", "/api/*/recruitment/jobs").permitAll()
                 .requestMatchers("/recruitment/apply", "/api/*/recruitment/apply").permitAll()
-                .requestMatchers("/org/**", "/api/*/org/**").permitAll()
+                .requestMatchers("/recruitment/candidates/**", "/api/*/recruitment/candidates/**").hasAnyRole("RECRUITER", "HR_MANAGER", "TENANT_ADMIN", "ADMIN")
+                .requestMatchers("/org/**", "/api/*/org/**").authenticated()
+                .requestMatchers("/error", "/api/*/error").permitAll()
                 .anyRequest().authenticated()
             )
             .addFilterBefore(new JwtAuthenticationFilter(jwtUtils, dataSource), org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter.class);
