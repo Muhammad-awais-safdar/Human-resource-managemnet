@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { getLogs, getTailLogs, getSecurityEvents, getExceptions, getAlerts, createAlert } from '@/services/platformOperationsService';
-import styles from '../../settings/billing/billing.module.css';
 
 export default function ObservabilityDashboardPage() {
   const [activeTab, setActiveTab] = useState('LOGS');
@@ -99,6 +98,17 @@ export default function ObservabilityDashboardPage() {
 
   const filteredLogs = logs.filter(l => filterLevel === 'ALL' || (l.level && l.level.toUpperCase() === filterLevel));
 
+  const btnPrimaryStyle = {
+    padding: '8px 16px',
+    background: '#0284c7',
+    color: '#fff',
+    border: 'none',
+    borderRadius: '6px',
+    fontWeight: 600,
+    cursor: 'pointer',
+    transition: 'background 0.2s'
+  };
+
   return (
     <div style={{ padding: '24px', maxWidth: '1400px', margin: '0 auto', color: 'var(--text-main, #fff)', fontFamily: 'system-ui, sans-serif' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
@@ -113,7 +123,7 @@ export default function ObservabilityDashboardPage() {
             <input type="checkbox" checked={isTailMode} onChange={e => setIsTailMode(e.target.checked)} />
             ⚡ Live tail -{linesCount}f Stream (0 Latency)
           </label>
-          <button className={`${styles.btn} ${styles.btnPrimary}`} onClick={fetchData} disabled={loading}>
+          <button style={btnPrimaryStyle} onClick={fetchData} disabled={loading}>
             {loading ? 'Refreshing...' : '🔄 Query Telemetry'}
           </button>
         </div>
@@ -280,7 +290,7 @@ export default function ObservabilityDashboardPage() {
               onChange={e => setNewThreshold(e.target.value)}
               style={{ width: '140px', padding: '8px 12px', background: '#0f172a', border: '1px solid #334155', color: '#fff', borderRadius: '4px' }}
             />
-            <button type="submit" className={`${styles.btn} ${styles.btnPrimary}`}>+ Add Alert Rule</button>
+            <button type="submit" style={btnPrimaryStyle}>+ Add Alert Rule</button>
           </form>
 
           {alerts.map((a, idx) => (
