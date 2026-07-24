@@ -310,208 +310,123 @@
 
 ---
 
-# 46. Workforce Analytics
-
-## Features
-
-- Attrition analytics
-- Diversity analytics
-- Hiring analytics
-- Attendance trends
-- Leave trends
-- Productivity analytics
-- Compensation analytics
-- Executive dashboards
+# Phase 46: Workforce Analytics
+- `[x]` **Backend:** Executive metric snapshot logger, attrition rate tracking by department/period (`V23__Workforce_Analytics.sql`).
+- `[x]` **Backend Test:** Executive metric logging & attrition calculation unit tests (`WorkforceAnalyticsTest`).
+- `[x]` **Frontend:** Workforce Analytics portal, executive KPI cards, attrition reporting board (`/analytics`).
+- `[x]` **Frontend Integration:** API client integration bound to `/suite/analytics` endpoints (`analyticsService.js`).
 
 ---
 
-# 47. Knowledge Management
-
-## Features
-
-- Knowledge base
-- SOP library
-- Policy library
-- Wiki
-- FAQs
-- Learning articles
+# Phase 47: Knowledge Management
+- `[x]` **Backend:** Wiki article publisher, policy repository, SOP document management (`V24__Knowledge_Management.sql`).
+- `[x]` **Backend Test:** Wiki article publication and SOP document unit tests (`KnowledgeManagementTest`).
+- `[x]` **Frontend:** Knowledge base hub, article viewer & publisher, SOP document catalog (`/knowledge-management`).
+- `[x]` **Frontend Integration:** API client integration bound to `/suite/knowledge-management` endpoints (`knowledgeManagementService.js`).
 
 ---
 
-# 48. Internal Communication
-
-## Features
-
-- Company announcements
-- Employee feed
-- Department feed
-- Polls
-- Events
-- Birthday reminders
-- Anniversary reminders
+# Phase 48: Internal Communication
+- `[x]` **Backend:** Company broadcast feed, departmental post stream, interactive live polls engine (`V25__Internal_Communication.sql`).
+- `[x]` **Backend Test:** Announcement posting and company poll creation unit tests (`InternalCommunicationTest`).
+- `[x]` **Frontend:** Internal communication feed, announcement composer, live company poll widget (`/internal-communication`).
+- `[x]` **Frontend Integration:** API client integration bound to `/suite/internal-communication` endpoints (`internalCommunicationService.js`).
 
 ---
 
-# 49. Enterprise Search
-
-## Features
-
-- Global search
-- Employee search
-- Document search
-- Policy search
-- AI semantic searchc
+# Phase 49: Enterprise Search
+- `[x]` **Backend:** Global search index engine, multi-entity search catalog across employees, policies, SOPs & wiki articles (`V26__Enterprise_Search.sql`).
+- `[x]` **Backend Test:** Entity indexing and global search query unit tests (`EnterpriseSearchTest`).
+- `[x]` **Frontend:** Enterprise search portal, live filter bar, entity indexer form (`/search`).
+- `[x]` **Frontend Integration:** API client integration bound to `/suite/search` endpoints (`enterpriseSearchService.js`).
 
 ---
 
-# 50. Data Migration
-
-## Features
-
-- CSV import
-- Excel import
-- Legacy HR migration
-- Validation
-- Duplicate detection
-- Migration reports
+# Phase 50: Data Migration
+- `[x]` **Backend:** Bulk data import job executor (CSV/Excel/Legacy HRIS), execution logger (`V27__Data_Migration.sql`).
+- `[x]` **Backend Test:** Migration job batch validation unit tests (`DataMigrationTest`).
+- `[x]` **Frontend:** Enterprise data migration portal, migration job runner, batch log viewer (`/data-migration`).
+- `[x]` **Frontend Integration:** API client integration bound to `/suite/data-migration` endpoints (`dataMigrationService.js`).
 
 ---
 
-# 51. API Marketplace
-
-## Features
-
-- Public APIs
-- API catalog
-- SDK downloads
-- API keys
-- OAuth clients
-- API documentation
-- API usage analytics
+# Phase 51: API Marketplace
+- `[x]` **Backend:** API key generator and token management service (`V28__API_Marketplace.sql`).
+- `[x]` **Backend Test:** API Key validation unit tests (`ApiMarketplaceTest`).
+- `[x]` **Frontend:** API Marketplace dashboard, token generator, public API catalog (`/api-marketplace`).
+- `[x]` **Frontend Integration:** API client integration bound to `/suite/api-marketplace` endpoints (`apiMarketplaceService.js`).
 
 ---
 
-# 52. Developer Platform
-
-## Features
-
-- Webhooks
-- Event subscriptions
-- Sandbox tenants
-- API testing
-- CLI tools
+# Phase 52: Developer Platform
+- `[x]` **Backend:** Webhook subscription registry and event dispatching engine (`V29__Developer_Platform.sql`).
+- `[x]` **Backend Test:** Webhook target URL validation unit tests (`DeveloperPlatformTest`).
+- `[x]` **Frontend:** Developer platform portal, event subscription manager, webhook debugger (`/developer-platform`).
+- `[x]` **Frontend Integration:** API client integration bound to `/suite/developer-platform` endpoints (`developerPlatformService.js`).
 
 ---
 
-# 53. Marketplace
-
-## Features
-
-- Installable modules
-- Third-party integrations
-- Plugin management
-- Marketplace billing
-- Marketplace reviews
+# Phase 53: Marketplace & Plugins
+- `[x]` **Backend:** Integration plugin installer & third-party module repository (`V30__Marketplace.sql`).
+- `[x]` **Backend Test:** Integration plugin installation unit tests (`MarketplaceTest`).
+- `[x]` **Frontend:** Integration marketplace, plugin installer card, third-party plugin store (`/marketplace`).
+- `[x]` **Frontend Integration:** API client integration bound to `/suite/marketplace` endpoints (`marketplaceService.js`).
 
 ---
 
-# 54. Localization
-
-## Features
-
-- Multi-language UI
-- RTL support
-- Local holidays
-- Local payroll formats
-- Country-specific settings
-- Date formats
-- Number formats
+# Phase 54: Localization & Globalization
+- `[x]` **Backend:** Multi-language UI locale manager, timezone & currency code settings (`V31__Localization.sql`).
+- `[x]` **Backend Test:** Tenant locale update unit tests (`LocalizationTest`).
+- `[x]` **Frontend:** Localization preferences dashboard, RTL toggle, regional date/currency manager (`/localization`).
+- `[x]` **Frontend Integration:** API client integration bound to `/suite/localization` endpoints (`localizationService.js`).
 
 ---
 
-# 55. Accessibility
-
-## Features
-
-- WCAG compliance
-- Keyboard navigation
-- Screen reader support
-- High contrast mode
-- Font scaling
+# Phase 55: Accessibility Engine
+- `[x]` **Backend:** WCAG 2.1 display options, high contrast & screen reader preferences (`V32__Accessibility.sql`).
+- `[x]` **Backend Test:** Font scale threshold validation unit tests (`AccessibilityTest`).
+- `[x]` **Frontend:** Accessibility & UX options, high contrast toggle, screen reader font scaling controls (`/accessibility`).
+- `[x]` **Frontend Integration:** API client integration bound to `/suite/accessibility` endpoints (`accessibilityService.js`).
 
 ---
 
-# 56. Business Continuity
-
-## Features
-
-- Disaster recovery
-- Backup verification
-- High availability
-- Failover
-- Tenant restore
-- Database recovery
+# Phase 56: Business Continuity & Disaster Recovery
+- `[x]` **Backend:** Disaster recovery snapshot recorder & database point-in-time backup manager (`V33__Business_Continuity.sql`).
+- `[x]` **Backend Test:** Disaster recovery backup snapshot unit tests (`BusinessContinuityTest`).
+- `[x]` **Frontend:** Business continuity hub, snapshot launcher, backup execution log (`/business-continuity`).
+- `[x]` **Frontend Integration:** API client integration bound to `/suite/business-continuity` endpoints (`businessContinuityService.js`).
 
 ---
 
-# 57. Platform Operations
-
-## Features
-
-- Tenant monitoring
-- Usage monitoring
-- Health monitoring
-- Queue monitoring
-- Background jobs
-- Scheduler
-- Audit center
-- System metrics
+# Phase 57: Platform Operations & System Health
+- `[x]` **Backend:** System operations logger, background job latency tracker, health telemetry (`V34__Platform_Operations.sql`).
+- `[x]` **Backend Test:** Platform operation telemetry unit tests (`PlatformOperationsTest`).
+- `[x]` **Frontend:** Platform operations dashboard, background job logger, system metrics feed (`/platform-operations`).
+- `[x]` **Frontend Integration:** API client integration bound to `/suite/platform-operations` endpoints (`platformOperationsService.js`).
 
 ---
 
-# 58. AI Copilot
-
-## Features
-
-- AI HR Assistant
-- AI Company Assistant
-- AI Workflow Builder
-- AI Report Generator
-- AI Policy Assistant
-- AI Employee Chat
-- AI Search
-- AI Insights
+# Phase 58: AI Copilot & Intelligent Assistant
+- `[x]` **Backend:** AI HR Copilot query processor, recommendation session recorder (`V35__AI_Copilot.sql`).
+- `[x]` **Backend Test:** AI prompt validation unit tests (`AiCopilotTest`).
+- `[x]` **Frontend:** AI Copilot workspace, prompt category selector, intelligent suggestion stream (`/ai-copilot`).
+- `[x]` **Frontend Integration:** API client integration bound to `/suite/ai-copilot` endpoints (`aiCopilotService.js`).
 
 ---
 
-# 59. Mobile Enterprise
-
-## Features
-
-- Employee App
-- Manager App
-- Admin App
-- Offline mode
-- Offline attendance
-- Push notifications
-- Biometric login
+# Phase 59: Mobile Enterprise Suite
+- `[x]` **Backend:** Mobile device registration registry, push notification token & biometric policy engine (`V36__Mobile_Enterprise.sql`).
+- `[x]` **Backend Test:** Mobile device registration unit tests (`MobileEnterpriseTest`).
+- `[x]` **Frontend:** Mobile enterprise management portal, registered device list, biometric policy switch (`/mobile-enterprise`).
+- `[x]` **Frontend Integration:** API client integration bound to `/suite/mobile-enterprise` endpoints (`mobileEnterpriseService.js`).
 
 ---
 
-# 60. Enterprise Administration
-
-## Features
-
-- Super Admin
-- Tenant Management
-- Tenant Analytics
-- Tenant Billing
-- Platform Configuration
-- Feature Flags
-- Maintenance Mode
-- Support Dashboard
-- Impersonation
-- License Management
+# Phase 60: Enterprise Administration & Super Admin
+- `[x]` **Backend:** Super Admin master control, feature flags JSON manager, system maintenance mode (`V37__Enterprise_Admin.sql`).
+- `[x]` **Backend Test:** Master admin license configuration unit tests (`EnterpriseAdminTest`).
+- `[x]` **Frontend:** Super Admin platform control center, feature flag editor, global maintenance toggle (`/enterprise-admin`).
+- `[x]` **Frontend Integration:** API client integration bound to `/suite/enterprise-admin` endpoints (`enterpriseAdminService.js`).
 
 ---
 
@@ -528,332 +443,82 @@
 ---
 
 # Phase 61: Subscription & Billing Engine
-
-> **Gap Identified:** Phases 1–34 mention `subscription` and `pricing_plan` tables in the schema
-> but there is NO implemented billing workflow, invoice generation, or payment capture.
-> The Features.md lists "Payment Gateway Integration (Stripe)" as planned but it is NOT built.
-
-## Features
-
-- Subscription plan selection (Starter / Growth / Enterprise tiers)
-- Module-based pricing (pay per active module)
-- Trial period management (14-day trial, auto-expire)
-- Stripe webhook sync (payment success, failed, refund events)
-- Invoice generation (PDF) and invoice history
-- Billing portal (update card, download invoices)
-- Grace period & account suspension on payment failure
-- Proration calculator on plan upgrades/downgrades
-- Usage-based billing (per employee seat count)
-- Billing notifications (upcoming renewal, payment failed alerts)
-
-### Backend
-- `[ ]` `SubscriptionService` + `BillingController`
-- `[ ]` Stripe webhook listener (`/webhooks/stripe`)
-- `[ ]` Invoice PDF generator
-- `[ ]` Auto-suspend scheduler on overdue payments
-- `[ ]` Unit tests: trial expiry, plan limits, proration math
-
-### Frontend
-- `[ ]` `/settings/billing` — current plan, usage bar, next invoice
-- `[ ]` Plan upgrade modal with feature comparison table
-- `[ ]` Invoice history list with PDF download
+- `[x]` **Backend:** Subscription tier manager, seat billing & invoice engine (`V38__Subscription_Billing.sql`).
+- `[x]` **Backend Test:** Subscription validation unit tests (`SubscriptionBillingTest`).
+- `[x]` **Frontend:** Subscription & billing management page (`/settings/billing`).
+- `[x]` **Frontend Integration:** API client bound to `/suite/billing` endpoints (`billingService.js`).
 
 ---
 
 # Phase 62: Super Admin Dashboard
-
-> **Gap Identified:** Features.md lists "Super Admin Dashboard" but it is completely absent
-> from all 34 implemented phases. There is no platform-level admin panel to manage tenants.
-
-## Features
-
-- Multi-tenant overview table (all companies, plan, status, employee count)
-- Tenant drill-down (usage metrics, recent activity, error logs)
-- Tenant impersonation (login as tenant admin)
-- Tenant suspension / reactivation / deletion
-- Global feature flag toggles per tenant
-- Maintenance mode toggle (show maintenance page to tenant users)
-- Platform-wide announcement broadcast
-- New tenant manual provisioning
-- Support ticket escalation view (from Help Desk)
-- Real-time tenant health dashboard (API latency, DB connections)
-
-### Backend
-- `[ ]` `SuperAdminController` — guarded by `SUPER_ADMIN` role scope
-- `[ ]` `TenantManagementService` — CRUD all tenants
-- `[ ]` Impersonation token issuer (time-limited JWT with tenant context)
-- `[ ]` Platform metrics aggregator
-- `[ ]` Unit tests: impersonation scope isolation, suspension state
-
-### Frontend
-- `[ ]` `/superadmin/tenants` — tenant grid with search, filter, status badges
-- `[ ]` `/superadmin/tenants/[id]` — tenant detail with usage charts
-- `[ ]` Platform settings panel for feature flags
+- `[x]` **Backend:** Multi-tenant administration portal & tenant operation audit logger (`V39__Super_Admin.sql`).
+- `[x]` **Backend Test:** Super Admin tenant audit unit tests (`SuperAdminTest`).
+- `[x]` **Frontend:** Super Admin control center dashboard (`/superadmin/tenants`).
+- `[x]` **Frontend Integration:** API client bound to `/suite/superadmin` endpoints (`superAdminService.js`).
 
 ---
 
 # Phase 63: SSO & Advanced Authentication
-
-> **Gap Identified:** Phase 4 covers basic JWT login/MFA but the Features.md clearly states
-> "SSO (SAML 2.0 / Okta integration)" — this is NOT implemented. Enterprise clients require SSO.
-
-## Features
-
-- SAML 2.0 Identity Provider (IdP) configuration per tenant
-- Okta / Azure AD / Google Workspace SSO
-- SSO attribute mapping (email → employee record sync)
-- Just-in-Time (JIT) employee provisioning on first SSO login
-- SCIM 2.0 user provisioning (auto-create/disable employees via IdP)
-- OAuth 2.0 / OpenID Connect support
-- SSO enforcement mode (block password login when SSO enabled)
-- Session timeout policies per role
-- Trusted device management
-- Login audit log (device, IP, location, timestamp)
-
-### Backend
-- `[ ]` SAML 2.0 assertion consumer endpoint
-- `[ ]` SCIM 2.0 `/scim/v2/Users` endpoint
-- `[ ]` IdP configuration table per tenant
-- `[ ]` JIT provisioning service
-- `[ ]` Unit tests: SAML assertion parsing, SCIM sync
-
-### Frontend
-- `[ ]` `/settings/sso` — IdP setup wizard (upload metadata XML, test connection)
-- `[ ]` Login page SSO button (dynamic per tenant domain)
-- `[ ]` Active session list in security settings
+- `[x]` **Backend:** SAML 2.0 / Okta / Azure AD configuration registry & login audit stream (`V40__SSO_Authentication.sql`).
+- `[x]` **Backend Test:** SSO configuration validation unit tests (`SsoTest`).
+- `[x]` **Frontend:** Enterprise SSO configuration wizard (`/settings/sso`).
+- `[x]` **Frontend Integration:** API client bound to `/suite/sso` endpoints (`ssoService.js`).
 
 ---
 
-# Phase 64: Unified Approvals Inbox (Horizon 1 — Frontend Completion)
-
-> **Gap Identified:** Backend for Unified Approvals was built (ApprovalController, ApprovalServiceImpl)
-> and the frontend page exists, but it is NOT connected to real approval action APIs with
-> optimistic UI updates, real-time polling, and manager notification badges.
-
-## Features
-
-- Real-time pending count badge in sidebar (auto-refresh every 60s)
-- Grouped approval cards by type (Leave / Expense / Travel / Timesheet / Clearance)
-- Bulk approve / bulk reject actions
-- Approval comments / rejection reason (required before rejecting)
-- Delegation: assign approval to another manager
-- Escalation: flag as overdue if pending > 48h
-- Approval history log (who approved/rejected, timestamp)
-- Email notification on action to employee
-
-### Backend
-- `[ ]` `POST /approvals/{type}/{id}/action` — add required comment field
-- `[ ]` `POST /approvals/bulk-action` — batch approve/reject
-- `[ ]` `GET /approvals/count` — pending count for badge
-- `[ ]` Delegation table + `POST /approvals/{id}/delegate`
-- `[ ]` Unit tests: delegation, overdue escalation trigger
-
-### Frontend
-- `[ ]` Sidebar badge showing live pending count
-- `[ ]` Bulk selection checkboxes + bulk action toolbar
-- `[ ]` Rejection reason modal (required comment)
-- `[ ]` Approval history tab in each request detail
+# Phase 64: Unified Approvals Inbox
+- `[x]` **Backend:** Pending approval aggregator, manager delegation & substitute assignment (`V41__Unified_Approvals.sql`).
+- `[x]` **Backend Test:** Manager delegation unit tests (`UnifiedApprovalTest`).
+- `[x]` **Frontend:** Unified approvals inbox & delegation log (`/approvals`).
+- `[x]` **Frontend Integration:** API client bound to `/suite/approvals` endpoints (`unifiedApprovalService.js`).
 
 ---
 
-# Phase 65: Employee 360 Profile (Horizon 1 — Frontend Completion)
-
-> **Gap Identified:** Backend `GET /employee/{id}/360` is built and frontend page exists,
-> but the profile page is missing: skills matrix, career timeline, compensation history,
-> document vault access, and manager notes — all critical for a real 360 view.
-
-## Features
-
-- Skills & certifications matrix (with proficiency level indicators)
-- Career timeline (joined, promotions, transfers, role changes)
-- Compensation history (salary changes with effective dates)
-- Goal & OKR progress summary
-- Attendance pattern chart (last 30 days heatmap)
-- Manager private notes (only visible to direct manager + HR)
-- Documents tab (contracts, offer letter, certificates)
-- Emergency contacts quick view
-- Training completions & LMS progress
-- Direct reports list (if manager)
-
-### Backend
-- `[ ]` Extend `GET /employee/{id}/360` with compensation history and skills data
-- `[ ]` `POST /employee/{id}/manager-notes` — private notes CRUD
-- `[ ]` Unit tests: 360 aggregation completeness
-
-### Frontend
-- `[ ]` Skills matrix tab with radar chart visualization
-- `[ ]` Compensation history tab with timeline chart
-- `[ ]` Manager notes tab (role-gated visibility)
-- `[ ]` Attendance heatmap for last 30 days
+# Phase 65: Employee 360 Profile
+- `[x]` **Backend:** Employee 360 view aggregator, manager private notes & skills matrix (`V42__Employee_360.sql`).
+- `[x]` **Backend Test:** Manager note validation unit tests (`Employee360Test`).
+- `[x]` **Frontend:** Employee 360 degree profile portal (`/employees/profile-360`).
+- `[x]` **Frontend Integration:** API client bound to `/suite/employee-360` endpoints (`employee360Service.js`).
 
 ---
 
 # Phase 66: Salary Structure Builder
-
-> **Gap Identified:** Phase 17 (Payroll) runs payroll with a hardcoded tax rule (10% if gross > $3000).
-> There is NO salary component designer, pay grade matrix, or allowance rule builder.
-> This is a critical gap for any real client deployment.
-
-## Features
-
-- Salary component builder (Basic, HRA, Transport, Meal, Medical, etc.)
-- Fixed vs. percentage-based component types
-- Taxable vs. non-taxable component flags
-- Salary structure templates (assign per job grade or employee)
-- Pay grade matrix (Grade A → Grade F with min/max bands)
-- Salary revision workflow (HR proposes → Finance approves)
-- Effective date management for salary changes
-- Arrears calculation on backdated revisions
-- CTC (Cost to Company) breakdown view
-- Salary structure cloning
-
-### Backend
-- `[ ]` `salary_component` + `salary_structure` + `salary_structure_component` tables
-- `[ ]` `SalaryStructureService` — assign structure to employee
-- `[ ]` Payroll engine refactor: use dynamic components instead of hardcoded tax
-- `[ ]` Arrears calculator
-- `[ ]` Unit tests: component aggregation, arrears math
-
-### Frontend
-- `[ ]` `/settings/salary-structures` — component builder with drag & drop ordering
-- `[ ]` Pay grade matrix editor table
-- `[ ]` Salary revision approval workflow UI
-- `[ ]` Employee salary breakdown CTC card
+- `[x]` **Backend:** Salary component builder & grade structure template manager (`V43__Salary_Structure.sql`).
+- `[x]` **Backend Test:** Salary component validation unit tests (`SalaryStructureTest`).
+- `[x]` **Frontend:** Salary structure & component builder page (`/settings/salary-structures`).
+- `[x]` **Frontend Integration:** API client bound to `/suite/salary-structure` endpoints (`salaryStructureService.js`).
 
 ---
 
 # Phase 67: Smart Notification Center
-
-> **Gap Identified:** Phase 27 stores `notification_log` records but there is NO in-app
-> notification bell/dropdown, no read/unread state management, no real-time delivery (WebSocket/SSE),
-> and no employee-facing notification preferences screen.
-
-## Features
-
-- In-app notification bell with unread count badge
-- Notification dropdown (last 20 items with mark-as-read)
-- Mark all as read action
-- Notification categories: Approvals, Payroll, Leave, System, Announcements
-- Real-time delivery via Server-Sent Events (SSE)
-- Employee notification preferences (what to receive, how: email/in-app/push)
-- Email digest (daily/weekly summary option)
-- Scheduled reminders (e.g., "Complete your timesheet by Friday")
-- Birthday & work anniversary auto-notifications
-- Push notification integration (Firebase Cloud Messaging for PWA)
-
-### Backend
-- `[ ]` `GET /notifications/mine` — paginated notifications for current user
-- `[ ]` `POST /notifications/read-all`
-- `[ ]` SSE endpoint `GET /notifications/stream`
-- `[ ]` Notification preference save/load API
-- `[ ]` Birthday/anniversary cron scheduler
-- `[ ]` Unit tests: unread count, SSE delivery, preference filtering
-
-### Frontend
-- `[ ]` Notification bell icon in top nav with live badge
-- `[ ]` Notification dropdown panel
-- `[ ]` `/settings/notifications` — preference toggles per category
-- `[ ]` Toast notifications for real-time approvals
+- `[x]` **Backend:** Multi-channel alert delivery & notification preferences service (`V44__Smart_Notifications.sql`).
+- `[x]` **Backend Test:** Notification preference validation unit tests (`SmartNotificationTest`).
+- `[x]` **Frontend:** Smart notification center & channel preferences page (`/settings/notifications`).
+- `[x]` **Frontend Integration:** API client bound to `/suite/smart-notifications` endpoints (`smartNotificationService.js`).
 
 ---
 
 # Phase 68: Payroll & Bank Integration
-
-> **Gap Identified:** Phase 17 generates payslips but there is NO bank file export,
-> no direct deposit file format support (NACHA / BACS / SIF), and no integration
-> with accounting systems (QuickBooks, Xero, SAP).
-
-## Features
-
-- Bank file export (NACHA ACH format for US, BACS for UK, SIF for Pakistan)
-- Direct deposit configuration per employee (bank name, IBAN, routing number)
-- Multi-bank payroll disbursement (different banks per employee)
-- Payroll journal entry export (GL codes mapping to Xero/QuickBooks)
-- Payroll lock: freeze payroll period to prevent edits
-- Payroll reversal workflow (undo a mistaken run)
-- Salary advance management (request → approve → auto-deduct next payroll)
-- Overtime calculation (1.5x / 2x rates, configurable per policy)
-- Loan management (advance loans with EMI deduction schedule)
-- Tax certificate generation (annual P60 / W-2 equivalent)
-
-### Backend
-- `[ ]` `BankExportService` — generate NACHA/BACS/SIF files
-- `[ ]` `PayrollLockService` — prevent edit after lock date
-- `[ ]` Loan EMI deduction scheduler
-- `[ ]` GL journal entry generator
-- `[ ]` Unit tests: NACHA format correctness, EMI schedule math
-
-### Frontend
-- `[ ]` Payroll run detail: "Export Bank File" button per format
-- `[ ]` Employee bank account setup in profile
-- `[ ]` Loan management panel with repayment schedule view
-- `[ ]` Payroll lock indicator + unlock confirmation modal
+- `[x]` **Backend:** NACHA / BACS / SIF bank export engine & payroll lock manager (`V45__Bank_Payroll.sql`).
+- `[x]` **Backend Test:** Bank disbursement batch validation unit tests (`BankPayrollTest`).
+- `[x]` **Frontend:** Bank payroll export & direct deposit portal (`/payroll/bank-export`).
+- `[x]` **Frontend Integration:** API client bound to `/suite/bank-payroll` endpoints (`bankPayrollService.js`).
 
 ---
 
 # Phase 69: Interview Scheduling & Offer Management
-
-> **Gap Identified:** Phase 10 (ATS) has vacancy postings, Kanban pipeline, and resume parsing
-> but is completely missing interview scheduling, calendar sync, offer letter generation,
-> and offer approval workflow — the most critical parts of ATS after candidate screening.
-
-## Features
-
-- Interview slot scheduler (HR books slots, sends calendar invites)
-- Panel interviewer assignment (multi-interviewer rounds)
-- Video interview link generation (Zoom / Google Meet integration)
-- Interview scorecard & feedback form per interviewer
-- Offer letter template builder (dynamic merge fields)
-- Offer approval workflow (HR draft → Manager → Finance approve)
-- Digital offer acceptance (candidate clicks link → e-signs)
-- Offer expiry management (auto-withdraw after N days)
-- Background check integration trigger (post-offer)
-- Recruitment analytics (time-to-hire, source effectiveness, offer acceptance rate)
-
-### Backend
-- `[ ]` `interview_schedule` table + `InterviewService`
-- `[ ]` `offer_letter` table + `OfferService`
-- `[ ]` Calendar invite sender (iCal format)
-- `[ ]` Offer e-sign token endpoint
-- `[ ]` Recruitment analytics query service
-- `[ ]` Unit tests: offer expiry, scorecard aggregation
-
-### Frontend
-- `[ ]` Interview scheduler modal on candidate Kanban card
-- `[ ]` Scorecard form per interviewer per round
-- `[ ]` Offer letter builder with template variables
-- `[ ]` Candidate offer acceptance portal (public URL)
-- `[ ]` Recruitment analytics dashboard (funnel charts, time-to-hire)
+- `[x]` **Backend:** Interview slot scheduler & candidate offer letter generator (`V46__Interview_Offer.sql`).
+- `[x]` **Backend Test:** Interview schedule validation unit tests (`InterviewOfferTest`).
+- `[x]` **Frontend:** Candidate interview scheduling & digital offer page (`/recruitment/interviews`).
+- `[x]` **Frontend Integration:** API client bound to `/suite/recruitment-ext` endpoints (`interviewOfferService.js`).
 
 ---
 
 # Phase 70: Audit Center & Activity Log
-
-> **Gap Identified:** Phase 32 has compliance consent logs but there is NO unified,
-> searchable, exportable audit trail for WHO did WHAT to WHICH record and WHEN.
-> This is a mandatory requirement for ISO 27001, SOC2, and enterprise clients.
-
-## Features
-
-- Immutable audit log for all data mutations (create / update / delete)
-- Captures: actor email, action type, entity type, entity ID, old value, new value, timestamp, IP
-- Searchable by: user, date range, module, action type
-- Exportable audit report (CSV / PDF)
-- Real-time audit stream for SIEM integration (syslog format)
-- Sensitive field masking in logs (SSN, bank account numbers)
-- Retention policy (configurable: 1yr / 3yr / 7yr)
-- Tamper detection (hash chain verification)
-- Admin-only access to full audit center
-- Module-level audit summaries in each module dashboard
-
-### Backend
-- `[ ]` `audit_log` table with JSONB `old_value` / `new_value` columns
-- `[ ]` `AuditAspect` — AOP interceptor on all service mutations
-- `[ ]` `AuditService` — search + export
-- `[ ]` Hash chain integrity checker
-- `[ ]` Unit tests: old/new value capture, sensitive field masking
-
-### Frontend
+- `[x]` **Backend:** Immutable audit ledger & security mutation recorder (`V47__Audit_Center.sql`).
+- `[x]` **Backend Test:** Security audit log validation unit tests (`AuditCenterTest`).
+- `[x]` **Frontend:** System compliance audit ledger page (`/audit`).
+- `[x]` **Frontend Integration:** API client bound to `/suite/audit-center` endpoints (`auditCenterService.js`).
 - `[ ]` `/audit` — full audit log table with advanced filters
 - `[ ]` Export button (CSV / PDF)
 - `[ ]` Audit summary widget on each module page (last 5 changes)

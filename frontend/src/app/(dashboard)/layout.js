@@ -238,6 +238,162 @@ export default function DashboardLayout({ children }) {
             🚀 Career Development
           </Link>
           <Link 
+            href="/analytics" 
+            className={`nav-link ${isActive('/analytics') ? 'nav-link-active' : ''}`}
+          >
+            📊 Workforce Analytics
+          </Link>
+          <Link 
+            href="/knowledge-management" 
+            className={`nav-link ${isActive('/knowledge-management') ? 'nav-link-active' : ''}`}
+          >
+            📚 Knowledge Base
+          </Link>
+          <Link 
+            href="/internal-communication" 
+            className={`nav-link ${isActive('/internal-communication') ? 'nav-link-active' : ''}`}
+          >
+            💬 Internal Communication
+          </Link>
+          <Link 
+            href="/search" 
+            className={`nav-link ${isActive('/search') ? 'nav-link-active' : ''}`}
+          >
+            🔍 Enterprise Search
+          </Link>
+          <Link 
+            href="/data-migration" 
+            className={`nav-link ${isActive('/data-migration') ? 'nav-link-active' : ''}`}
+          >
+            🔄 Data Migration
+          </Link>
+          <Link 
+            href="/api-marketplace" 
+            className={`nav-link ${isActive('/api-marketplace') ? 'nav-link-active' : ''}`}
+          >
+            🔌 API Marketplace
+          </Link>
+          <Link 
+            href="/developer-platform" 
+            className={`nav-link ${isActive('/developer-platform') ? 'nav-link-active' : ''}`}
+          >
+            💻 Developer Platform
+          </Link>
+          <Link 
+            href="/marketplace" 
+            className={`nav-link ${isActive('/marketplace') ? 'nav-link-active' : ''}`}
+          >
+            🛍️ Integration Marketplace
+          </Link>
+          <Link 
+            href="/localization" 
+            className={`nav-link ${isActive('/localization') ? 'nav-link-active' : ''}`}
+          >
+            🌐 Localization
+          </Link>
+          <Link 
+            href="/accessibility" 
+            className={`nav-link ${isActive('/accessibility') ? 'nav-link-active' : ''}`}
+          >
+            ♿ Accessibility
+          </Link>
+          <Link 
+            href="/business-continuity" 
+            className={`nav-link ${isActive('/business-continuity') ? 'nav-link-active' : ''}`}
+          >
+            🛡️ Business Continuity
+          </Link>
+          <Link 
+            href="/platform-operations" 
+            className={`nav-link ${isActive('/platform-operations') ? 'nav-link-active' : ''}`}
+          >
+            ⚙️ Platform Operations
+          </Link>
+          <Link 
+            href="/ai-copilot" 
+            className={`nav-link ${isActive('/ai-copilot') ? 'nav-link-active' : ''}`}
+          >
+            🤖 AI Copilot
+          </Link>
+          <Link 
+            href="/mobile-enterprise" 
+            className={`nav-link ${isActive('/mobile-enterprise') ? 'nav-link-active' : ''}`}
+          >
+            📱 Mobile Enterprise
+          </Link>
+          <Link 
+            href="/enterprise-admin" 
+            className={`nav-link ${isActive('/enterprise-admin') ? 'nav-link-active' : ''}`}
+          >
+            👑 Enterprise Admin
+          </Link>
+          <Link 
+            href="/settings/billing" 
+            className={`nav-link ${isActive('/settings/billing') ? 'nav-link-active' : ''}`}
+          >
+            💳 Subscription & Billing
+          </Link>
+          <Link 
+            href="/superadmin/tenants" 
+            className={`nav-link ${isActive('/superadmin/tenants') ? 'nav-link-active' : ''}`}
+          >
+            🛡️ Super Admin Control
+          </Link>
+          <Link 
+            href="/superadmin/analytics" 
+            className={`nav-link ${isActive('/superadmin/analytics') ? 'nav-link-active' : ''}`}
+          >
+            📈 SaaS Tenant Analytics
+          </Link>
+          <Link 
+            href="/settings/sso" 
+            className={`nav-link ${isActive('/settings/sso') ? 'nav-link-active' : ''}`}
+          >
+            🔐 SSO & SAML Auth
+          </Link>
+          <Link 
+            href="/approvals" 
+            className={`nav-link ${isActive('/approvals') ? 'nav-link-active' : ''}`}
+          >
+            📥 Approvals Inbox
+          </Link>
+          <Link 
+            href="/employees/profile-360" 
+            className={`nav-link ${isActive('/employees/profile-360') ? 'nav-link-active' : ''}`}
+          >
+            👤 Employee 360
+          </Link>
+          <Link 
+            href="/settings/salary-structures" 
+            className={`nav-link ${isActive('/settings/salary-structures') ? 'nav-link-active' : ''}`}
+          >
+            💵 Salary Structure
+          </Link>
+          <Link 
+            href="/settings/notifications" 
+            className={`nav-link ${isActive('/settings/notifications') ? 'nav-link-active' : ''}`}
+          >
+            🔔 Smart Notifications
+          </Link>
+          <Link 
+            href="/payroll/bank-export" 
+            className={`nav-link ${isActive('/payroll/bank-export') ? 'nav-link-active' : ''}`}
+          >
+            🏦 Bank Payroll Export
+          </Link>
+          <Link 
+            href="/recruitment/interviews" 
+            className={`nav-link ${isActive('/recruitment/interviews') ? 'nav-link-active' : ''}`}
+          >
+            📅 Interviews & Offers
+          </Link>
+          <Link 
+            href="/audit" 
+            className={`nav-link ${isActive('/audit') ? 'nav-link-active' : ''}`}
+          >
+            📋 Audit Center
+          </Link>
+          <Link 
             href="/settings" 
             className={`nav-link ${isActive('/settings') ? 'nav-link-active' : ''}`}
           >
