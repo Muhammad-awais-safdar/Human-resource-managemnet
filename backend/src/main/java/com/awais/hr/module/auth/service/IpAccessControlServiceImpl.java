@@ -1,5 +1,7 @@
 package com.awais.hr.module.auth.service;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -9,6 +11,7 @@ import javax.sql.DataSource;
 @Transactional(readOnly = true)
 public class IpAccessControlServiceImpl implements IpAccessControlService {
 
+    private static final Logger log = LoggerFactory.getLogger(IpAccessControlServiceImpl.class);
     private final DataSource dataSource;
 
     public IpAccessControlServiceImpl(DataSource dataSource) {
@@ -25,6 +28,7 @@ public class IpAccessControlServiceImpl implements IpAccessControlService {
                     Boolean.class, clientIp
             );
             if (isBlacklisted != null && isBlacklisted) {
+                log.warn("[IP RESTRICTION] Access denied for blacklisted IP: {}", clientIp);
                 return false;
             }
 
@@ -38,12 +42,17 @@ public class IpAccessControlServiceImpl implements IpAccessControlService {
                         "SELECT EXISTS(SELECT 1 FROM ip_restriction WHERE ip_address = ? AND type = 'ALLOW')",
                         Boolean.class, clientIp
                 );
-                return isWhitelisted != null && isWhitelisted;
+                boolean allowed = isWhitelisted != null && isWhitelisted;
+                if (!allowed) {
+                    log.warn("[IP RESTRICTION] Access denied for non-whitelisted IP: {}", clientIp);
+                }
+                return allowed;
             }
             return true;
         } catch (Exception e) {
-            System.err.println("Warning: ip_restriction validation error - " + e.getMessage());
+            log.warn("Warning: ip_restriction validation note - {}", e.getMessage());
             return true; // Safe fallback to not block system operations if tables aren't ready
         }
     }
 }
+

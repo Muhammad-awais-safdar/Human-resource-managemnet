@@ -7,16 +7,17 @@ import com.awais.hr.module.tenant.model.Tenant;
 import com.awais.hr.module.tenant.repository.TenantRepository;
 import com.awais.hr.module.tenant.service.TenantService;
 import jakarta.servlet.http.HttpServletRequest;
-
-import java.util.List;
-import java.util.Optional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import javax.sql.DataSource;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 @RestController
@@ -24,6 +25,7 @@ import java.util.UUID;
 @CrossOrigin(origins = "*")
 public class AuthController {
 
+    private static final Logger log = LoggerFactory.getLogger(AuthController.class);
     private final DataSource routingDataSource;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtils jwtUtils;
@@ -62,6 +64,7 @@ public class AuthController {
         }
 
         email = email.trim().toLowerCase();
+        log.info("[AUTH REGISTER] Attempting employee registration for email: {} in tenant: {}", email, tenantId);
         JdbcTemplate jdbcTemplate = new JdbcTemplate(routingDataSource);
 
         try {
@@ -71,6 +74,7 @@ public class AuthController {
                     Integer.class, email
             );
             if (count != null && count > 0) {
+                log.warn("[AUTH REGISTER CONFLICT] Email {} already registered", email);
                 return ResponseEntity.status(HttpStatus.CONFLICT)
                         .body(Map.of("success", false, "message", "An employee profile with email '" + email + "' is already registered in this workspace organization."));
             }
@@ -96,6 +100,7 @@ public class AuthController {
                 );
             }
 
+            log.info("[AUTH REGISTER SUCCESS] Created employee ID: {} with code: {}", employeeId, employeeCode);
             return ResponseEntity.ok(Map.of(
                     "success", true,
                     "message", "Employee account registered successfully. You may now log in to your workspace.",
@@ -105,6 +110,7 @@ public class AuthController {
             ));
 
         } catch (Exception e) {
+            log.error("[AUTH REGISTER ERROR] {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("success", false, "message", "Failed to register employee account: " + e.getMessage()));
         }
@@ -120,6 +126,8 @@ public class AuthController {
         if (email != null) {
             email = email.trim().toLowerCase();
         }
+
+        log.info("[AUTH LOGIN] Login attempt for user: {} from IP: {}", email, clientIp);
 
         // Base domain login resolution: if no subdomain is present, locate user's workspace tenant
         if (tenantId == null && email != null) {
@@ -142,6 +150,7 @@ public class AuthController {
         }
 
         if (tenantId == null) {
+            log.warn("[AUTH LOGIN FAILED] Could not resolve tenant context for email: {}", email);
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(Map.of("success", false, "message", "No workspace tenant context resolved. Make sure you enter a registered email address or access via your workspace subdomain."));
         }
@@ -169,7 +178,7 @@ public class AuthController {
                 Optional<Tenant> tenantOpt = findTenantByIdMaster(tenantId);
                 String subdomain = tenantOpt.map(Tenant::getSubdomain).orElse("awais");
                 
-                System.out.println("[MFA] Generated verification code " + mfaCode + " for user: " + email);
+                log.info("[MFA GENERATED] Verification code issued for user: {} in tenant: {}", email, tenantId);
                 return ResponseEntity.ok(Map.of(
                         "success", true,
                         "mfaRequired", true,
@@ -179,11 +188,13 @@ public class AuthController {
                         "message", "Credentials verified. MFA verification code sent."
                 ));
             } else {
+                log.warn("[AUTH LOGIN FAILED] Password mismatch for user: {}", email);
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                         .body(Map.of("success", false, "message", "Invalid email or password"));
             }
 
         } catch (Exception e) {
+            log.warn("[AUTH LOGIN ERROR] Invalid credentials for user: {} - {}", email, e.getMessage());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(Map.of("success", false, "message", "Invalid email or password"));
         }

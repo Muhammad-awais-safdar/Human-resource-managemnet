@@ -5,6 +5,9 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -19,6 +22,7 @@ import java.util.stream.Collectors;
 
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
+    private static final Logger log = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
     private final JwtUtils jwtUtils;
     private final DataSource dataSource;
 
@@ -52,9 +56,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 String tenantId = jwtUtils.getTenantIdFromToken(token);
                 String roles = jwtUtils.getRolesFromToken(token);
                 
-                // Override the thread context with the verified token tenant ID
+                // Override the thread context with the verified token tenant ID and user MDC
                 if (tenantId != null) {
                     TenantContextHolder.setCurrentTenant(tenantId);
+                    MDC.put("tenantId", tenantId);
+                }
+                if (email != null) {
+                    MDC.put("userId", email);
                 }
 
                 // Verify Session IP & User-Agent Device Binding signatures
@@ -75,7 +83,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
                         // Block access and revoke session if token is hijacked
                         if (!Objects.equals(savedIp, clientIp) || !Objects.equals(savedUserAgent, userAgent)) {
-                            System.err.println("[SECURITY ALERT] Hijack attempt detected. Client IP: " + clientIp + ", expected: " + savedIp);
+                            log.warn("[SECURITY ALERT] Session hijack attempt detected for user: {}. Client IP: {}, expected: {}", email, clientIp, savedIp);
                             jdbcTemplate.update("DELETE FROM active_session WHERE token = ?", token);
                             response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Security alert: Device signature mismatch. Session revoked.");
                             return;
@@ -97,7 +105,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                         SecurityContextHolder.getContext().setAuthentication(auth);
                     }
                 } catch (Exception e) {
-                    // Ignore session check error for filter continuation
+                    log.debug("Session verification note: {}", e.getMessage());
                 }
             }
         }
@@ -105,3 +113,4 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 }
+

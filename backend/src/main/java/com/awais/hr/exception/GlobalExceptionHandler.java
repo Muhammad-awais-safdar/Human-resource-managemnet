@@ -1,7 +1,11 @@
 package com.awais.hr.exception;
 
 import com.awais.hr.context.TenantContextHolder;
-import com.awais.hr.module.observability.service.LogStreamManager;
+import com.awais.hr.module.observability.service.ObservabilityService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -9,22 +13,24 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    private final LogStreamManager logStreamManager;
+    private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+    private final ObjectProvider<ObservabilityService> observabilityServiceProvider;
 
-    public GlobalExceptionHandler(LogStreamManager logStreamManager) {
-        this.logStreamManager = logStreamManager;
+    public GlobalExceptionHandler(ObjectProvider<ObservabilityService> observabilityServiceProvider) {
+        this.observabilityServiceProvider = observabilityServiceProvider;
     }
 
     @ExceptionHandler(TenantAlreadyExistsException.class)
     public ResponseEntity<Map<String, Object>> handleTenantAlreadyExists(TenantAlreadyExistsException ex) {
-        logStreamManager.addLog("WARN", "tenant", TenantContextHolder.getCurrentTenant(), "tr-ex", "Tenant conflict: " + ex.getMessage(), "127.0.0.1");
+        log.warn("[TENANT CONFLICT] {}", ex.getMessage());
         Map<String, Object> body = new HashMap<>();
         body.put("success", false);
         body.put("message", ex.getMessage());
@@ -33,7 +39,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(InvalidTenantException.class)
     public ResponseEntity<Map<String, Object>> handleInvalidTenant(InvalidTenantException ex) {
-        logStreamManager.addLog("WARN", "tenant", TenantContextHolder.getCurrentTenant(), "tr-ex", "Invalid tenant: " + ex.getMessage(), "127.0.0.1");
+        log.warn("[INVALID TENANT] {}", ex.getMessage());
         Map<String, Object> body = new HashMap<>();
         body.put("success", false);
         body.put("message", ex.getMessage());
@@ -42,7 +48,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, Object>> handleValidationExceptions(MethodArgumentNotValidException ex) {
-        logStreamManager.addLog("WARN", "system", TenantContextHolder.getCurrentTenant(), "tr-val", "Validation failed: " + ex.getMessage(), "127.0.0.1");
+        log.warn("[VALIDATION FAILURE] Payload validation failed for incoming request");
         Map<String, Object> body = new HashMap<>();
         body.put("success", false);
         
@@ -60,7 +66,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(SecurityException.class)
     public ResponseEntity<Map<String, Object>> handleSecurityException(SecurityException ex) {
-        logStreamManager.addLog("WARN", "security", TenantContextHolder.getCurrentTenant(), "sec-" + UUID.randomUUID().toString().substring(0, 6), "Security violation: " + ex.getMessage(), "127.0.0.1");
+        log.warn("[SECURITY VIOLATION] {}", ex.getMessage());
         Map<String, Object> body = new HashMap<>();
         body.put("success", false);
         body.put("message", ex.getMessage());
@@ -69,12 +75,37 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, Object>> handleGeneralExceptions(Exception ex) {
-        logStreamManager.addLog("ERROR", "system", TenantContextHolder.getCurrentTenant(), "err-" + UUID.randomUUID().toString().substring(0, 6), "Unhandled Exception: " + ex.getClass().getSimpleName() + " - " + ex.getMessage(), "127.0.0.1");
-        ex.printStackTrace();
+        String traceId = MDC.get("traceId");
+        String tenantId = TenantContextHolder.getCurrentTenant();
+        log.error("[UNCAUGHT EXCEPTION] [TraceID: {}] Root Cause: {} - {}", traceId, ex.getClass().getName(), ex.getMessage(), ex);
+
+        StringWriter sw = new StringWriter();
+        ex.printStackTrace(new PrintWriter(sw));
+        String stackTraceStr = sw.toString();
+
+        ObservabilityService obsService = observabilityServiceProvider.getIfAvailable();
+        if (obsService != null) {
+            obsService.recordExceptionLog(
+                    tenantId != null ? tenantId : "awais",
+                    MDC.get("requestId"),
+                    traceId,
+                    ex.getClass().getName(),
+                    ex.getMessage(),
+                    stackTraceStr,
+                    "BackendService",
+                    "GlobalExceptionHandler",
+                    MDC.get("requestUri"),
+                    MDC.get("method"),
+                    MDC.get("userId")
+            );
+        }
+
         Map<String, Object> body = new HashMap<>();
         body.put("success", false);
         body.put("message", "An unexpected server-side error occurred: " + ex.getMessage());
+        body.put("traceId", traceId);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(body);
     }
 }
+
 

@@ -1,5 +1,7 @@
 package com.awais.hr.module.approvals.service;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -10,6 +12,7 @@ import java.util.*;
 @Transactional
 public class ApprovalServiceImpl implements ApprovalService {
 
+    private static final Logger log = LoggerFactory.getLogger(ApprovalServiceImpl.class);
     private final DataSource dataSource;
 
     public ApprovalServiceImpl(DataSource dataSource) {
@@ -35,7 +38,7 @@ public class ApprovalServiceImpl implements ApprovalService {
             );
             pending.addAll(leaves);
         } catch (Exception e) {
-            System.err.println("Error fetching pending leaves: " + e.getMessage());
+            log.warn("Error fetching pending leaves: {}", e.getMessage());
         }
 
         try {
@@ -50,7 +53,7 @@ public class ApprovalServiceImpl implements ApprovalService {
             );
             pending.addAll(expenses);
         } catch (Exception e) {
-            System.err.println("Error fetching pending expenses: " + e.getMessage());
+            log.warn("Error fetching pending expenses: {}", e.getMessage());
         }
 
         try {
@@ -65,7 +68,7 @@ public class ApprovalServiceImpl implements ApprovalService {
             );
             pending.addAll(travel);
         } catch (Exception e) {
-            System.err.println("Error fetching pending travel: " + e.getMessage());
+            log.warn("Error fetching pending travel: {}", e.getMessage());
         }
 
         try {
@@ -81,7 +84,7 @@ public class ApprovalServiceImpl implements ApprovalService {
             );
             pending.addAll(timesheets);
         } catch (Exception e) {
-            System.err.println("Error fetching pending timesheets: " + e.getMessage());
+            log.warn("Error fetching pending timesheets: {}", e.getMessage());
         }
 
         try {
@@ -96,7 +99,7 @@ public class ApprovalServiceImpl implements ApprovalService {
             );
             pending.addAll(resignations);
         } catch (Exception e) {
-            System.err.println("Error fetching pending resignations: " + e.getMessage());
+            log.warn("Error fetching pending resignations: {}", e.getMessage());
         }
 
         try {
@@ -111,9 +114,10 @@ public class ApprovalServiceImpl implements ApprovalService {
             );
             pending.addAll(clearances);
         } catch (Exception e) {
-            System.err.println("Error fetching pending clearances: " + e.getMessage());
+            log.warn("Error fetching pending clearances: {}", e.getMessage());
         }
 
+        log.info("Retrieved {} total pending approval items", pending.size());
         return pending;
     }
 
@@ -121,6 +125,7 @@ public class ApprovalServiceImpl implements ApprovalService {
     public void actionApproval(String type, String id, String action, String comment) {
         JdbcTemplate jdbc = new JdbcTemplate(dataSource);
         String finalStatus = "APPROVED".equalsIgnoreCase(action) ? "APPROVED" : "REJECTED";
+        log.info("[APPROVAL ACTION] Type: {} | ID: {} | Action: {} -> {}", type, id, action, finalStatus);
 
         if ("LEAVE".equalsIgnoreCase(type)) {
             jdbc.update("UPDATE leave_request SET status = ? WHERE id = ?", finalStatus, id);
@@ -139,7 +144,9 @@ public class ApprovalServiceImpl implements ApprovalService {
                 jdbc.update("UPDATE exit_clearance SET status = 'REJECTED' WHERE id = ?", id);
             }
         } else {
+            log.error("[APPROVAL ACTION FAILED] Unknown approval type: {}", type);
             throw new IllegalArgumentException("Unknown approval type: " + type);
         }
     }
 }
+

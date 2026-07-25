@@ -16,6 +16,9 @@ public class LogStreamManager {
     private final Set<SseEmitter> activeEmitters = ConcurrentHashMap.newKeySet();
 
     public LogStreamManager() {
+        // Register static instance for Logback Appender integration
+        com.awais.hr.module.observability.util.ObservabilityLogbackAppender.setLogStreamManager(this);
+
         // Pre-fill ring buffer with system startup events
         long now = System.currentTimeMillis();
         addLog("INFO", "system", "awais", "tr-start-01", "Awais HR Engine initialized with Zero-Latency Log Streamer", "127.0.0.1");

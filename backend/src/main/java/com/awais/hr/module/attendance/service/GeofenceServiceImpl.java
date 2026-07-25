@@ -1,5 +1,7 @@
 package com.awais.hr.module.attendance.service;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -11,6 +13,7 @@ import java.util.Map;
 @Transactional(readOnly = true)
 public class GeofenceServiceImpl implements GeofenceService {
 
+    private static final Logger log = LoggerFactory.getLogger(GeofenceServiceImpl.class);
     private final DataSource dataSource;
 
     public GeofenceServiceImpl(DataSource dataSource) {
@@ -36,7 +39,7 @@ public class GeofenceServiceImpl implements GeofenceService {
                     "SELECT latitude, longitude, radius_km FROM geofence_setting WHERE active = TRUE"
             );
             if (activeGeofences.isEmpty()) {
-                // System warning, allow access fallback if no geofence configured at all
+                log.info("No active geofence settings found. Allowing attendance access by default.");
                 return true;
             }
 
@@ -47,13 +50,16 @@ public class GeofenceServiceImpl implements GeofenceService {
 
                 double distanceKm = calculateHaversineDistance(latitude, longitude, officeLat, officeLon);
                 if (distanceKm <= allowedRadiusKm) {
+                    log.info("[GEOFENCE VERIFIED] Location ({}, {}) is within allowed radius ({} km)", latitude, longitude, allowedRadiusKm);
                     return true;
                 }
             }
+            log.warn("[GEOFENCE VIOLATION] Location ({}, {}) is outside all active geofence zones", latitude, longitude);
             return false;
         } catch (Exception e) {
-            System.err.println("Warning: geofence verification error - " + e.getMessage());
+            log.warn("Warning: geofence verification error - {}", e.getMessage());
             return true; // Fallback to not disrupt operations
         }
     }
 }
+

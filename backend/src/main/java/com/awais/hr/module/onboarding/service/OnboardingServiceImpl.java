@@ -1,6 +1,8 @@
 package com.awais.hr.module.onboarding.service;
 
 import com.awais.hr.module.onboarding.dto.PolicySignatureRequestDTO;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -11,6 +13,7 @@ import java.util.*;
 @Transactional
 public class OnboardingServiceImpl implements OnboardingService {
 
+    private static final Logger log = LoggerFactory.getLogger(OnboardingServiceImpl.class);
     private final DataSource dataSource;
 
     public OnboardingServiceImpl(DataSource dataSource) {
@@ -54,6 +57,7 @@ public class OnboardingServiceImpl implements OnboardingService {
     public void completeTask(String id) {
         JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
         jdbcTemplate.update("UPDATE onboarding_task SET status_completed = TRUE WHERE id = ?", id);
+        log.info("Onboarding task completed: {}", id);
     }
 
     @Override
@@ -92,6 +96,7 @@ public class OnboardingServiceImpl implements OnboardingService {
                 "INSERT INTO onboarding_policy_signature (id, employee_id, name, document) VALUES (?, ?, ?, ?)",
                 UUID.randomUUID().toString(), employeeId, dto.getName(), dto.getDocument()
         );
-        System.out.println("[COMPLIANCE] Digital policy agreement signature logged: " + dto.getName() + " signed document: " + dto.getDocument());
+        log.info("[COMPLIANCE SIGNATURE] Policy agreement logged for: {} - signed document: {}", dto.getName(), dto.getDocument());
     }
 }
+
