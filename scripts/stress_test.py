@@ -32,19 +32,19 @@ JWT_SECRET = "awais_hr_enterprise_secure_jwt_token_secret_key_256_bits_long"
 
 # Seeded multi-role enterprise accounts for login stress testing
 TEST_USERS = [
-    {"email": "admin@awais.com", "password": "admin123", "role": "SYSTEM_ADMIN,TENANT_ADMIN,HR_MANAGER"},
-    {"email": "tenant.admin@awais.com", "password": "password123", "role": "TENANT_ADMIN,HR_MANAGER"},
-    {"email": "hr.manager@awais.com", "password": "password123", "role": "HR_MANAGER"},
-    {"email": "line.manager@awais.com", "password": "password123", "role": "LINE_MANAGER"},
-    {"email": "employee.john@awais.com", "password": "password123", "role": "EMPLOYEE"},
-    {"email": "employee.jane@awais.com", "password": "password123", "role": "EMPLOYEE"}
+    {"email": "admin@awais.com", "password": "admin123", "role": "ROLE_ADMIN,SYSTEM_ADMIN,TENANT_ADMIN,HR_MANAGER,EMPLOYEE"},
+    {"email": "tenant.admin@awais.com", "password": "password123", "role": "ROLE_ADMIN,TENANT_ADMIN,HR_MANAGER,EMPLOYEE"},
+    {"email": "hr.manager@awais.com", "password": "password123", "role": "ROLE_ADMIN,HR_MANAGER,EMPLOYEE"},
+    {"email": "line.manager@awais.com", "password": "password123", "role": "ROLE_ADMIN,LINE_MANAGER,EMPLOYEE"},
+    {"email": "employee.john@awais.com", "password": "password123", "role": "ROLE_ADMIN,EMPLOYEE"},
+    {"email": "employee.jane@awais.com", "password": "password123", "role": "ROLE_ADMIN,EMPLOYEE"}
 ]
 
 def base64url_encode(data: bytes) -> str:
     return base64.urlsafe_b64encode(data).rstrip(b'=').decode('utf-8')
 
-def generate_jwt(email: str, tenant_id: str = "awais", roles: str = "SYSTEM_ADMIN,TENANT_ADMIN,HR_MANAGER,EMPLOYEE") -> str:
-    header = {"alg": "HS256", "typ": "JWT"}
+def generate_jwt(email: str, tenant_id: str = "awais", roles: str = "ROLE_ADMIN,SYSTEM_ADMIN,TENANT_ADMIN,HR_MANAGER,EMPLOYEE") -> str:
+    header = {"alg": "HS256"}
     now = int(time.time())
     payload = {
         "sub": email,
@@ -53,7 +53,7 @@ def generate_jwt(email: str, tenant_id: str = "awais", roles: str = "SYSTEM_ADMI
         "iat": now,
         "exp": now + 86400
     }
-    encoded_header = base64url_encode(json.dumps(header).encode('utf-8'))
+    encoded_header = base64url_encode(json.dumps(header, separators=(',', ':')).encode('utf-8'))
     encoded_payload = base64url_encode(json.dumps(payload, separators=(',', ':')).encode('utf-8'))
     signature_input = f"{encoded_header}.{encoded_payload}".encode('utf-8')
     signature = hmac.new(JWT_SECRET.encode('utf-8'), signature_input, hashlib.sha256).digest()

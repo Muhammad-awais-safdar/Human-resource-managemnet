@@ -1,4 +1,4 @@
-package com.awais.hr.config;
+ package com.awais.hr.config;
 
 import com.awais.hr.context.TenantContextHolder;
 import jakarta.servlet.FilterChain;
@@ -65,12 +65,25 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     MDC.put("userId", email);
                 }
 
-                // Verify Session IP & User-Agent Device Binding signatures
-                org.springframework.jdbc.core.JdbcTemplate jdbcTemplate = new org.springframework.jdbc.core.JdbcTemplate(dataSource);
-                String clientIp = request.getRemoteAddr();
-                String userAgent = request.getHeader("User-Agent");
+                List<SimpleGrantedAuthority> authorities = Arrays.stream(roles.split(","))
+                        .map(String::trim)
+                        .filter(r -> !r.isEmpty())
+                        .map(r -> r.startsWith("ROLE_") ? r : "ROLE_" + r)
+                        .map(SimpleGrantedAuthority::new)
+                        .collect(Collectors.toList());
+                
+                UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
+                        email, null, authorities
+                );
+                
+                SecurityContextHolder.getContext().setAuthentication(auth);
 
+                // Verify Session IP & User-Agent Device Binding signatures if active_session table exists
                 try {
+                    org.springframework.jdbc.core.JdbcTemplate jdbcTemplate = new org.springframework.jdbc.core.JdbcTemplate(dataSource);
+                    String clientIp = request.getRemoteAddr();
+                    String userAgent = request.getHeader("User-Agent");
+
                     List<Map<String, Object>> sessions = jdbcTemplate.queryForList(
                             "SELECT ip_address, user_agent FROM active_session WHERE token = ?",
                             token
@@ -81,29 +94,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                         String savedIp = (String) session.get("ip_address");
                         String savedUserAgent = (String) session.get("user_agent");
 
-                        // Block access and revoke session if token is hijacked
                         if (savedIp != null && savedUserAgent != null && (!Objects.equals(savedIp, clientIp) || !Objects.equals(savedUserAgent, userAgent))) {
                             log.warn("[SECURITY ALERT] Session hijack attempt detected for user: {}. Client IP: {}, expected: {}", email, clientIp, savedIp);
                             jdbcTemplate.update("DELETE FROM active_session WHERE token = ?", token);
+                            SecurityContextHolder.clearContext();
                             response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Security alert: Device signature mismatch. Session revoked.");
                             return;
                         }
                     }
-
-                    List<SimpleGrantedAuthority> authorities = Arrays.stream(roles.split(","))
-                            .map(String::trim)
-                            .filter(r -> !r.isEmpty())
-                            .map(r -> new SimpleGrantedAuthority("ROLE_" + r))
-                            .collect(Collectors.toList());
-                    
-                    org.springframework.security.core.userdetails.User userDetails =
-                            new org.springframework.security.core.userdetails.User(email, "", authorities);
-                    
-                    UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
-                            userDetails, null, authorities
-                    );
-                    
-                    SecurityContextHolder.getContext().setAuthentication(auth);
                 } catch (Exception e) {
                     log.debug("Session verification note: {}", e.getMessage());
                 }
