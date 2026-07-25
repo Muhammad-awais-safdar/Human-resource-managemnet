@@ -162,10 +162,10 @@ export default function DashboardLayout({ children }) {
             href="/dashboard" 
             className={`nav-link ${isActive('/dashboard') ? 'nav-link-active' : ''}`}
           >
-            📊 {userRole === 'SYSTEM_ADMIN' ? 'SaaS Super Admin Dashboard' : userRole === 'TENANT_ADMIN' ? 'Tenant Org Dashboard' : 'Employee ESS Dashboard'}
+            📊 {userRole === 'SYSTEM_ADMIN' ? 'SaaS Super Admin Dashboard' : (userRole === 'TENANT_ADMIN' || userRole === 'HR_MANAGER') ? 'Tenant Org Dashboard' : 'Employee ESS Dashboard'}
           </Link>
 
-          {/* 1. SaaS PLATFORM PRODUCT OWNER / SUPER ADMIN SECTION */}
+          {/* 1. SAAS PLATFORM CONTROL (SYSTEM_ADMIN ONLY) */}
           {userRole === 'SYSTEM_ADMIN' && (
             <>
               <div className="nav-section-label" style={{ marginTop: '16px', color: '#eab308' }}>👑 SAAS PLATFORM CONTROL</div>
@@ -187,6 +187,9 @@ export default function DashboardLayout({ children }) {
               <Link href="/audit" className={`nav-link ${isActive('/audit') ? 'nav-link-active' : ''}`}>
                 📋 Global Security Audit Ledger
               </Link>
+              <Link href="/logs" className={`nav-link ${isActive('/logs') ? 'nav-link-active' : ''}`}>
+                📊 Platform & Security Logs
+              </Link>
               <Link href="/data-migration" className={`nav-link ${isActive('/data-migration') ? 'nav-link-active' : ''}`}>
                 🔄 Multi-Tenant Data Migration
               </Link>
@@ -199,19 +202,23 @@ export default function DashboardLayout({ children }) {
             </>
           )}
 
-          {/* 2. TENANT ORGANIZATION ADMIN & HR MANAGER SECTION */}
-          {(userRole === 'TENANT_ADMIN' || userRole === 'SYSTEM_ADMIN' || userRole === 'HR_MANAGER') && (
+          {/* 2. TENANT ORGANIZATION ADMINISTRATION (TENANT_ADMIN & HR_MANAGER) */}
+          {(userRole === 'TENANT_ADMIN' || userRole === 'HR_MANAGER') && (
             <>
               <div className="nav-section-label" style={{ marginTop: '16px', color: '#6366f1' }}>🏢 ORGANIZATION ADMINISTRATION</div>
               <Link href="/org-chart" className={`nav-link ${isActive('/org-chart') ? 'nav-link-active' : ''}`}>
                 🏢 Org Chart & Hierarchy
               </Link>
-              <Link href="/settings" className={`nav-link ${isActive('/settings') ? 'nav-link-active' : ''}`}>
-                🎨 Workspace White-labeling
-              </Link>
-              <Link href="/roles" className={`nav-link ${isActive('/roles') ? 'nav-link-active' : ''}`}>
-                🔐 Roles & Security Matrix
-              </Link>
+              {userRole === 'TENANT_ADMIN' && (
+                <>
+                  <Link href="/settings" className={`nav-link ${isActive('/settings') ? 'nav-link-active' : ''}`}>
+                    🎨 Workspace White-labeling
+                  </Link>
+                  <Link href="/roles" className={`nav-link ${isActive('/roles') ? 'nav-link-active' : ''}`}>
+                    🔐 Roles & Security Matrix
+                  </Link>
+                </>
+              )}
               <Link href="/payroll" className={`nav-link ${isActive('/payroll') ? 'nav-link-active' : ''}`}>
                 💰 Payroll Calculation Engine
               </Link>
@@ -233,31 +240,50 @@ export default function DashboardLayout({ children }) {
               <Link href="/compliance-management" className={`nav-link ${isActive('/compliance-management') ? 'nav-link-active' : ''}`}>
                 ⚖️ Compliance & Audits
               </Link>
+
+              <div className="nav-section-label" style={{ marginTop: '16px', color: '#38bdf8' }}>👥 MANAGER PORTAL</div>
+              <Link href="/mss" className={`nav-link ${isActive('/mss') ? 'nav-link-active' : ''}`}>
+                👥 Team MSS Portal
+              </Link>
             </>
           )}
 
-          {/* 3. EMPLOYEE & TEAM PORTALS */}
-          <div className="nav-section-label" style={{ marginTop: '16px', color: '#10b981' }}>👥 WORKFORCE & SELF-SERVICE</div>
-          <Link href="/ess" className={`nav-link ${isActive('/ess') ? 'nav-link-active' : ''}`}>
-            👤 My ESS Portal
-          </Link>
-          <Link href="/mss" className={`nav-link ${isActive('/mss') ? 'nav-link-active' : ''}`}>
-            👥 Team MSS Portal
-          </Link>
-          <Link href="/leaves" className={`nav-link ${isActive('/leaves') ? 'nav-link-active' : ''}`}>
-            🏖️ Vacation & Leave Requests
-          </Link>
-          <Link href="/shifts" className={`nav-link ${isActive('/shifts') ? 'nav-link-active' : ''}`}>
-            📅 Shift Schedule
-          </Link>
-          <Link href="/learning" className={`nav-link ${isActive('/learning') ? 'nav-link-active' : ''}`}>
-            🎓 Learning & LMS
-          </Link>
-          <Link href="/performance" className={`nav-link ${isActive('/performance') ? 'nav-link-active' : ''}`}>
-            📈 Performance Reviews
-          </Link>
+          {/* 3. RECRUITER ATS NAVIGATION */}
+          {userRole === 'RECRUITER' && (
+            <>
+              <div className="nav-section-label" style={{ marginTop: '16px', color: '#a855f7' }}>💼 TALENT ACQUISITION</div>
+              <Link href="/recruitment" className={`nav-link ${isActive('/recruitment') ? 'nav-link-active' : ''}`}>
+                💼 Recruitment & ATS
+              </Link>
+              <Link href="/lifecycle" className={`nav-link ${isActive('/lifecycle') ? 'nav-link-active' : ''}`}>
+                📋 Candidate Milestones
+              </Link>
+            </>
+          )}
 
-          {/* 4. UTILITIES & EXTENSIONS */}
+          {/* 4. EMPLOYEE SELF-SERVICE (EMPLOYEE, HR_MANAGER & TENANT_ADMIN) */}
+          {(userRole === 'EMPLOYEE' || userRole === 'HR_MANAGER' || userRole === 'TENANT_ADMIN') && (
+            <>
+              <div className="nav-section-label" style={{ marginTop: '16px', color: '#10b981' }}>👤 WORKFORCE & SELF-SERVICE</div>
+              <Link href="/ess" className={`nav-link ${isActive('/ess') ? 'nav-link-active' : ''}`}>
+                👤 My ESS Portal
+              </Link>
+              <Link href="/leaves" className={`nav-link ${isActive('/leaves') ? 'nav-link-active' : ''}`}>
+                🏖️ Vacation & Leave Requests
+              </Link>
+              <Link href="/shifts" className={`nav-link ${isActive('/shifts') ? 'nav-link-active' : ''}`}>
+                📅 Shift Schedule
+              </Link>
+              <Link href="/learning" className={`nav-link ${isActive('/learning') ? 'nav-link-active' : ''}`}>
+                🎓 Learning & LMS
+              </Link>
+              <Link href="/performance" className={`nav-link ${isActive('/performance') ? 'nav-link-active' : ''}`}>
+                📈 Performance Reviews
+              </Link>
+            </>
+          )}
+
+          {/* 5. SYSTEM UTILITIES (ALL ROLES) */}
           <div className="nav-section-label" style={{ marginTop: '16px' }}>⚙️ SYSTEM UTILITIES</div>
           <Link href="/profile" className={`nav-link ${isActive('/profile') ? 'nav-link-active' : ''}`}>
             👤 My Account Profile
@@ -265,9 +291,11 @@ export default function DashboardLayout({ children }) {
           <Link href="/ai-copilot" className={`nav-link ${isActive('/ai-copilot') ? 'nav-link-active' : ''}`}>
             🤖 AI HR Copilot
           </Link>
-          <Link href="/marketplace" className={`nav-link ${isActive('/marketplace') ? 'nav-link-active' : ''}`}>
-            🛍️ Integration Apps
-          </Link>
+          {(userRole === 'SYSTEM_ADMIN' || userRole === 'TENANT_ADMIN') && (
+            <Link href="/marketplace" className={`nav-link ${isActive('/marketplace') ? 'nav-link-active' : ''}`}>
+              🛍️ Integration Apps
+            </Link>
+          )}
         </nav>
 
         <div className="sidebar-footer">

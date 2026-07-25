@@ -136,12 +136,19 @@ export default function LeavesPage() {
           ))}
           {Array.from({ length: 14 }).map((_, idx) => {
             const dayNum = idx + 1;
-            // Mock some leaves spanning on this mockup view
-            const hasLeaves = requests.filter(r => r.status === 'APPROVED');
+            const currentDayDate = new Date(2026, 6, dayNum); // July 2026
+            const activeLeavesOnDay = requests.filter(r => {
+              if (r.status !== 'APPROVED') return false;
+              if (!r.startDate || !r.endDate) return true;
+              const start = new Date(r.startDate);
+              const end = new Date(r.endDate);
+              return currentDayDate >= start && currentDayDate <= end;
+            });
+
             return (
               <div key={idx} style={{ minHeight: '80px', border: '1px solid var(--border-light)', borderRadius: 'var(--radius-sm)', padding: '6px', background: 'rgba(255,255,255,0.01)' }}>
                 <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>July {dayNum}</span>
-                {dayNum >= 3 && dayNum <= 8 && hasLeaves.slice(0, 1).map(l => (
+                {activeLeavesOnDay.map(l => (
                   <div key={l.id} style={{ fontSize: '0.65rem', background: 'rgba(99, 102, 241, 0.15)', color: 'var(--accent-primary)', padding: '3px 6px', borderRadius: '3px', marginTop: '4px', fontWeight: '700', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                     ✈ {l.firstName} ({l.policyName})
                   </div>

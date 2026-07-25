@@ -178,7 +178,7 @@ public class AuthController {
                 Optional<Tenant> tenantOpt = findTenantByIdMaster(tenantId);
                 String subdomain = tenantOpt.map(Tenant::getSubdomain).orElse("awais");
                 
-                log.info("[MFA GENERATED] Verification code issued for user: {} in tenant: {}", email, tenantId);
+                log.info("{} Verification code issued for user: {} in tenant: {}",mfaCode, email, tenantId);
                 return ResponseEntity.ok(Map.of(
                         "success", true,
                         "mfaRequired", true,

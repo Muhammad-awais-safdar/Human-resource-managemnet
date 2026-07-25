@@ -15,7 +15,7 @@ export default function RecruitmentATSPage() {
   const [jobs, setJobs] = useState([]);
   const [candidates, setCandidates] = useState([]);
 
-  // Mock Career Portal State
+  // Career Portal State
   const [showApplyModal, setShowApplyModal] = useState(false);
   const [showCreateJobModal, setShowCreateJobModal] = useState(false);
   const [selectedJobId, setSelectedJobId] = useState('');
@@ -23,7 +23,7 @@ export default function RecruitmentATSPage() {
   const [applyLastName, setApplyLastName] = useState('');
   const [applyEmail, setApplyEmail] = useState('');
   const [applyResumeUrl, setApplyResumeUrl] = useState('');
-  const [applyResumeText, setApplyResumeText] = useState('Extracted skills: Java, Spring Boot, React. Phone: +923001234567');
+  const [applyResumeText, setApplyResumeText] = useState('');
 
   // Create Job Form State
   const [newJobTitle, setNewJobTitle] = useState('');
