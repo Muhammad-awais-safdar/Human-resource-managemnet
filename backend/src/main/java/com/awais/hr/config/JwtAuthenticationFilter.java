@@ -82,28 +82,28 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                         String savedUserAgent = (String) session.get("user_agent");
 
                         // Block access and revoke session if token is hijacked
-                        if (!Objects.equals(savedIp, clientIp) || !Objects.equals(savedUserAgent, userAgent)) {
+                        if (savedIp != null && savedUserAgent != null && (!Objects.equals(savedIp, clientIp) || !Objects.equals(savedUserAgent, userAgent))) {
                             log.warn("[SECURITY ALERT] Session hijack attempt detected for user: {}. Client IP: {}, expected: {}", email, clientIp, savedIp);
                             jdbcTemplate.update("DELETE FROM active_session WHERE token = ?", token);
                             response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Security alert: Device signature mismatch. Session revoked.");
                             return;
                         }
-
-                        List<SimpleGrantedAuthority> authorities = Arrays.stream(roles.split(","))
-                                .map(String::trim)
-                                .filter(r -> !r.isEmpty())
-                                .map(r -> new SimpleGrantedAuthority("ROLE_" + r))
-                                .collect(Collectors.toList());
-                        
-                        org.springframework.security.core.userdetails.User userDetails =
-                                new org.springframework.security.core.userdetails.User(email, "", authorities);
-                        
-                        UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
-                                userDetails, null, authorities
-                        );
-                        
-                        SecurityContextHolder.getContext().setAuthentication(auth);
                     }
+
+                    List<SimpleGrantedAuthority> authorities = Arrays.stream(roles.split(","))
+                            .map(String::trim)
+                            .filter(r -> !r.isEmpty())
+                            .map(r -> new SimpleGrantedAuthority("ROLE_" + r))
+                            .collect(Collectors.toList());
+                    
+                    org.springframework.security.core.userdetails.User userDetails =
+                            new org.springframework.security.core.userdetails.User(email, "", authorities);
+                    
+                    UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
+                            userDetails, null, authorities
+                    );
+                    
+                    SecurityContextHolder.getContext().setAuthentication(auth);
                 } catch (Exception e) {
                     log.debug("Session verification note: {}", e.getMessage());
                 }

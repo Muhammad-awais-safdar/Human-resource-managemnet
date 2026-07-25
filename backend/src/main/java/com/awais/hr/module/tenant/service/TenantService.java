@@ -42,15 +42,19 @@ public class TenantService {
     @PostConstruct
     public void initializeTenants() {
         log.info("Initializing active tenant connection pools on startup...");
-        List<Tenant> tenants = tenantRepository.findAll();
-        for (Tenant tenant : tenants) {
-            if ("ACTIVE".equalsIgnoreCase(tenant.getStatus())) {
-                try {
-                    registerTenantDataSource(tenant);
-                } catch (Exception e) {
-                    log.error("Failed to initialize connection pool for tenant: {}", tenant.getId(), e);
+        try {
+            List<Tenant> tenants = tenantRepository.findAll();
+            for (Tenant tenant : tenants) {
+                if ("ACTIVE".equalsIgnoreCase(tenant.getStatus())) {
+                    try {
+                        registerTenantDataSource(tenant);
+                    } catch (Exception e) {
+                        log.error("Failed to initialize connection pool for tenant: {}", tenant.getId(), e);
+                    }
                 }
             }
+        } catch (Exception e) {
+            log.warn("Master tenant table not fully ready during startup initialization: {}. DataSeeder will complete setup.", e.getMessage());
         }
     }
 

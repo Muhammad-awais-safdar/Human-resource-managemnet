@@ -28,6 +28,7 @@ public class PermissionAspect {
         this(dataSource, null);
     }
 
+    @org.springframework.beans.factory.annotation.Autowired
     public PermissionAspect(DataSource dataSource, ObjectProvider<ObservabilityService> observabilityServiceProvider) {
         this.dataSource = dataSource;
         this.observabilityServiceProvider = observabilityServiceProvider;

@@ -1,7 +1,11 @@
 package com.awais.hr.config;
 
 import com.awais.hr.context.TenantRoutingDataSource;
+import org.flywaydb.core.Flyway;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -15,6 +19,9 @@ import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 import javax.sql.DataSource;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.Statement;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -27,6 +34,17 @@ import java.util.Map;
 )
 public class DatabaseConfig {
 
+    private static final Logger log = LoggerFactory.getLogger(DatabaseConfig.class);
+
+    @Value("${spring.datasource.url:jdbc:postgresql://localhost:5432/awais_hr_master}")
+    private String masterUrl;
+
+    @Value("${spring.datasource.username:postgres}")
+    private String masterUsername;
+
+    @Value("${spring.datasource.password:root}")
+    private String masterPassword;
+
     @Bean
     @ConfigurationProperties("spring.datasource")
     public DataSourceProperties masterDataSourceProperties() {
@@ -35,7 +53,44 @@ public class DatabaseConfig {
 
     @Bean(name = "masterDataSource")
     public DataSource masterDataSource() {
+        ensureMasterDatabaseExists();
         return masterDataSourceProperties().initializeDataSourceBuilder().build();
+    }
+
+    @Bean(name = "masterFlyway")
+    public Flyway masterFlyway(@Qualifier("masterDataSource") DataSource masterDataSource) {
+        log.info("Executing Master Database Flyway migration against: {}", masterUrl);
+        Flyway flyway = Flyway.configure()
+                .dataSource(masterDataSource)
+                .locations("classpath:db/migration/master")
+                .baselineOnMigrate(true)
+                .load();
+        flyway.migrate();
+        log.info("Master Database Flyway migration completed successfully.");
+        return flyway;
+    }
+
+    private void ensureMasterDatabaseExists() {
+        try {
+            int lastSlashIndex = masterUrl.lastIndexOf('/');
+            if (lastSlashIndex > 0) {
+                String baseUrl = masterUrl.substring(0, lastSlashIndex + 1);
+                String dbName = masterUrl.substring(lastSlashIndex + 1);
+                int queryIndex = dbName.indexOf('?');
+                if (queryIndex > 0) {
+                    dbName = dbName.substring(0, queryIndex);
+                }
+                String adminUrl = baseUrl + "postgres";
+
+                try (Connection conn = DriverManager.getConnection(adminUrl, masterUsername, masterPassword);
+                     Statement stmt = conn.createStatement()) {
+                    stmt.executeUpdate("CREATE DATABASE \"" + dbName + "\"");
+                    log.info("Created Master database: {}", dbName);
+                } catch (Exception ignored) {
+                    // Database likely already exists
+                }
+            }
+        } catch (Exception ignored) {}
     }
 
     @Bean(name = "tenantRoutingDataSource")
@@ -60,7 +115,8 @@ public class DatabaseConfig {
     @Primary
     @Bean(name = "entityManagerFactory")
     public LocalContainerEntityManagerFactoryBean entityManagerFactory(
-            @Qualifier("dataSource") DataSource dataSource) {
+            @Qualifier("dataSource") DataSource dataSource,
+            @Qualifier("masterFlyway") Flyway masterFlyway) {
         LocalContainerEntityManagerFactoryBean em = new LocalContainerEntityManagerFactoryBean();
         em.setDataSource(dataSource);
         em.setPackagesToScan("com.awais.hr.module");

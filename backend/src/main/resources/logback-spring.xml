@@ -1,9 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration scan="true" scanPeriod="30 seconds">
 
-    <conversionRule conversionWord="clr" converterClass="org.springframework.boot.logging.logback.ColorConverter" />
-    <conversionRule conversionWord="wex" converterClass="org.springframework.boot.logging.logback.WhitespaceThrowableProxyConverter" />
-    <conversionRule conversionWord="wEx" converterClass="org.springframework.boot.logging.logback.NestedComplexThrowableProxyConverter" />
+    <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
 
     <!-- Console Appender with MDC context formatting -->
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
@@ -27,3 +25,4 @@
     </root>
 
 </configuration>
+
