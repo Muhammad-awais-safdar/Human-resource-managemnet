@@ -2,6 +2,8 @@ package com.awais.hr.module.auth.controller;
 
 import com.awais.hr.config.JwtUtils;
 import com.awais.hr.context.TenantContextHolder;
+import com.awais.hr.module.auth.model.PlatformUser;
+import com.awais.hr.module.auth.repository.PlatformUserRepository;
 import com.awais.hr.module.auth.service.IpAccessControlService;
 import com.awais.hr.module.tenant.model.Tenant;
 import com.awais.hr.module.tenant.repository.TenantRepository;
@@ -19,6 +21,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/auth")
@@ -32,16 +35,18 @@ public class AuthController {
     private final IpAccessControlService ipAccessControlService;
     private final TenantRepository tenantRepository;
     private final TenantService tenantService;
+    private final PlatformUserRepository platformUserRepository;
 
     public AuthController(DataSource routingDataSource, PasswordEncoder passwordEncoder, JwtUtils jwtUtils, 
                           IpAccessControlService ipAccessControlService, TenantRepository tenantRepository, 
-                          TenantService tenantService) {
+                          TenantService tenantService, PlatformUserRepository platformUserRepository) {
         this.routingDataSource = routingDataSource;
         this.passwordEncoder = passwordEncoder;
         this.jwtUtils = jwtUtils;
         this.ipAccessControlService = ipAccessControlService;
         this.tenantRepository = tenantRepository;
         this.tenantService = tenantService;
+        this.platformUserRepository = platformUserRepository;
     }
 
     @PostMapping({"/register", "/register-employee"})
@@ -120,83 +125,111 @@ public class AuthController {
     public ResponseEntity<?> login(@RequestBody Map<String, String> credentials, HttpServletRequest request) {
         String email = credentials.get("email");
         String password = credentials.get("password");
-        String tenantId = TenantContextHolder.getCurrentTenant();
+        String requestTenantId = TenantContextHolder.getCurrentTenant();
         String clientIp = request.getRemoteAddr();
 
         if (email != null) {
             email = email.trim().toLowerCase();
         }
 
-        log.info("[AUTH LOGIN] Login attempt for user: {} from IP: {}", email, clientIp);
+        log.info("[AUTH LOGIN] Login attempt for user: {} from IP: {}, requestTenantId: {}", email, clientIp, requestTenantId);
 
-        // Base domain login resolution: if no subdomain is present, locate user's workspace tenant
-        if (tenantId == null && email != null) {
-            for (Tenant t : findAllTenantsMaster()) {
-                try {
-                    DataSource ds = tenantService.getTenantDataSource(t.getId());
-                    if (ds != null) {
-                        JdbcTemplate tJdbc = new JdbcTemplate(ds);
-                        Integer count = tJdbc.queryForObject(
-                                "SELECT COUNT(1) FROM employee WHERE LOWER(email) = ? AND status = 'ACTIVE'",
-                                Integer.class, email
-                        );
-                        if (count != null && count > 0) {
-                            tenantId = t.getId();
-                            break;
-                        }
-                    }
-                } catch (Exception ignored) {}
-            }
-        }
+        boolean isBaseDomainRequest = (requestTenantId == null);
 
-        if (tenantId == null) {
-            log.warn("[AUTH LOGIN FAILED] Could not resolve tenant context for email: {}", email);
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("success", false, "message", "No workspace tenant context resolved. Make sure you enter a registered email address or access via your workspace subdomain."));
-        }
+        if (isBaseDomainRequest) {
+            // Base domain request: ONLY Platform Users (SYSTEM_ADMIN, PLATFORM_SUPPORT, DEVOPS_ENGINEER, etc.) are allowed
+            Optional<PlatformUser> pUserOpt = platformUserRepository.findByEmail(email);
+            if (pUserOpt.isPresent()) {
+                PlatformUser pUser = pUserOpt.get();
+                if (!passwordEncoder.matches(password, pUser.getPassword())) {
+                    return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                            .body(Map.of("success", false, "message", "Invalid email address or password."));
+                }
+                if (!"ACTIVE".equals(pUser.getStatus())) {
+                    return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                            .body(Map.of("success", false, "message", "Platform Administrator account is suspended."));
+                }
 
-        DataSource ds = tenantService.getTenantDataSource(tenantId);
-        JdbcTemplate jdbcTemplate = new JdbcTemplate(ds != null ? ds : routingDataSource);
-
-        try {
-            // Query employee table in the resolved tenant database
-            Map<String, Object> employee = jdbcTemplate.queryForMap(
-                    "SELECT id, first_name, last_name, email, password, employee_code FROM employee WHERE LOWER(email) = ? AND status = 'ACTIVE'",
-                    email
-            );
-
-            String dbHashedPassword = (String) employee.get("password");
-
-            if (passwordEncoder.matches(password, dbHashedPassword)) {
                 String mfaCode = String.format("%06d", new java.security.SecureRandom().nextInt(1000000));
-                
-                jdbcTemplate.update(
+                JdbcTemplate masterJdbc = new JdbcTemplate(routingDataSource);
+                masterJdbc.update(
                         "INSERT INTO mfa_code (id, email, code, expires_at) VALUES (?, ?, ?, CURRENT_TIMESTAMP + INTERVAL '5 minutes')",
                         UUID.randomUUID().toString(), email, mfaCode
                 );
 
-                Optional<Tenant> tenantOpt = findTenantByIdMaster(tenantId);
-                String subdomain = tenantOpt.map(Tenant::getSubdomain).orElse("awais");
-                
-                log.info("{} Verification code issued for user: {} in tenant: {}",mfaCode, email, tenantId);
+                log.info("{} Verification code issued for platform user: {}", mfaCode, email);
                 return ResponseEntity.ok(Map.of(
                         "success", true,
                         "mfaRequired", true,
                         "email", email,
-                        "tenantId", tenantId,
-                        "subdomain", subdomain,
+                        "tenantId", "MASTER",
+                        "subdomain", "platform",
                         "message", "Credentials verified. MFA verification code sent."
                 ));
             } else {
-                log.warn("[AUTH LOGIN FAILED] Password mismatch for user: {}", email);
+                // Not in platform_user table. Check if tenant user to display friendly message
+                for (Tenant t : findAllTenantsMaster()) {
+                    try {
+                        DataSource tDs = tenantService.getTenantDataSource(t.getId());
+                        if (tDs != null) {
+                            JdbcTemplate tJdbc = new JdbcTemplate(tDs);
+                            Integer count = tJdbc.queryForObject("SELECT COUNT(1) FROM employee WHERE LOWER(email) = ? AND status = 'ACTIVE'", Integer.class, email);
+                            if (count != null && count > 0) {
+                                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                                        .body(Map.of(
+                                                "success", false,
+                                                "message", "This portal is reserved for Platform Administrators. Please login using your company workspace."
+                                        ));
+                            }
+                        }
+                    } catch (Exception ignored) {}
+                }
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                        .body(Map.of("success", false, "message", "Invalid email or password"));
+                        .body(Map.of("success", false, "message", "Invalid email address or password."));
+            }
+        } else {
+            // Subdomain request: Platform staff are NOT allowed to log in directly on tenant subdomains
+            if (platformUserRepository.existsByEmail(email)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(Map.of("success", false, "message", "Platform Administrators must log in on the Platform Portal (hrm.com). Support access requires an authorized Support Session."));
             }
 
-        } catch (Exception e) {
-            log.warn("[AUTH LOGIN ERROR] Invalid credentials for user: {} - {}", email, e.getMessage());
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(Map.of("success", false, "message", "Invalid email or password"));
+            DataSource ds = tenantService.getTenantDataSource(requestTenantId);
+            if (ds == null) {
+                log.error("[AUTH LOGIN] Tenant database connection pool unavailable for tenant ID/subdomain: {}", requestTenantId);
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(Map.of("success", false, "message", "Workspace database connection unavailable for subdomain: " + requestTenantId));
+            }
+            JdbcTemplate tJdbc = new JdbcTemplate(ds);
+            try {
+                Map<String, Object> emp = tJdbc.queryForMap(
+                        "SELECT id, password FROM employee WHERE LOWER(email) = ? AND status = 'ACTIVE'",
+                        email
+                );
+                String dbHashedPassword = (String) emp.get("password");
+                if (passwordEncoder.matches(password, dbHashedPassword)) {
+                    String mfaCode = String.format("%06d", new java.security.SecureRandom().nextInt(1000000));
+                    tJdbc.update(
+                            "INSERT INTO mfa_code (id, email, code, expires_at) VALUES (?, ?, ?, CURRENT_TIMESTAMP + INTERVAL '5 minutes')",
+                            UUID.randomUUID().toString(), email, mfaCode
+                    );
+                    log.info("{} Verification code issued for workspace user: {} in tenant: {}", mfaCode, email, requestTenantId);
+                    return ResponseEntity.ok(Map.of(
+                            "success", true,
+                            "mfaRequired", true,
+                            "email", email,
+                            "tenantId", requestTenantId,
+                            "subdomain", requestTenantId,
+                            "message", "Credentials verified. MFA verification code sent."
+                    ));
+                } else {
+                    return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                            .body(Map.of("success", false, "message", "Invalid email address or password for this workspace subdomain."));
+                }
+            } catch (Exception e) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(Map.of("success", false, "message", "Invalid email address or password for this workspace subdomain."));
+            }
         }
     }
 
@@ -241,6 +274,48 @@ public class AuthController {
             tenantId = bodyTenantId;
         }
 
+        if ("MASTER".equalsIgnoreCase(tenantId)) {
+            // Master Platform MFA Verification
+            JdbcTemplate masterJdbc = new JdbcTemplate(routingDataSource);
+            List<Map<String, Object>> activeCodes = masterJdbc.queryForList(
+                    "SELECT id, code FROM mfa_code WHERE LOWER(email) = ? AND used = FALSE AND expires_at > CURRENT_TIMESTAMP ORDER BY created_at DESC LIMIT 1",
+                    email
+            );
+            if (activeCodes.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(Map.of("success", false, "message", "No active MFA verification code found. Please request a new code."));
+            }
+            Map<String, Object> mfaRecord = activeCodes.get(0);
+            if (!mfaRecord.get("code").equals(code)) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(Map.of("success", false, "message", "Invalid MFA verification code."));
+            }
+            masterJdbc.update("UPDATE mfa_code SET used = TRUE WHERE id = ?", mfaRecord.get("id"));
+
+            PlatformUser pUser = platformUserRepository.findByEmail(email)
+                    .orElseThrow(() -> new IllegalArgumentException("Platform user not found"));
+
+            List<String> roleNames = pUser.getRoles().stream().map(r -> r.getName()).collect(Collectors.toList());
+            String rolesStr = roleNames.isEmpty() ? "SYSTEM_ADMIN" : String.join(",", roleNames);
+
+            String token = jwtUtils.generateToken(email, "MASTER", rolesStr);
+
+            return ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "token", token,
+                    "tenantId", "MASTER",
+                    "subdomain", "platform",
+                    "user", Map.of(
+                            "id", pUser.getId(),
+                            "firstName", pUser.getFirstName(),
+                            "lastName", pUser.getLastName(),
+                            "email", pUser.getEmail(),
+                            "roles", rolesStr,
+                            "role", roleNames.isEmpty() ? "SYSTEM_ADMIN" : roleNames.get(0)
+                    )
+            ));
+        }
+
         // Fallback: Locate tenant database with active MFA code for this email
         if (tenantId == null && email != null) {
             for (Tenant t : findAllTenantsMaster()) {
@@ -267,7 +342,12 @@ public class AuthController {
         }
 
         DataSource ds = tenantService.getTenantDataSource(tenantId);
-        JdbcTemplate jdbcTemplate = new JdbcTemplate(ds != null ? ds : routingDataSource);
+        if (ds == null) {
+            log.error("[AUTH MFA] Tenant database connection pool unavailable for tenant ID/subdomain: {}", tenantId);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("success", false, "message", "Workspace database connection unavailable for subdomain: " + tenantId));
+        }
+        JdbcTemplate jdbcTemplate = new JdbcTemplate(ds);
 
         try {
             List<Map<String, Object>> activeCodes = jdbcTemplate.queryForList(
@@ -316,7 +396,7 @@ public class AuthController {
             );
 
             Optional<Tenant> tenantOpt = findTenantByIdMaster(tenantId);
-            String subdomain = tenantOpt.map(Tenant::getSubdomain).orElse("awais");
+            String subdomain = tenantOpt.map(Tenant::getSubdomain).orElse("system");
 
             return ResponseEntity.ok(Map.of(
                     "success", true,

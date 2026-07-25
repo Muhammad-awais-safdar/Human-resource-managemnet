@@ -9,13 +9,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import com.awais.hr.module.tenant.repository.TenantRepository;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/tenants")
@@ -24,6 +23,32 @@ import java.util.Map;
 public class TenantController {
 
     private final TenantService tenantService;
+
+    private final TenantRepository tenantRepository;
+
+    @GetMapping("/public/lookup/{subdomain}")
+    public ResponseEntity<Map<String, Object>> lookupSubdomain(@PathVariable String subdomain) {
+        if (subdomain == null || subdomain.trim().isEmpty()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("exists", false, "message", "Subdomain parameter is required."));
+        }
+
+        Optional<Tenant> tenantOpt = tenantRepository.findBySubdomain(subdomain.toLowerCase().trim());
+        if (tenantOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("exists", false, "message", "Workspace subdomain '" + subdomain + "' is not registered on this platform."));
+        }
+
+        Tenant tenant = tenantOpt.get();
+        return ResponseEntity.ok(Map.of(
+                "exists", true,
+                "tenantId", tenant.getId(),
+                "name", tenant.getName(),
+                "subdomain", tenant.getSubdomain(),
+                "logoUrl", tenant.getLogoUrl() != null ? tenant.getLogoUrl() : "",
+                "primaryColor", tenant.getPrimaryColor() != null ? tenant.getPrimaryColor() : "#6366f1"
+        ));
+    }
 
     @PostMapping("/register")
     public ResponseEntity<Map<String, Object>> registerTenant(

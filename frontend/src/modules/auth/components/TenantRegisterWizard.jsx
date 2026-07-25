@@ -158,10 +158,6 @@ export default function TenantRegisterWizard() {
     });
   };
 
-  if (!mounted) {
-    return <div style={{ minHeight: '400px' }} />;
-  }
-
   // 1. Employee Registration Form (on Tenant Subdomain context)
   if (isSubdomainRestricted) {
     if (empSuccess) {
@@ -279,19 +275,26 @@ export default function TenantRegisterWizard() {
     );
   }
 
-  // 2. Success Provisioning Screen for Tenant Registration (Main Domain)
+  // 2. Success Provisioning & Payment Confirmation Screen
   if (successData) {
+    const targetUrl = `http://${successData.subdomain}.localhost:3000/login?payment=success`;
+
     return (
-      <div className={`${styles.card} ${styles.successCard}`} style={{ maxWidth: '550px' }}>
-        <div className={styles.iconContainer}>
-          <svg className={styles.successIcon} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+      <div className={`${styles.card} ${styles.successCard}`} style={{ maxWidth: '560px' }}>
+        <div className={styles.iconContainer} style={{ background: 'rgba(16, 185, 129, 0.15)' }}>
+          <svg className={styles.successIcon} style={{ color: '#10b981' }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
         </div>
-        <h2 className={styles.title}>Workspace Successfully Provisioned!</h2>
+
+        <h2 className={styles.title}>Payment Authorized & Workspace Active!</h2>
         <p className={styles.successMsg}>
-          Your enterprise tenant <strong>{companyName}</strong> has been created with isolated database schema.
+          Your subscription order for <strong>{companyName}</strong> has been processed successfully.
         </p>
+
+        <div style={{ background: 'rgba(16, 185, 129, 0.1)', border: '1px solid #10b981', padding: '12px 16px', borderRadius: '8px', marginBottom: '20px', color: '#10b981', fontSize: '0.88rem', fontWeight: 600, textAlign: 'center' }}>
+          ✅ Gateway Payment Checkout Succeeded • Status: ACTIVE (30-Day Renewal)
+        </div>
 
         <div className={styles.tenantDetails}>
           <div className={styles.detailRow}>
@@ -299,22 +302,28 @@ export default function TenantRegisterWizard() {
             <strong>{successData.subdomain}.localhost:3000</strong>
           </div>
           <div className={styles.detailRow}>
-            <span>Admin Account:</span>
+            <span>Admin Email:</span>
             <strong>{successData.adminEmail}</strong>
           </div>
           <div className={styles.detailRow}>
+            <span>Assigned Role:</span>
+            <strong style={{ color: '#6366f1' }}>🏢 TENANT_ADMIN (Workspace Owner)</strong>
+          </div>
+          <div className={styles.detailRow}>
             <span>Subscription Tier:</span>
-            <strong>{successData.planTier}</strong>
+            <strong>{successData.planTier} Plan</strong>
           </div>
         </div>
 
-        <a 
-          href={`http://${successData.subdomain}.localhost:3000/login`} 
+        <button 
+          onClick={() => {
+            window.location.href = targetUrl;
+          }} 
           className={`${styles.btn} ${styles.btnPrimary}`}
-          style={{ textDecoration: 'none', display: 'block', textAlign: 'center', marginTop: '24px' }}
+          style={{ width: '100%', padding: '14px', fontSize: '1rem', marginTop: '24px', cursor: 'pointer', background: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)' }}
         >
-          Launch Workspace Portal
-        </a>
+          🚀 Launch Workspace & Login as Tenant Admin →
+        </button>
       </div>
     );
   }

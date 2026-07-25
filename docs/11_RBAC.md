@@ -4,25 +4,28 @@ This document details the dynamic, permission-based security and authorization m
 
 ---
 
-## 1. Authorization Philosophy
+## 1. Authorization Philosophy & Role Scope Partitioning
 
-To satisfy complex enterprise organizational requirements, Awais HR does **not** use hardcoded role evaluations in the backend code (e.g., checking `hasRole('ROLE_HR_ADMIN')` is forbidden). 
+Awais HR enforces a strict **Domain-Partitioned Role Model**:
 
-Instead, the authorization system is entirely **Permission-Based**:
-1.  **Permissions are Static Key Constants:** Permissions are defined in code by modules (e.g., `corehr:employee:write`, `payroll:run:execute`).
-2.  **Roles are Dynamic Sets:** Roles are custom tenant configurations defined in the database. A role (e.g. "Operations Supervisor") is simply a collection of permissions.
-3.  **APIs Check Permissions:** Backend controllers check permission authorities directly via Spring Security annotations.
-4.  **Runtime Customization:** Tenant administrators can create custom roles, delete roles, or change the permissions mapping of any role at runtime without modifying code or redeploying.
+### 1.1. Platform Administration Roles (Master Database `platform_role`)
+Platform staff manage SaaS infrastructure, tenant provisioning, system health, and billing on the base domain (`hrm.com`). They have **zero direct access** to tenant workspace employee data.
+*   **`SYSTEM_ADMIN`**: Full platform infrastructure controller (tenant provisioning, billing, global configuration).
+*   **`PLATFORM_SUPPORT`**: Support engineers authorized to request audited, time-limited tenant impersonation sessions.
+*   **`DEVOPS_ENGINEER`**: Cloud deployment, observability monitoring, and database clustering engineer.
+*   **`SECURITY_ADMIN`**: Platform security officer managing IAM compliance and global security audit logs.
+*   **`BILLING_ADMIN`**: Financial operations manager overseeing tenant subscription lifecycles.
+*   **`PRODUCT_MANAGER`**: Managed feature flags and global SaaS release rollouts.
 
-```mermaid
-graph LR
-    Employee[Employee Profile] -->|Assigned| EmployeeRole[Employee Role Link]
-    EmployeeRole -->|Resolves| Role[Dynamic Role Table]
-    Role -->|Maps to| RolePermission[Role-Permission Mapping]
-    RolePermission -->|Contains| Permission[Static Permission Nodes]
-    
-    Permission -->|Protects| API[Spring Boot API Endpoints]
-```
+### 1.2. Tenant Workspace Roles (Tenant Database `role`)
+Workspace roles manage company HR, payroll, leaves, recruitment, and ATS on workspace subdomains (`company.hrm.com`).
+*   **`TENANT_ADMIN`**: Workspace owner and administrator with full company configuration rights.
+*   **`HR_MANAGER`**: HR operations manager overseeing employee lifecycle and policies.
+*   **`LINE_MANAGER`**: Department manager supervising attendance, shift schedules, and performance goals.
+*   **`FINANCE_ADMIN`**: Payroll accountant handling compensation structure and bank export files.
+*   **`RECRUITER`**: Talent acquisition specialist managing job requisitions and candidate pipelines.
+*   **`AUDITOR`**: Compliance auditor with read-only access to tenant security logs.
+*   **`EMPLOYEE`**: Self-service user profile for attendance check-in, leave requests, and performance updates.
 
 ---
 

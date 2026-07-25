@@ -159,18 +159,16 @@ public class DataSeeder implements CommandLineRunner {
         log.info("Seeding multi-role test employee logins...");
 
         String defaultHashedPassword = passwordEncoder.encode("password123");
-        String adminHashedPassword = passwordEncoder.encode("admin123");
 
         List<Object[]> seedUsers = List.of(
-                new Object[]{"EMP-001", "System", "Administrator", "admin@awais.com", adminHashedPassword, "SYSTEM_ADMIN"},
-                new Object[]{"EMP-002", "Tenant", "Administrator", "tenant.admin@awais.com", defaultHashedPassword, "TENANT_ADMIN"},
-                new Object[]{"EMP-003", "Sarah", "Connor (HR Mgr)", "hr.manager@awais.com", defaultHashedPassword, "HR_MANAGER"},
-                new Object[]{"EMP-004", "Michael", "Scott (Line Mgr)", "line.manager@awais.com", defaultHashedPassword, "LINE_MANAGER"},
-                new Object[]{"EMP-005", "Oscar", "Martinez (Finance)", "finance.admin@awais.com", defaultHashedPassword, "FINANCE_ADMIN"},
-                new Object[]{"EMP-006", "Pam", "Beesly (Recruiter)", "recruiter@awais.com", defaultHashedPassword, "RECRUITER"},
-                new Object[]{"EMP-007", "Angela", "Martin (Auditor)", "auditor@awais.com", defaultHashedPassword, "AUDITOR"},
-                new Object[]{"EMP-008", "John", "Doe (Employee)", "employee.john@awais.com", defaultHashedPassword, "EMPLOYEE"},
-                new Object[]{"EMP-009", "Jane", "Smith (Employee)", "employee.jane@awais.com", defaultHashedPassword, "EMPLOYEE"}
+                new Object[]{"EMP-001", "Tenant", "Administrator", "tenant.admin@awais.com", defaultHashedPassword, "TENANT_ADMIN"},
+                new Object[]{"EMP-002", "Sarah", "Connor (HR Mgr)", "hr.manager@awais.com", defaultHashedPassword, "HR_MANAGER"},
+                new Object[]{"EMP-003", "Michael", "Scott (Line Mgr)", "line.manager@awais.com", defaultHashedPassword, "LINE_MANAGER"},
+                new Object[]{"EMP-004", "Oscar", "Martinez (Finance)", "finance.admin@awais.com", defaultHashedPassword, "FINANCE_ADMIN"},
+                new Object[]{"EMP-005", "Pam", "Beesly (Recruiter)", "recruiter@awais.com", defaultHashedPassword, "RECRUITER"},
+                new Object[]{"EMP-006", "Angela", "Martin (Auditor)", "auditor@awais.com", defaultHashedPassword, "AUDITOR"},
+                new Object[]{"EMP-007", "John", "Doe (Employee)", "employee.john@awais.com", defaultHashedPassword, "EMPLOYEE"},
+                new Object[]{"EMP-008", "Jane", "Smith (Employee)", "employee.jane@awais.com", defaultHashedPassword, "EMPLOYEE"}
         );
 
         for (Object[] user : seedUsers) {
@@ -234,17 +232,19 @@ public class DataSeeder implements CommandLineRunner {
 
     private void logSeederCredentialSummary() {
         log.info("========================================================================");
-        log.info("🔑 DEFAULT SEEDED LOGIN CREDENTIALS (SUBDOMAIN: 'awais'):");
+        log.info("🔑 PLATFORM & TENANT LOGIN CREDENTIAL MATRIX:");
         log.info("========================================================================");
-        log.info(" 1. SYSTEM ADMIN    : admin@awais.com         / Password: admin123");
-        log.info(" 2. TENANT ADMIN    : tenant.admin@awais.com  / Password: password123");
-        log.info(" 3. HR MANAGER      : hr.manager@awais.com    / Password: password123");
-        log.info(" 4. LINE MANAGER    : line.manager@awais.com  / Password: password123");
-        log.info(" 5. FINANCE ADMIN   : finance.admin@awais.com / Password: password123");
-        log.info(" 6. RECRUITER       : recruiter@awais.com     / Password: password123");
-        log.info(" 7. AUDITOR         : auditor@awais.com       / Password: password123");
-        log.info(" 8. EMPLOYEE (JOHN) : employee.john@awais.com / Password: password123");
-        log.info(" 9. EMPLOYEE (JANE) : employee.jane@awais.com / Password: password123");
+        log.info(" 🛡️ PLATFORM PORTAL (Base Domain / hrm.com):");
+        log.info("    - SYSTEM ADMIN     : admin@hrm.com           / Password: admin123");
+        log.info(" 🏢 WORKSPACE PORTAL (Subdomain: 'awais.hrm.com'):");
+        log.info("    1. TENANT ADMIN    : tenant.admin@awais.com  / Password: password123");
+        log.info("    2. HR MANAGER      : hr.manager@awais.com    / Password: password123");
+        log.info("    3. LINE MANAGER    : line.manager@awais.com  / Password: password123");
+        log.info("    4. FINANCE ADMIN   : finance.admin@awais.com / Password: password123");
+        log.info("    5. RECRUITER       : recruiter@awais.com     / Password: password123");
+        log.info("    6. AUDITOR         : auditor@awais.com       / Password: password123");
+        log.info("    7. EMPLOYEE (JOHN) : employee.john@awais.com / Password: password123");
+        log.info("    8. EMPLOYEE (JANE) : employee.jane@awais.com / Password: password123");
         log.info("========================================================================");
     }
 }

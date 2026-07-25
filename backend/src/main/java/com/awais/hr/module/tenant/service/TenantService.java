@@ -59,7 +59,26 @@ public class TenantService {
     }
 
     public DataSource getTenantDataSource(String tenantId) {
-        return (DataSource) tenantDataSources.get(tenantId);
+        if (tenantId == null || tenantId.trim().isEmpty()) {
+            return null;
+        }
+        String key = tenantId.trim().toLowerCase();
+        DataSource ds = (DataSource) tenantDataSources.get(key);
+        if (ds == null) {
+            ds = (DataSource) tenantDataSources.get(tenantId);
+        }
+        if (ds == null) {
+            // Dynamically load from database repository
+            Optional<Tenant> tenantOpt = tenantRepository.findById(tenantId);
+            if (tenantOpt.isEmpty()) {
+                tenantOpt = tenantRepository.findBySubdomain(key);
+            }
+            if (tenantOpt.isPresent()) {
+                registerTenantDataSource(tenantOpt.get());
+                ds = (DataSource) tenantDataSources.get(tenantOpt.get().getId());
+            }
+        }
+        return ds;
     }
 
     public synchronized void registerTenantDataSource(Tenant tenant) {
@@ -82,6 +101,9 @@ public class TenantService {
         ds.setIdleTimeout(300000);
 
         tenantDataSources.put(tenant.getId(), ds);
+        if (tenant.getSubdomain() != null) {
+            tenantDataSources.put(tenant.getSubdomain().toLowerCase().trim(), ds);
+        }
         
         // Refresh routing datasource configurations dynamically
         Map<Object, Object> updatedDataSources = new HashMap<>(tenantDataSources);
@@ -277,14 +299,20 @@ public class TenantService {
         p3 = fetchPermissionId(jdbcTemplate, "corehr:org:write", p3);
         p4 = fetchPermissionId(jdbcTemplate, "corehr:settings:write", p4);
         
-        jdbcTemplate.update("INSERT INTO role (id, name, description) VALUES (?, ?, ?) ON CONFLICT DO NOTHING", roleId, "SYSTEM_ADMIN", "Full access administrator");
-        List<String> existingRoles = jdbcTemplate.queryForList("SELECT id FROM role WHERE name = 'SYSTEM_ADMIN'", String.class);
-        if (!existingRoles.isEmpty()) roleId = existingRoles.get(0);
+        String tenantAdminRoleId = UUID.randomUUID().toString();
+        jdbcTemplate.update("INSERT INTO role (id, name, description) VALUES (?, 'TENANT_ADMIN', 'Tenant organization workspace administrator') ON CONFLICT DO NOTHING", tenantAdminRoleId);
+        List<String> existingRoles = jdbcTemplate.queryForList("SELECT id FROM role WHERE name = 'TENANT_ADMIN'", String.class);
+        if (!existingRoles.isEmpty()) tenantAdminRoleId = existingRoles.get(0);
         
-        jdbcTemplate.update("INSERT INTO role_permission (role_id, permission_id) VALUES (?, ?) ON CONFLICT DO NOTHING", roleId, p1);
-        jdbcTemplate.update("INSERT INTO role_permission (role_id, permission_id) VALUES (?, ?) ON CONFLICT DO NOTHING", roleId, p2);
-        jdbcTemplate.update("INSERT INTO role_permission (role_id, permission_id) VALUES (?, ?) ON CONFLICT DO NOTHING", roleId, p3);
-        jdbcTemplate.update("INSERT INTO role_permission (role_id, permission_id) VALUES (?, ?) ON CONFLICT DO NOTHING", roleId, p4);
+        // Seed default auxiliary roles into tenant schema for employee onboarding
+        jdbcTemplate.update("INSERT INTO role (id, name, description) VALUES (?, 'HR_MANAGER', 'Human resource department manager') ON CONFLICT DO NOTHING", UUID.randomUUID().toString());
+        jdbcTemplate.update("INSERT INTO role (id, name, description) VALUES (?, 'EMPLOYEE', 'Standard employee self-service user') ON CONFLICT DO NOTHING", UUID.randomUUID().toString());
+        jdbcTemplate.update("INSERT INTO role (id, name, description) VALUES (?, 'RECRUITER', 'Talent acquisition recruiter') ON CONFLICT DO NOTHING", UUID.randomUUID().toString());
+        
+        jdbcTemplate.update("INSERT INTO role_permission (role_id, permission_id) VALUES (?, ?) ON CONFLICT DO NOTHING", tenantAdminRoleId, p1);
+        jdbcTemplate.update("INSERT INTO role_permission (role_id, permission_id) VALUES (?, ?) ON CONFLICT DO NOTHING", tenantAdminRoleId, p2);
+        jdbcTemplate.update("INSERT INTO role_permission (role_id, permission_id) VALUES (?, ?) ON CONFLICT DO NOTHING", tenantAdminRoleId, p3);
+        jdbcTemplate.update("INSERT INTO role_permission (role_id, permission_id) VALUES (?, ?) ON CONFLICT DO NOTHING", tenantAdminRoleId, p4);
 
         // Seed default Leave Policies (Vacation Types)
         jdbcTemplate.update("INSERT INTO leave_policy (id, name, allowance, description) VALUES (?, 'Annual Vacation', 20, 'Standard annual paid vacation allocation') ON CONFLICT DO NOTHING", UUID.randomUUID().toString());
@@ -308,7 +336,7 @@ public class TenantService {
 
         jdbcTemplate.update(
                 "INSERT INTO employee_role (employee_id, role_id) VALUES (?, ?) ON CONFLICT DO NOTHING",
-                employeeId, roleId
+                employeeId, tenantAdminRoleId
         );
     }
 

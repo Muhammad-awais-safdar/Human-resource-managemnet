@@ -56,7 +56,7 @@ export default function AssetPage() {
   };
 
   const statusColor = { AVAILABLE: '#10b981', ASSIGNED: '#f59e0b', MAINTENANCE: '#ef4444' };
-  const categoryIcons = { LAPTOP: '💻', MOBILE: '📱', FURNITURE: '🪑', GENERAL: '📦', VEHICLE: '🚗', OTHER: '🔧' };
+  const categoryIcons = { HARDWARE: '💻', LAPTOP: '💻', MOBILE: '📱', FURNITURE: '🪑', GENERAL: '📦', VEHICLE: '🚗', OTHER: '🔧' };
 
   return (
     <div style={styles.page}>
@@ -169,9 +169,9 @@ export default function AssetPage() {
               <label style={styles.label}>Asset Name</label>
               <input style={styles.input} value={name} onChange={e => setName(e.target.value)} required placeholder="e.g., MacBook Pro 14" />
               <label style={styles.label}>Category</label>
-              <select style={styles.input} value={category} onChange={e => setCategory(e.target.value)}>
-                {['LAPTOP', 'MOBILE', 'FURNITURE', 'VEHICLE', 'GENERAL', 'OTHER'].map(c => (
-                  <option key={c} value={c}>{c}</option>
+              <select style={styles.select} value={category} onChange={e => setCategory(e.target.value)}>
+                {['HARDWARE', 'LAPTOP', 'MOBILE', 'FURNITURE', 'VEHICLE', 'GENERAL', 'OTHER'].map(c => (
+                  <option key={c} value={c} style={styles.option}>{c}</option>
                 ))}
               </select>
               <label style={styles.label}>Serial Number</label>
@@ -186,10 +186,10 @@ export default function AssetPage() {
           {activeTab === 'assign' && (
             <form onSubmit={handleAssign} style={styles.form}>
               <label style={styles.label}>Asset</label>
-              <select style={styles.input} value={assignAssetId} onChange={e => setAssignAssetId(e.target.value)} required>
-                <option value="">Select available asset…</option>
+              <select style={styles.select} value={assignAssetId} onChange={e => setAssignAssetId(e.target.value)} required>
+                <option value="" style={styles.option}>Select available asset…</option>
                 {assets.filter(a => a.status === 'AVAILABLE').map((a, i) => (
-                  <option key={i} value={a.id}>{a.name} ({a.serial_number})</option>
+                  <option key={i} value={a.id} style={styles.option}>{a.name} ({a.serial_number})</option>
                 ))}
               </select>
               <label style={styles.label}>Employee ID</label>
@@ -219,6 +219,8 @@ const styles = {
   form: { display: 'flex', flexDirection: 'column', gap: '12px', maxWidth: '480px' },
   label: { fontSize: '0.85rem', color: '#94a3b8', fontWeight: 500 },
   input: { width: '100%', padding: '10px 14px', background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '8px', color: '#f1f5f9', fontSize: '0.9rem', boxSizing: 'border-box' },
+  select: { width: '100%', padding: '10px 14px', background: '#1e293b', color: '#f1f5f9', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '8px', fontSize: '0.9rem', boxSizing: 'border-box', cursor: 'pointer' },
+  option: { background: '#1e293b', color: '#f1f5f9', padding: '8px' },
   button: { padding: '11px 24px', background: 'linear-gradient(90deg, #06b6d4, #10b981)', border: 'none', borderRadius: '8px', color: '#fff', fontWeight: 700, cursor: 'pointer', fontSize: '0.95rem', width: 'fit-content' },
   table: { width: '100%', borderCollapse: 'collapse' },
   th: { padding: '10px 14px', textAlign: 'left', fontSize: '0.78rem', color: '#64748b', borderBottom: '1px solid rgba(255,255,255,0.1)', textTransform: 'uppercase', letterSpacing: '0.05em' },

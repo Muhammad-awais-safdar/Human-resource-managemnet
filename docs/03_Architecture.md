@@ -23,20 +23,22 @@ graph TD
 
 ---
 
-## 2. Multi-Tenancy Architecture
+## 2. Multi-Tenancy Architecture & Domain Isolation
 
-We employ the **Database-per-Tenant** pattern. The benefits of this approach outweigh the resource overhead:
-*   **Benefits:** Strict security compliance (no shared table bugs), simplified database backup/restore per customer, and easy dynamic module migrations.
-*   **Trade-off:** Connection pool management overhead. (Mitigated using dynamic connection pooling via HikariCP and idle timeout tuning).
+We employ a strict **Two-Portal Domain Isolation & Database-per-Tenant** pattern:
+*   **Platform Operations Portal (`hrm.com` / `localhost:3000`)**: Restricted exclusively to Platform Staff (`SYSTEM_ADMIN`, `PLATFORM_SUPPORT`, `DEVOPS_ENGINEER`, `SECURITY_ADMIN`, `BILLING_ADMIN`, `PRODUCT_MANAGER`). Platform staff accounts live exclusively in the Master Database (`platform_user`).
+*   **Tenant Workspaces (`company.hrm.com` / `<subdomain>.localhost:3000`)**: Restricted exclusively to tenant workspace employees (`TENANT_ADMIN`, `HR_MANAGER`, `EMPLOYEE`, etc.). Physical tenant databases store ONLY tenant business data and zero platform staff accounts.
+*   **Support Impersonation Sessions**: Platform admins access workspace contexts solely via time-limited, audited support sessions (`POST /api/v1/platform/support/impersonate`).
 
-### 2.1. Master Database
-The Master database is the registry. It stores:
-*   `tenant_registry`: Subdomains, custom domain mappings, status (`PROVISIONING`, `ACTIVE`, `SUSPENDED`).
-*   `tenant_connection_details`: Encrypted database host, port, username, password.
-*   `subscription_metadata`: Active modules, plan limits, billing renewal dates.
+### 2.1. Master / Platform Database
+The Master database serves as both tenant registry and platform IAM control plane. It stores:
+*   `tenant`: Subdomains, custom domain mappings, database credentials, status (`ACTIVE`, `SUSPENDED`).
+*   `subscription`: Active plan tier, seat limits, subscription status.
+*   `platform_user`, `platform_role`, `platform_user_role`, `platform_permission`: SaaS Platform Staff authentication and RBAC.
+*   `platform_impersonation_log`: Comprehensive security audit trail of all platform admin impersonation sessions.
 
 ### 2.2. Tenant Databases
-Each company gets a separate physical database on PostgreSQL clusters. Cross-tenant queries are physically impossible.
+Each tenant organization gets a separate physical database schema on PostgreSQL clusters. Cross-tenant queries are physically impossible, and zero platform user credentials are saved in tenant schemas.
 
 ---
 

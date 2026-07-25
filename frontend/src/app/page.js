@@ -10,16 +10,11 @@ export default function Home() {
     setMounted(true);
   }, []);
 
-  if (!mounted) {
-    // Return matching background placeholder during server-side pre-rendering
-    return <div suppressHydrationWarning={true} style={{ backgroundColor: '#09090b', minHeight: '100vh' }} />;
-  }
-
   return (
     <div suppressHydrationWarning={true} className="landing-container">
-      <div className="glow-effect" />
-      <div className="landing-card">
-        <div className="badge">Phase 1 Complete</div>
+      <div suppressHydrationWarning={true} className="glow-effect" />
+      <div suppressHydrationWarning={true} className="landing-card">
+        <div suppressHydrationWarning={true} className="badge">Phase 1 Complete</div>
         <h1 className="landing-title">
           Awais <span>HR</span>
         </h1>
@@ -27,22 +22,22 @@ export default function Home() {
           The next-generation unified enterprise SaaS platform. Dynamic physical database-per-tenant architecture with isolated connection pool routing.
         </p>
 
-        <div className="features-grid">
-          <div className="feature-item">
+        <div suppressHydrationWarning={true} className="features-grid">
+          <div suppressHydrationWarning={true} className="feature-item">
             <h3>Registry Engine</h3>
             <p>Automatic database provisioning on master schemas.</p>
           </div>
-          <div className="feature-item">
+          <div suppressHydrationWarning={true} className="feature-item">
             <h3>Isolated Storage</h3>
             <p>Dedicated physical PostgreSQL database schemas.</p>
           </div>
-          <div className="feature-item">
+          <div suppressHydrationWarning={true} className="feature-item">
             <h3>Dynamic Routing</h3>
             <p>Context-aware ThreadLocal routing datasource mappings.</p>
           </div>
         </div>
 
-        <div className="actions-wrapper">
+        <div suppressHydrationWarning={true} className="actions-wrapper">
           <Link href="/register" className="btn btn-primary">
             Launch Onboarding Wizard
           </Link>

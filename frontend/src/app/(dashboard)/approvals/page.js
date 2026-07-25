@@ -98,7 +98,7 @@ export default function ApprovalsPage() {
         <div style={{ flex: 1, minWidth: '350px' }} className="form-card">
           <h3>Active Delegation Log</h3>
           <div style={{ marginTop: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            {delegation.map ? delegations.map((d, idx) => (
+            {Array.isArray(delegations) && delegations.length > 0 ? delegations.map((d, idx) => (
               <div key={idx} style={{ padding: '12px 16px', background: 'var(--bg-tertiary)', border: '1px solid var(--border-light)', borderRadius: 'var(--radius-md)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div>
                   <strong>{d.delegator_email || d.delegatorEmail} ➔ {d.delegatee_email || d.delegateeEmail}</strong>

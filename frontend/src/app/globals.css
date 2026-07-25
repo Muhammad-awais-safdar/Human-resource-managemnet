@@ -26,3 +26,13 @@ input, select, textarea, button {
   font-family: inherit;
   box-sizing: border-box;
 }
+
+select {
+  background-color: #1e293b !important;
+  color: #f1f5f9 !important;
+}
+
+select option {
+  background-color: #1e293b !important;
+  color: #f1f5f9 !important;
+}

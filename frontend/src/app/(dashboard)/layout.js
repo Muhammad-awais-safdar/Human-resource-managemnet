@@ -110,14 +110,10 @@ export default function DashboardLayout({ children }) {
 
   const isActive = (path) => pathname === path;
 
-  if (!mounted) {
-    return <div suppressHydrationWarning={true} style={{ backgroundColor: '#09090b', minHeight: '100vh' }} />;
-  }
-
   return (
     <div suppressHydrationWarning={true} className="dashboard-layout">
-      <aside className="sidebar">
-        <div className="sidebar-header" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: '8px' }}>
+      <aside suppressHydrationWarning={true} className="sidebar">
+        <div suppressHydrationWarning={true} className="sidebar-header" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: '8px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', width: '100%' }}>
             {logoUrl ? (
               <img src={logoUrl} alt="logo" className="sidebar-logo" style={{ objectFit: 'cover' }} />

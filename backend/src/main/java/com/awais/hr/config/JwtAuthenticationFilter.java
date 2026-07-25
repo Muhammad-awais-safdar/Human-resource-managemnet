@@ -55,11 +55,21 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 String email = jwtUtils.getEmailFromToken(token);
                 String tenantId = jwtUtils.getTenantIdFromToken(token);
                 String roles = jwtUtils.getRolesFromToken(token);
-                
-                // Override the thread context with the verified token tenant ID and user MDC
-                if (tenantId != null) {
-                    TenantContextHolder.setCurrentTenant(tenantId);
-                    MDC.put("tenantId", tenantId);
+                String requestTenantId = TenantContextHolder.getCurrentTenant();
+                boolean isSystemAdmin = roles != null && (roles.contains("SYSTEM_ADMIN") || roles.contains("ROLE_SYSTEM_ADMIN"));
+
+                // Enforce strict multi-tenant boundary isolation
+                if (requestTenantId != null && tenantId != null && !requestTenantId.equals(tenantId) && !isSystemAdmin) {
+                    log.warn("[CROSS-TENANT ACCESS BLOCKED] User {} (tenant {}) attempted unauthorized access to tenant context {}", email, tenantId, requestTenantId);
+                    response.sendError(HttpServletResponse.SC_FORBIDDEN, "Access Denied: Account is not authorized to access this tenant workspace.");
+                    return;
+                }
+
+                // Set active tenant context
+                String effectiveTenantId = isSystemAdmin && requestTenantId != null ? requestTenantId : tenantId;
+                if (effectiveTenantId != null) {
+                    TenantContextHolder.setCurrentTenant(effectiveTenantId);
+                    MDC.put("tenantId", effectiveTenantId);
                 }
                 if (email != null) {
                     MDC.put("userId", email);

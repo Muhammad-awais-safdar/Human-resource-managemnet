@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useTransition } from 'react';
+import React, { useState, useEffect, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import apiClient from '../../../services/api';
 import styles from '../../../modules/auth/styles/register.module.css';
@@ -11,6 +11,8 @@ export default function LoginPage() {
   // Credentials Step States
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [isPlatformPortal, setIsPlatformPortal] = useState(true);
+  const [subdomainName, setSubdomainName] = useState('');
   
   // MFA Step States
   const [mfaEmail, setMfaEmail] = useState('');
@@ -19,6 +21,20 @@ export default function LoginPage() {
   
   const [errors, setErrors] = useState({});
   const [isPending, startTransition] = useTransition();
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const hostname = window.location.hostname;
+      const parts = hostname.split('.');
+      if (parts.length > 2 || (parts.length === 2 && parts[0] !== 'localhost' && parts[0] !== 'hrm')) {
+        const sub = parts[0];
+        if (sub !== 'www' && sub !== 'hrm' && sub !== 'app') {
+          setIsPlatformPortal(false);
+          setSubdomainName(sub);
+        }
+      }
+    }
+  }, []);
 
   const handleLogin = (e) => {
     e.preventDefault();
@@ -84,9 +100,6 @@ export default function LoginPage() {
           <p className={styles.subtitle}>
             Enter the 6-digit MFA security code generated for <strong>{mfaEmail}</strong>
           </p>
-          <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textAlign: 'center', marginTop: '-8px', marginBottom: '20px' }}>
-            Hint: Default development MFA verification code is <code>123456</code>.
-          </p>
 
           {errors.mfa && (
             <div className={`${styles.alert} ${styles.alertDanger}`}>
@@ -131,24 +144,48 @@ export default function LoginPage() {
 
   // Render Standard Credentials Form
   return (
-    <main className={styles.authContainer}>
-      <div className={styles.card}>
-        <h2 className={styles.title}>Workspace Login</h2>
-        <p className={styles.subtitle}>Sign in to access your isolated employee directory</p>
+    <main suppressHydrationWarning={true} className={styles.authContainer}>
+      <div suppressHydrationWarning={true} className={styles.card}>
+        <div style={{ textAlign: 'center', marginBottom: '16px' }}>
+          <span style={{
+            display: 'inline-block',
+            padding: '4px 12px',
+            borderRadius: '16px',
+            fontSize: '0.75rem',
+            fontWeight: '700',
+            textTransform: 'uppercase',
+            letterSpacing: '0.05em',
+            background: isPlatformPortal ? 'rgba(99, 102, 241, 0.15)' : 'rgba(16, 185, 129, 0.15)',
+            color: isPlatformPortal ? '#818cf8' : '#34d399',
+            border: `1px solid ${isPlatformPortal ? 'rgba(99, 102, 241, 0.3)' : 'rgba(16, 185, 129, 0.3)'}`
+          }}>
+            {isPlatformPortal ? '🛡️ Platform Operations Portal' : `🏢 ${subdomainName.toUpperCase()} Workspace`}
+          </span>
+        </div>
+
+        <h2 className={styles.title}>
+          {isPlatformPortal ? 'Platform Administration' : 'Workspace Login'}
+        </h2>
+        <p className={styles.subtitle}>
+          {isPlatformPortal
+            ? 'Sign in with your SaaS Platform Administrator credentials'
+            : `Sign in to access your isolated workspace (${subdomainName || 'tenant'})`}
+        </p>
 
         {errors.submit && (
-          <div className={`${styles.alert} ${styles.alertDanger}`}>
+          <div suppressHydrationWarning={true} className={`${styles.alert} ${styles.alertDanger}`}>
             {errors.submit}
           </div>
         )}
 
-        <form onSubmit={handleLogin} noValidate>
-          <div className={styles.formGroup}>
+        <form suppressHydrationWarning={true} onSubmit={handleLogin} noValidate>
+          <div suppressHydrationWarning={true} className={styles.formGroup}>
             <label className={styles.label}>Email Address</label>
             <input
+              suppressHydrationWarning={true}
               type="email"
               className={styles.input}
-              placeholder="e.g. admin@company.com"
+              placeholder={isPlatformPortal ? 'admin@hrm.com' : 'e.g. employee@company.com'}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
@@ -156,9 +193,10 @@ export default function LoginPage() {
             />
           </div>
 
-          <div className={styles.formGroup}>
+          <div suppressHydrationWarning={true} className={styles.formGroup}>
             <label className={styles.label}>Password</label>
             <input
+              suppressHydrationWarning={true}
               type="password"
               className={styles.input}
               placeholder="••••••••"
