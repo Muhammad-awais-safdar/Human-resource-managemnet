@@ -52,4 +52,38 @@ public class SuperAdminController {
             return ResponseEntity.badRequest().body(Map.of("success", false, "message", e.getMessage()));
         }
     }
+
+    @GetMapping("/tenants/deep-dive")
+    @HasPermission("corehr:employee:read")
+    public ResponseEntity<List<Map<String, Object>>> getTenantDeepDive() {
+        return ResponseEntity.ok(adminService.getTenantDeepDive());
+    }
+
+    @PostMapping("/tenants/{id}/status")
+    @HasPermission("corehr:employee:write")
+    public ResponseEntity<?> updateTenantStatus(@PathVariable String id, @RequestBody Map<String, Object> body) {
+        try {
+            String status = (String) body.get("status");
+            return ResponseEntity.ok(adminService.updateTenantStatus(id, status));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "message", e.getMessage()));
+        }
+    }
+
+    @PostMapping("/tenants/{id}/extend-subscription")
+    @HasPermission("corehr:employee:write")
+    public ResponseEntity<?> extendTenantSubscription(@PathVariable String id, @RequestBody Map<String, Object> body) {
+        try {
+            int days = body.get("days") != null ? ((Number) body.get("days")).intValue() : 30;
+            return ResponseEntity.ok(adminService.extendTenantSubscription(id, days));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "message", e.getMessage()));
+        }
+    }
+
+    @GetMapping("/tenants/{id}/users")
+    @HasPermission("corehr:employee:read")
+    public ResponseEntity<List<Map<String, Object>>> getTenantUsers(@PathVariable String id) {
+        return ResponseEntity.ok(adminService.getTenantUsers(id));
+    }
 }

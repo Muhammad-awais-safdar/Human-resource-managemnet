@@ -271,6 +271,9 @@ export default function DashboardLayout({ children }) {
               <Link href="/leaves" className={`nav-link ${isActive('/leaves') ? 'nav-link-active' : ''}`}>
                 🏖️ Vacation & Leave Requests
               </Link>
+              <Link href="/expenses" className={`nav-link ${isActive('/expenses') ? 'nav-link-active' : ''}`}>
+                💼 Expense Claims & Reimbursements
+              </Link>
               <Link href="/shifts" className={`nav-link ${isActive('/shifts') ? 'nav-link-active' : ''}`}>
                 📅 Shift Schedule
               </Link>
