@@ -99,12 +99,34 @@ Awais HR uses **Spring Security** combined with an external OIDC Provider or loc
 *   **Configuration Metadata:** Active module catalogs, industry templates, and system configs.
 
 ### 5.2. RabbitMQ Message Distribution
-RabbitMQ orchestrates background tasks and event-driven communication:
+RabbitMQ orchestrates background state-machine tasks:
 *   `tenant.provisioning.queue`: Receives tasks to spin up databases, run flyway, and seed initial data.
 *   `notifications.queue`: Sends transaction emails, Slack hooks, SMS alerts.
 *   `payroll.processing.queue`: Handles long-running payroll calculations asynchronously.
 
+### 5.3. High-Throughput Observability & Event Streaming Architecture (Kafka + Vector + ClickHouse)
+For high-volume telemetry (logs, metrics, tracing, security events), the application bypasses relational databases to guarantee zero latency overhead on client HTTP requests (`<0.1ms` CPU overhead):
+
+```mermaid
+graph TD
+    AppThread[Application Worker Threads] --> Disruptor[LMAX Disruptor In-Memory Ring Buffer]
+    Disruptor --> LogAgent[Vector / Fluentbit Sidecar Agent]
+    LogAgent --> KafkaTopic[[Apache Kafka Log & Telemetry Topics]]
+    KafkaTopic --> ClickHouseEngine[(ClickHouse Columnar Storage Engine)]
+    KafkaTopic --> PrometheusGrafana[Prometheus & Grafana Observability Dashboards]
+
+    DBMutation[Core Transaction Mutation] --> TxOutbox[PostgreSQL Transactional Outbox Table]
+    TxOutbox --> CDCDebezium[Debezium CDC Engine]
+    CDCDebezium --> KafkaAuditTopic[[Kafka Security Audit Topic]]
+    KafkaAuditTopic --> ClickHouseEngine
+```
+
+*   **Non-Blocking Ring Buffer:** Application loggers push JSON MDC records into memory ring buffers without blocking worker threads.
+*   **Transactional Outbox Pattern:** Compliance audit logs stage inside tenant DB outbox tables during primary business transactions, published asynchronously via Debezium CDC to Kafka.
+*   **Decoupled Log Storage:** ClickHouse handles up to 500,000 log lines/sec with 10:1 ZSTD compression, keeping OLTP PostgreSQL databases completely free from observability write contention.
+
 ---
+
 
 ## 6. File Storage & Cryptography
 

@@ -202,27 +202,54 @@ CREATE TABLE attendance_log (
 
 ---
 
-## 5. Audit Logging Architecture
+## 5. Audit Logging & Telemetry Storage Architecture
 
-We implement a dedicated, trigger-less, high-performance audit system. All write mutations (`INSERT`, `UPDATE`, `DELETE`) write to the `audit_trail` table inside the tenant DB via application Hibernate interceptors or Postgres triggers.
+To prevent high-throughput observability writes from degrading OLTP database performance while maintaining financial and legal audit integrity, the platform segregates audit records into two pathways:
+
+### 5.1. Transactional Outbox Pattern for Compliance Audit Trails
+All security, access control, and mutation audits (`INSERT`, `UPDATE`, `DELETE`) stage inside a lightweight outbox table within the local tenant PostgreSQL database during the primary transaction. A background CDC engine (Debezium / Kafka Connect) relays events asynchronously to Kafka:
 
 ```sql
-CREATE TABLE audit_trail (
+CREATE TABLE audit_outbox (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    employee_id UUID, -- Actor triggering the change
-    action VARCHAR(50) NOT NULL, -- INSERT, UPDATE, DELETE
+    tenant_id VARCHAR(100) NOT NULL,
+    employee_id UUID,
+    action VARCHAR(50) NOT NULL,
     table_name VARCHAR(100) NOT NULL,
     record_id UUID NOT NULL,
-    old_state JSONB, -- NULL on INSERT
-    new_state JSONB, -- NULL on DELETE
+    old_state JSONB,
+    new_state JSONB,
     ip_address VARCHAR(45),
     user_agent TEXT,
+    processed_at TIMESTAMP WITH TIME ZONE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 
--- Indexing for compliance querying
-CREATE INDEX idx_audit_table_record ON audit_trail(table_name, record_id);
-CREATE INDEX idx_audit_employee ON audit_trail(employee_id);
+CREATE INDEX idx_outbox_unprocessed ON audit_outbox(created_at) WHERE processed_at IS NULL;
+```
+
+### 5.2. Columnar Storage Engine for High-Volume Observability (ClickHouse)
+High-volume application logs, distributed tracing spans, and metric telemetry bypass PostgreSQL and are ingested into **ClickHouse** columnar storage:
+
+```sql
+CREATE TABLE platform_telemetry_log (
+    tenant_id LowCardinality(String),
+    created_at DateTime64(3, 'UTC'),
+    log_level LowCardinality(String),
+    module_code LowCardinality(String),
+    trace_id String,
+    span_id String,
+    user_id String,
+    message String,
+    exception_class String,
+    stack_trace String,
+    attributes Map(String, String),
+    ip_address String
+) ENGINE = MergeTree()
+PARTITION BY toYYYYMM(created_at)
+ORDER BY (tenant_id, log_level, module_code, created_at)
+TTL created_at + INTERVAL 30 DAY DELETE
+SETTINGS index_granularity = 8192, storage_policy = 'tiered_s3';
 ```
 
 ---

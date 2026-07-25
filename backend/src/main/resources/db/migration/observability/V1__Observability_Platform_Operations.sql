@@ -1,6 +1,5 @@
 -- V1__Observability_Platform_Operations.sql
--- Dedicated Observability Database Schema (awais_hr_observability)
--- Houses Centralized Audit Logs, Security Threat Logs, Exception Traces & Alert Configs
+-- Dedicated Observability Database Schema Migration (awais_hr_observability)
 
 CREATE TABLE IF NOT EXISTS platform_audit_log (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -63,8 +62,13 @@ CREATE TABLE IF NOT EXISTS platform_alert_configuration (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 
--- Time-series optimized indexes for rapid log search and filtering
 CREATE INDEX IF NOT EXISTS idx_audit_tenant_time ON platform_audit_log (tenant_id, created_at DESC);
-CREATE INDEX IF NOT EXISTS idx_audit_trace ON platform_audit_log (trace_id);
 CREATE INDEX IF NOT EXISTS idx_security_event_type ON platform_security_event (event_type, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_exception_trace ON platform_exception_log (trace_id);
+
+-- Seed default production alert rules
+INSERT INTO platform_alert_configuration (id, rule_name, metric_name, threshold_value, comparison_operator, notification_channel, destination_target)
+VALUES 
+    (gen_random_uuid(), 'High API P95 Latency Alert', 'http_server_requests_seconds_max', 500.0, '>', 'SLACK', 'https://hooks.slack.com/services/alert-hook'),
+    (gen_random_uuid(), 'HikariCP DB Connection Pool Exhaustion', 'hikaricp_connections_pending', 10.0, '>', 'PAGERDUTY', 'https://events.pagerduty.com/v2/enqueue')
+ON CONFLICT (rule_name) DO NOTHING;

@@ -25,6 +25,9 @@ services:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/awais_hr_master
       - SPRING_DATASOURCE_USERNAME=postgres
       - SPRING_DATASOURCE_PASSWORD=root
+      - OBSERVABILITY_DATASOURCE_URL=jdbc:postgresql://postgres:5432/awais_hr_observability
+      - OBSERVABILITY_DATASOURCE_USERNAME=postgres
+      - OBSERVABILITY_DATASOURCE_PASSWORD=root
       - TENANT_DATASOURCE_URL_PREFIX=jdbc:postgresql://postgres:5432/
       - TENANT_DATASOURCE_USERNAME=postgres
       - TENANT_DATASOURCE_PASSWORD=root

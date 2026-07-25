@@ -153,3 +153,11 @@ sequenceDiagram
 ### 7.4. Compliance & Accessibility
 *   **GDPR:** Support full data export and hard delete ("Right to be forgotten") on the tenant database.
 *   **Accessibility:** W3C WCAG 2.1 AA compliant UI components.
+
+### 7.5. High-Throughput Logging & Observability Performance
+*   **Zero-Impact Telemetry Overhead:** Application logging, metric collection, and distributed tracing MUST occur asynchronously via non-blocking Ring Buffers, contributing `<0.1ms` CPU overhead to the HTTP request path.
+*   **Transactional Audit Integrity:** Security and financial compliance audit events must use the Transactional Outbox pattern to guarantee atomic persistence without blocking client responses.
+*   **Multi-Tier Log Retention:** 30-day Hot storage (ClickHouse SSD), 90-day Warm storage (ClickHouse Object Storage), and 7-year Cold compliance archiving (S3 Glacier Parquet).
+*   **Automatic PII Masking:** Real-time regex and AST redactors must automatically sanitize passwords, tokens, API keys, and sensitive financial/employee identifiers before log persistence.
+*   **Multi-Tenant Log Segregation:** Strict row-level tenant filtering (`WHERE tenant_id = X`) enforced on all observability and log query interfaces.
+
