@@ -24,6 +24,8 @@ public interface ObservabilityService {
 
     void recordAuditLog(String tenantId, String userId, String requestId, String traceId, String moduleCode, String actionType, String entityName, String entityId, String oldValue, String newValue, String ipAddress, String userAgent);
 
+    void recordAuditLog(String tenantId, String userId, String requestId, String traceId, String moduleCode, String actionType, String entityName, String entityId, String oldValue, String newValue, String ipAddress, String userAgent, Integer statusCode, Long responseTimeMs);
+
     void recordSecurityEvent(String tenantId, String userId, String eventType, String severity, String ipAddress, String userAgent, String requestUri, String requestMethod, String detailsJson);
 
     void recordExceptionLog(String tenantId, String requestId, String traceId, String exceptionClass, String message, String stackTrace, String serviceName, String controllerName, String requestUri, String httpMethod, String userId);

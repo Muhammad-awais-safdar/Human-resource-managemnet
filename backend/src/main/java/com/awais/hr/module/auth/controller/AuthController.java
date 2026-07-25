@@ -138,7 +138,7 @@ public class AuthController {
 
         if (isBaseDomainRequest) {
             // Base domain request: ONLY Platform Users (SYSTEM_ADMIN, PLATFORM_SUPPORT, DEVOPS_ENGINEER, etc.) are allowed
-            Optional<PlatformUser> pUserOpt = platformUserRepository.findByEmail(email);
+            Optional<PlatformUser> pUserOpt = findPlatformUserByEmailMaster(email);
             if (pUserOpt.isPresent()) {
                 PlatformUser pUser = pUserOpt.get();
                 if (!passwordEncoder.matches(password, pUser.getPassword())) {
@@ -189,7 +189,7 @@ public class AuthController {
             }
         } else {
             // Subdomain request: Platform staff are NOT allowed to log in directly on tenant subdomains
-            if (platformUserRepository.existsByEmail(email)) {
+            if (existsPlatformUserMaster(email)) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN)
                         .body(Map.of("success", false, "message", "Platform Administrators must log in on the Platform Portal (hrm.com). Support access requires an authorized Support Session."));
             }
@@ -257,6 +257,30 @@ public class AuthController {
         }
     }
 
+    private boolean existsPlatformUserMaster(String email) {
+        String currentCtx = TenantContextHolder.getCurrentTenant();
+        try {
+            TenantContextHolder.clear();
+            return platformUserRepository.existsByEmail(email);
+        } finally {
+            if (currentCtx != null) {
+                TenantContextHolder.setCurrentTenant(currentCtx);
+            }
+        }
+    }
+
+    private Optional<PlatformUser> findPlatformUserByEmailMaster(String email) {
+        String currentCtx = TenantContextHolder.getCurrentTenant();
+        try {
+            TenantContextHolder.clear();
+            return platformUserRepository.findByEmail(email);
+        } finally {
+            if (currentCtx != null) {
+                TenantContextHolder.setCurrentTenant(currentCtx);
+            }
+        }
+    }
+
     @PostMapping("/mfa/verify")
     public ResponseEntity<?> verifyMfa(@RequestBody Map<String, String> body, HttpServletRequest request) {
         String email = body.get("email");
@@ -292,7 +316,7 @@ public class AuthController {
             }
             masterJdbc.update("UPDATE mfa_code SET used = TRUE WHERE id = ?", mfaRecord.get("id"));
 
-            PlatformUser pUser = platformUserRepository.findByEmail(email)
+            PlatformUser pUser = findPlatformUserByEmailMaster(email)
                     .orElseThrow(() -> new IllegalArgumentException("Platform user not found"));
 
             List<String> roleNames = pUser.getRoles().stream().map(r -> r.getName()).collect(Collectors.toList());

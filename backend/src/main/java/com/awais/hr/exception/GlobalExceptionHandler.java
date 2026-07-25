@@ -28,9 +28,36 @@ public class GlobalExceptionHandler {
         this.observabilityServiceProvider = observabilityServiceProvider;
     }
 
+    private void logExceptionToDb(Exception ex, String category) {
+        try {
+            ObservabilityService obsService = observabilityServiceProvider.getIfAvailable();
+            if (obsService != null) {
+                String traceId = MDC.get("traceId");
+                String tenantId = TenantContextHolder.getCurrentTenant();
+                StringWriter sw = new StringWriter();
+                ex.printStackTrace(new PrintWriter(sw));
+                
+                obsService.recordExceptionLog(
+                        tenantId != null ? tenantId : "awais",
+                        MDC.get("requestId"),
+                        traceId,
+                        ex.getClass().getName(),
+                        ex.getMessage(),
+                        sw.toString(),
+                        category,
+                        "GlobalExceptionHandler",
+                        MDC.get("requestUri"),
+                        MDC.get("method"),
+                        MDC.get("userId")
+                );
+            }
+        } catch (Exception ignored) {}
+    }
+
     @ExceptionHandler(TenantAlreadyExistsException.class)
     public ResponseEntity<Map<String, Object>> handleTenantAlreadyExists(TenantAlreadyExistsException ex) {
         log.warn("[TENANT CONFLICT] {}", ex.getMessage());
+        logExceptionToDb(ex, "TenantManagement");
         Map<String, Object> body = new HashMap<>();
         body.put("success", false);
         body.put("message", ex.getMessage());
@@ -40,6 +67,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(InvalidTenantException.class)
     public ResponseEntity<Map<String, Object>> handleInvalidTenant(InvalidTenantException ex) {
         log.warn("[INVALID TENANT] {}", ex.getMessage());
+        logExceptionToDb(ex, "TenantManagement");
         Map<String, Object> body = new HashMap<>();
         body.put("success", false);
         body.put("message", ex.getMessage());
@@ -49,6 +77,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, Object>> handleValidationExceptions(MethodArgumentNotValidException ex) {
         log.warn("[VALIDATION FAILURE] Payload validation failed for incoming request");
+        logExceptionToDb(ex, "ValidationService");
         Map<String, Object> body = new HashMap<>();
         body.put("success", false);
         
@@ -67,6 +96,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(SecurityException.class)
     public ResponseEntity<Map<String, Object>> handleSecurityException(SecurityException ex) {
         log.warn("[SECURITY VIOLATION] {}", ex.getMessage());
+        logExceptionToDb(ex, "SecurityService");
         Map<String, Object> body = new HashMap<>();
         body.put("success", false);
         body.put("message", ex.getMessage());
@@ -76,29 +106,8 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, Object>> handleGeneralExceptions(Exception ex) {
         String traceId = MDC.get("traceId");
-        String tenantId = TenantContextHolder.getCurrentTenant();
         log.error("[UNCAUGHT EXCEPTION] [TraceID: {}] Root Cause: {} - {}", traceId, ex.getClass().getName(), ex.getMessage(), ex);
-
-        StringWriter sw = new StringWriter();
-        ex.printStackTrace(new PrintWriter(sw));
-        String stackTraceStr = sw.toString();
-
-        ObservabilityService obsService = observabilityServiceProvider.getIfAvailable();
-        if (obsService != null) {
-            obsService.recordExceptionLog(
-                    tenantId != null ? tenantId : "awais",
-                    MDC.get("requestId"),
-                    traceId,
-                    ex.getClass().getName(),
-                    ex.getMessage(),
-                    stackTraceStr,
-                    "BackendService",
-                    "GlobalExceptionHandler",
-                    MDC.get("requestUri"),
-                    MDC.get("method"),
-                    MDC.get("userId")
-            );
-        }
+        logExceptionToDb(ex, "UncaughtService");
 
         Map<String, Object> body = new HashMap<>();
         body.put("success", false);

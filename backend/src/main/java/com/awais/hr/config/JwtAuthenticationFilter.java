@@ -66,7 +66,22 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 }
 
                 // Set active tenant context
-                String effectiveTenantId = isSystemAdmin && requestTenantId != null ? requestTenantId : tenantId;
+                String effectiveTenantId;
+                if (isSystemAdmin) {
+                    if (requestTenantId != null) {
+                        effectiveTenantId = requestTenantId;
+                    } else {
+                        String requestUri = request.getRequestURI().toLowerCase();
+                        if (requestUri.contains("/tenants") || requestUri.contains("/superadmin") || requestUri.contains("/observability") || requestUri.contains("/system") || requestUri.contains("/auth") || requestUri.contains("/platform")) {
+                            effectiveTenantId = "MASTER";
+                        } else {
+                            effectiveTenantId = "awais"; // Fallback default tenant for tenant operational endpoints
+                        }
+                    }
+                } else {
+                    effectiveTenantId = tenantId;
+                }
+
                 if (effectiveTenantId != null) {
                     TenantContextHolder.setCurrentTenant(effectiveTenantId);
                     MDC.put("tenantId", effectiveTenantId);
@@ -88,32 +103,34 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 
                 SecurityContextHolder.getContext().setAuthentication(auth);
 
-                // Verify Session IP & User-Agent Device Binding signatures if active_session table exists
-                try {
-                    org.springframework.jdbc.core.JdbcTemplate jdbcTemplate = new org.springframework.jdbc.core.JdbcTemplate(dataSource);
-                    String clientIp = request.getRemoteAddr();
-                    String userAgent = request.getHeader("User-Agent");
+                // Verify Session IP & User-Agent Device Binding signatures if active_session table exists (only for tenant context)
+                if (!"MASTER".equalsIgnoreCase(effectiveTenantId)) {
+                    try {
+                        org.springframework.jdbc.core.JdbcTemplate jdbcTemplate = new org.springframework.jdbc.core.JdbcTemplate(dataSource);
+                        String clientIp = request.getRemoteAddr();
+                        String userAgent = request.getHeader("User-Agent");
 
-                    List<Map<String, Object>> sessions = jdbcTemplate.queryForList(
-                            "SELECT ip_address, user_agent FROM active_session WHERE token = ?",
-                            token
-                    );
+                        List<Map<String, Object>> sessions = jdbcTemplate.queryForList(
+                                "SELECT ip_address, user_agent FROM active_session WHERE token = ?",
+                                token
+                        );
 
-                    if (!sessions.isEmpty()) {
-                        Map<String, Object> session = sessions.get(0);
-                        String savedIp = (String) session.get("ip_address");
-                        String savedUserAgent = (String) session.get("user_agent");
+                        if (!sessions.isEmpty()) {
+                            Map<String, Object> session = sessions.get(0);
+                            String savedIp = (String) session.get("ip_address");
+                            String savedUserAgent = (String) session.get("user_agent");
 
-                        if (savedIp != null && savedUserAgent != null && (!Objects.equals(savedIp, clientIp) || !Objects.equals(savedUserAgent, userAgent))) {
-                            log.warn("[SECURITY ALERT] Session hijack attempt detected for user: {}. Client IP: {}, expected: {}", email, clientIp, savedIp);
-                            jdbcTemplate.update("DELETE FROM active_session WHERE token = ?", token);
-                            SecurityContextHolder.clearContext();
-                            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Security alert: Device signature mismatch. Session revoked.");
-                            return;
+                            if (savedIp != null && savedUserAgent != null && (!Objects.equals(savedIp, clientIp) || !Objects.equals(savedUserAgent, userAgent))) {
+                                log.warn("[SECURITY ALERT] Session hijack attempt detected for user: {}. Client IP: {}, expected: {}", email, clientIp, savedIp);
+                                jdbcTemplate.update("DELETE FROM active_session WHERE token = ?", token);
+                                SecurityContextHolder.clearContext();
+                                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Security alert: Device signature mismatch. Session revoked.");
+                                return;
+                            }
                         }
+                    } catch (Exception e) {
+                        log.debug("Session verification note: {}", e.getMessage());
                     }
-                } catch (Exception e) {
-                    log.debug("Session verification note: {}", e.getMessage());
                 }
             }
         }

@@ -28,6 +28,19 @@ public class TenantSettingsController {
                     .body(Map.of("success", false, "message", "No active tenant workspace resolved."));
         }
 
+        if ("MASTER".equalsIgnoreCase(tenantId) || "SYSTEM".equalsIgnoreCase(tenantId)) {
+            return ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "tenantId", "MASTER",
+                    "name", "Platform Administration Console",
+                    "subdomain", "master",
+                    "customDomain", "",
+                    "logoUrl", "",
+                    "primaryColor", "#6366f1",
+                    "secondaryColor", "#a855f7"
+            ));
+        }
+
         Optional<Tenant> tenantOpt;
         TenantContextHolder.clear();
         try {

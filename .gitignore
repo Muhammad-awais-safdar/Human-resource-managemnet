@@ -191,3 +191,6 @@ CREDENTIALS.md
 ./scripts/__pycache__/
 ./backend/__pycache__/
 scripts/__pycache__/stress_test.cpython-314.pyc
+scripts/reset_db.sh
+run.sh
+run.sh

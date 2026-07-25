@@ -23,6 +23,11 @@ export default function DashboardLayout({ children }) {
   useEffect(() => {
     setMounted(true);
     if (typeof window !== 'undefined') {
+      const token = localStorage.getItem('auth_token');
+      if (!token) {
+        router.push('/login');
+        return;
+      }
       const cachedUser = localStorage.getItem('user');
       if (cachedUser) {
         try {
@@ -33,7 +38,7 @@ export default function DashboardLayout({ children }) {
         } catch (e) {}
       }
     }
-  }, []);
+  }, [router]);
 
   useEffect(() => {
     if (!mounted) return;

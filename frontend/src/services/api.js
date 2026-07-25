@@ -68,13 +68,20 @@ const customFetch = async (url, options = {}) => {
     headers,
   });
 
-  // Handle unauthorized responses (401)
-  if (response.status === 401) {
+  // Handle unauthorized (401) and forbidden (403) authentication responses
+  if (response.status === 401 || response.status === 403) {
     if (typeof window !== 'undefined') {
-      localStorage.removeItem('auth_token');
-      window.location.href = '/login';
+      const currentPath = window.location.pathname;
+      const isAuthPage = currentPath.startsWith('/login') || 
+                         currentPath.startsWith('/register') || 
+                         currentPath.startsWith('/accept-invite');
+      if (!isAuthPage) {
+        localStorage.removeItem('auth_token');
+        localStorage.removeItem('user');
+        window.location.href = '/login';
+      }
     }
-    throw new Error('Unauthorized');
+    throw new Error(response.status === 401 ? 'Unauthorized session' : 'Access forbidden');
   }
 
   // Parse JSON response body safely
@@ -88,6 +95,20 @@ const customFetch = async (url, options = {}) => {
 
   // Unpack unified ApiResponse envelope if present
   if (data && data.hasOwnProperty('result') && data.hasOwnProperty('statusCode')) {
+    if (data.statusCode === 401 || data.statusCode === 403) {
+      if (typeof window !== 'undefined') {
+        const currentPath = window.location.pathname;
+        const isAuthPage = currentPath.startsWith('/login') || 
+                           currentPath.startsWith('/register') || 
+                           currentPath.startsWith('/accept-invite');
+        if (!isAuthPage) {
+          localStorage.removeItem('auth_token');
+          localStorage.removeItem('user');
+          window.location.href = '/login';
+        }
+      }
+      throw new Error(data.statusMessage || 'Authentication required');
+    }
     if (data.statusCode !== 200) {
       throw new Error(data.statusMessage || 'API Error');
     }

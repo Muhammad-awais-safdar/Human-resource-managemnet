@@ -5,6 +5,12 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 BACKEND_DIR="$DIR/backend"
 FRONTEND_DIR="$DIR/frontend"
 
+# Handle subcommands (e.g. ./run.sh reset-db)
+if [ "$1" = "reset-db" ] || [ "$1" = "db:reset" ] || [ "$1" = "clean-db" ]; then
+    bash "$DIR/scripts/reset_db.sh"
+    exit 0
+fi
+
 # Helper to terminate processes occupying a specific port
 kill_port() {
     local port=$1

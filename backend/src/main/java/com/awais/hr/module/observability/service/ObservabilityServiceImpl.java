@@ -30,7 +30,12 @@ public class ObservabilityServiceImpl implements ObservabilityService {
                     "id UUID PRIMARY KEY DEFAULT gen_random_uuid(), tenant_id VARCHAR(100) NOT NULL, user_id VARCHAR(100), " +
                     "request_id VARCHAR(100), trace_id VARCHAR(100), correlation_id VARCHAR(100), module_code VARCHAR(50) NOT NULL, " +
                     "action_type VARCHAR(100) NOT NULL, entity_name VARCHAR(100), entity_id VARCHAR(100), old_value JSONB, " +
-                    "new_value JSONB, ip_address VARCHAR(45), user_agent TEXT, created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL)");
+                    "new_value JSONB, ip_address VARCHAR(45), user_agent TEXT, status_code INT, response_time_ms BIGINT, created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL)");
+
+            try {
+                jdbc.execute("ALTER TABLE platform_audit_log ADD COLUMN IF NOT EXISTS status_code INT");
+                jdbc.execute("ALTER TABLE platform_audit_log ADD COLUMN IF NOT EXISTS response_time_ms BIGINT");
+            } catch (Exception ignored) {}
 
             jdbc.execute("CREATE TABLE IF NOT EXISTS platform_security_event (" +
                     "id UUID PRIMARY KEY DEFAULT gen_random_uuid(), tenant_id VARCHAR(100), user_id VARCHAR(100), " +
@@ -192,13 +197,21 @@ public class ObservabilityServiceImpl implements ObservabilityService {
     @Override
     @Async
     public void recordAuditLog(String tenantId, String userId, String requestId, String traceId, String moduleCode, String actionType, String entityName, String entityId, String oldValue, String newValue, String ipAddress, String userAgent) {
+        recordAuditLog(tenantId, userId, requestId, traceId, moduleCode, actionType, entityName, entityId, oldValue, newValue, ipAddress, userAgent, null, null);
+    }
+
+    @Override
+    @Async
+    public void recordAuditLog(String tenantId, String userId, String requestId, String traceId, String moduleCode, String actionType, String entityName, String entityId, String oldValue, String newValue, String ipAddress, String userAgent, Integer statusCode, Long responseTimeMs) {
         // Non-blocking asynchronous background execution (0ms latency for HTTP user thread)
-        logStreamManager.addLog("INFO", moduleCode, tenantId, traceId, "Audit: " + actionType + " on " + entityName, ipAddress);
+        String level = (statusCode != null && statusCode >= 400) ? "WARN" : "INFO";
+        String logMsg = String.format("API Request: %s %s -> HTTP %s (%s ms)", actionType, entityName != null ? entityName : "", statusCode != null ? statusCode : 200, responseTimeMs != null ? responseTimeMs : 0);
+        logStreamManager.addLog(level, moduleCode, tenantId, traceId, logMsg, ipAddress);
         try {
             JdbcTemplate jdbc = new JdbcTemplate(dataSource);
             jdbc.update(
-                    "INSERT INTO platform_audit_log (tenant_id, user_id, request_id, trace_id, module_code, action_type, entity_name, entity_id, ip_address, user_agent) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                    tenantId != null ? tenantId : "awais", userId, requestId, traceId, moduleCode, actionType, entityName, entityId, ipAddress, userAgent
+                    "INSERT INTO platform_audit_log (tenant_id, user_id, request_id, trace_id, module_code, action_type, entity_name, entity_id, ip_address, user_agent, status_code, response_time_ms) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                    tenantId != null ? tenantId : "awais", userId, requestId, traceId, moduleCode, actionType, entityName, entityId, ipAddress, userAgent, statusCode, responseTimeMs
             );
         } catch (Exception ignored) {}
     }

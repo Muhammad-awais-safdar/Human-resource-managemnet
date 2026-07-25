@@ -2,6 +2,8 @@ package com.awais.hr.config;
 
 import com.awais.hr.context.TenantContextHolder;
 import com.awais.hr.module.observability.service.LogStreamManager;
+import com.awais.hr.module.observability.service.ObservabilityService;
+import org.springframework.beans.factory.ObjectProvider;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -18,9 +20,11 @@ public class ApiLoggingFilter extends OncePerRequestFilter {
 
     private static final Logger log = LoggerFactory.getLogger(ApiLoggingFilter.class);
     private final LogStreamManager logStreamManager;
+    private final ObjectProvider<ObservabilityService> observabilityServiceProvider;
 
-    public ApiLoggingFilter(LogStreamManager logStreamManager) {
+    public ApiLoggingFilter(LogStreamManager logStreamManager, ObjectProvider<ObservabilityService> observabilityServiceProvider) {
         this.logStreamManager = logStreamManager;
+        this.observabilityServiceProvider = observabilityServiceProvider;
     }
 
     @Override
@@ -57,6 +61,43 @@ public class ApiLoggingFilter extends OncePerRequestFilter {
             String logLevel = status >= 500 ? "ERROR" : status >= 400 ? "WARN" : "INFO";
             String logMsg = String.format("%s %s -> HTTP %d (%d ms)", method, fullPath, status, duration);
             logStreamManager.addLog(logLevel, moduleName, tenantId, traceId, logMsg, clientIp);
+
+            // Persist request execution log to Database Audit Table
+            ObservabilityService obsService = observabilityServiceProvider.getIfAvailable();
+            if (obsService != null) {
+                String authenticatedUser = (String) request.getAttribute("authenticatedUserEmail");
+                obsService.recordAuditLog(
+                        tenantId != null ? tenantId : "awais",
+                        authenticatedUser,
+                        traceId,
+                        traceId,
+                        moduleName,
+                        method,
+                        fullPath,
+                        null,
+                        null,
+                        null,
+                        clientIp,
+                        request.getHeader("User-Agent"),
+                        status,
+                        duration
+                );
+
+                // If HTTP Status is 401 or 403, persist Security Event to DB
+                if (status == 401 || status == 403) {
+                    obsService.recordSecurityEvent(
+                            tenantId != null ? tenantId : "awais",
+                            authenticatedUser,
+                            status == 401 ? "UNAUTHORIZED_ACCESS" : "FORBIDDEN_ACCESS",
+                            status == 401 ? "WARN" : "HIGH",
+                            clientIp,
+                            request.getHeader("User-Agent"),
+                            fullPath,
+                            method,
+                            "HTTP " + status + " generated for request. Processing time: " + duration + "ms"
+                    );
+                }
+            }
         }
     }
 

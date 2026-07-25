@@ -19,7 +19,6 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Service
-@RequiredArgsConstructor
 @Slf4j
 public class TenantService {
 
@@ -27,6 +26,17 @@ public class TenantService {
     private final TenantRoutingDataSource routingDataSource;
     private final DataSource masterDataSource;
     private final PasswordEncoder passwordEncoder;
+
+    public TenantService(
+            TenantRepository tenantRepository,
+            TenantRoutingDataSource routingDataSource,
+            @org.springframework.beans.factory.annotation.Qualifier("masterDataSource") DataSource masterDataSource,
+            PasswordEncoder passwordEncoder) {
+        this.tenantRepository = tenantRepository;
+        this.routingDataSource = routingDataSource;
+        this.masterDataSource = masterDataSource;
+        this.passwordEncoder = passwordEncoder;
+    }
 
     private final Map<Object, Object> tenantDataSources = new ConcurrentHashMap<>();
 
