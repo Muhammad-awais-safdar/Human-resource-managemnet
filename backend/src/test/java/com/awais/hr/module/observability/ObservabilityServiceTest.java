@@ -63,6 +63,6 @@ public class ObservabilityServiceTest {
     public void recordAuditLog_shouldAddLogToStreamManager() {
         observabilityService.recordAuditLog("acme", "usr-1", "req-1", "tr-1", "employee", "CREATE", "Employee", "emp-101", null, "{\"name\":\"John\"}", "127.0.0.1", "Mozilla");
         List<Map<String, Object>> tail = observabilityService.getTailLogs(50);
-        assertTrue(tail.stream().anyMatch(l -> l.get("message") != null && l.get("message").toString().contains("CREATE on Employee")));
+        assertTrue(tail.stream().anyMatch(l -> l.get("message") != null && l.get("message").toString().contains("CREATE Employee")));
     }
 }

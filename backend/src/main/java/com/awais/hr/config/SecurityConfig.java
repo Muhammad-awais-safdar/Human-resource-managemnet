@@ -40,6 +40,7 @@ public class SecurityConfig {
                 // Allow dynamic properties API version context paths
                 .requestMatchers("/tenants/register", "/api/*/tenants/register").permitAll()
                 .requestMatchers("/auth/**", "/api/*/auth/**").permitAll()
+                .requestMatchers("/health", "/api/*/health", "/api/v1/health").permitAll()
                 .requestMatchers("/tenants/active/**", "/api/*/tenants/active/**").permitAll()
                 .requestMatchers("/recruitment/jobs", "/api/*/recruitment/jobs").permitAll()
                 .requestMatchers("/recruitment/apply", "/api/*/recruitment/apply").permitAll()

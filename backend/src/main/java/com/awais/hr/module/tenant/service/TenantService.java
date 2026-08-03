@@ -3,7 +3,7 @@ package com.awais.hr.module.tenant.service;
 import com.awais.hr.module.tenant.dto.TenantRegisterRequestDTO;
 import com.awais.hr.module.tenant.model.Tenant;
 import com.awais.hr.module.tenant.repository.TenantRepository;
-import com.awais.hr.context.TenantRoutingDataSource;
+import com.awais.hr.module.tenant.infrastructure.datasource.TenantRoutingDataSource;
 import com.zaxxer.hikari.HikariDataSource;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;

@@ -3,7 +3,7 @@ package com.awais.hr.module.tenant.service;
 import com.awais.hr.exception.TenantAlreadyExistsException;
 import com.awais.hr.module.tenant.model.Tenant;
 import com.awais.hr.module.tenant.repository.TenantRepository;
-import com.awais.hr.context.TenantRoutingDataSource;
+import com.awais.hr.module.tenant.infrastructure.datasource.TenantRoutingDataSource;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

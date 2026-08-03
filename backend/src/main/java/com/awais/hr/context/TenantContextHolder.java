@@ -2,17 +2,15 @@ package com.awais.hr.context;
 
 public class TenantContextHolder {
 
-    private static final ThreadLocal<String> CURRENT_TENANT = new ThreadLocal<>();
-
     public static String getCurrentTenant() {
-        return CURRENT_TENANT.get();
+        return com.awais.hr.module.tenant.infrastructure.context.TenantContextHolder.getCurrentTenant();
     }
 
     public static void setCurrentTenant(String tenantId) {
-        CURRENT_TENANT.set(tenantId);
+        com.awais.hr.module.tenant.infrastructure.context.TenantContextHolder.setCurrentTenant(tenantId);
     }
 
     public static void clear() {
-        CURRENT_TENANT.remove();
+        com.awais.hr.module.tenant.infrastructure.context.TenantContextHolder.clear();
     }
 }

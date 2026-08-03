@@ -1,6 +1,6 @@
 package com.awais.hr.config;
 
-import com.awais.hr.context.TenantRoutingDataSource;
+import com.awais.hr.module.tenant.infrastructure.datasource.TenantRoutingDataSource;
 import org.flywaydb.core.Flyway;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -65,6 +65,7 @@ public class DatabaseConfig {
                 .locations("classpath:db/migration/master")
                 .baselineOnMigrate(true)
                 .load();
+        flyway.repair();
         flyway.migrate();
         log.info("Master Database Flyway migration completed successfully.");
         return flyway;
