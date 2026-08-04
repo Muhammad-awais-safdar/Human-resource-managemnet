@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState, useTransition } from 'react';
+import React, { useEffect, useState, useTransition, useCallback } from 'react';
 import { Briefcase, Plus, Send, ChevronRight, ChevronLeft, Trash2, Sparkles, UserCheck, X } from 'lucide-react';
 import * as recruitmentService from '../../../services/recruitmentService';
 import { Button } from '@/components/primitives/Button';

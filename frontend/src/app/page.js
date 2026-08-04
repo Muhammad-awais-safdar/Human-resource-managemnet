@@ -7,8 +7,51 @@ export default function Home() {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setTimeout(() => setMounted(true), 0);
+    setMounted(true);
   }, []);
+
+  if (!mounted) {
+    return (
+      <div style={{
+        backgroundColor: '#09090b',
+        minHeight: '100vh',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        fontFamily: 'sans-serif'
+      }}>
+        <div style={{
+          width: '40px',
+          height: '40px',
+          border: '3px solid rgba(99, 102, 241, 0.1)',
+          borderTop: '3px solid #6366f1',
+          borderRadius: '50%',
+          animation: 'spin 1s linear infinite',
+          boxShadow: '0 0 15px rgba(99, 102, 241, 0.3)'
+        }} />
+        <h2 style={{
+          color: '#ffffff',
+          marginTop: '16px',
+          fontSize: '0.9rem',
+          fontWeight: 600,
+          letterSpacing: '0.1em',
+          textTransform: 'uppercase',
+          background: 'linear-gradient(135deg, #6366f1, #a855f7)',
+          WebkitBackgroundClip: 'text',
+          WebkitTextFillColor: 'transparent'
+        }}>
+          Awais HR
+        </h2>
+        <style>{`
+          @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }
+        `}</style>
+      </div>
+    );
+  }
 
   return (
     <div suppressHydrationWarning={true} className="landing-container">

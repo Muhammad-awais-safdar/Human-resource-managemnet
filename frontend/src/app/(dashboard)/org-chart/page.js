@@ -79,7 +79,7 @@ export default function OrgChartPage() {
   const [message, setMessage] = useState('');
 
   const loadData = () => {
-    apiClient.get('/org')
+    apiClient.get('/org/tree')
       .then(res => {
         if (Array.isArray(res)) setTreeData(res);
         else setTreeData(res.data || []);
