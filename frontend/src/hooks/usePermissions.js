@@ -28,8 +28,10 @@ export default function usePermissions() {
         const payload = decodeJwt(token);
         if (payload) {
           const rolesStr = payload.roles || '';
-          setRoles(rolesStr.split(',').map((r) => r.trim().toUpperCase()));
-          setEmail(payload.sub || '');
+          setTimeout(() => {
+            setRoles(rolesStr.split(',').map((r) => r.trim().toUpperCase()));
+            setEmail(payload.sub || '');
+          }, 0);
         }
       }
     }

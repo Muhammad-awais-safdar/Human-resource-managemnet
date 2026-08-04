@@ -210,7 +210,7 @@ export default function PerformancePage() {
                   </div>
                 </div>
                 <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '8px' }}>
-                  "{f.feedback}"
+                  &quot;{f.feedback}&quot;
                 </div>
               </div>
             ))}

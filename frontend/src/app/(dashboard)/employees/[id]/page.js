@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState, useTransition } from 'react';
+import React, { useEffect, useState, useTransition, useCallback } from 'react';
 import * as employeeService from '../../../../services/employeeService';
 import styles from '../../../../modules/auth/styles/register.module.css';
 
@@ -14,7 +14,7 @@ export default function Employee360Page({ params }) {
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState('');
 
-  const loadData = () => {
+  const loadData = useCallback(() => {
     employeeService.getEmployee360(id)
       .then(res => {
         if (res.success) {
@@ -26,11 +26,11 @@ export default function Employee360Page({ params }) {
       .catch(err => {
         setError(err.message || 'Failed to fetch employee profile.');
       });
-  };
+  }, [id]);
 
   useEffect(() => {
     loadData();
-  }, [id]);
+  }, [loadData]);
 
   if (error) {
     return (
@@ -246,7 +246,7 @@ export default function Employee360Page({ params }) {
                         </span>
                       </div>
                       <p style={{ margin: 0, fontSize: '0.9rem', color: 'var(--text-secondary)', lineHeight: '1.4' }}>
-                        "{f.feedback || f.FEEDBACK}"
+                        &quot;{f.feedback || f.FEEDBACK}&quot;
                       </p>
                     </div>
                   ))}

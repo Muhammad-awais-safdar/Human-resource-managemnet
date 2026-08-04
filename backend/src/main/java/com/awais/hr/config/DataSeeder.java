@@ -25,6 +25,7 @@ public class DataSeeder implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
+        com.awais.hr.module.tenant.infrastructure.context.TenantContextHolder.clear();
         log.info("========================================================================");
         log.info("🚀 EXECUTING ENTERPRISE TENANT & MULTI-ROLE DATA SEEDER...");
         log.info("========================================================================");
@@ -33,8 +34,12 @@ public class DataSeeder implements CommandLineRunner {
         String defaultCompanyName = "Acme HR Enterprise";
         String defaultAdminEmail = "admin@awais.com";
 
-        // Check if default tenant exists in master database
-        Optional<Tenant> existingTenant = tenantRepository.findBySubdomain(defaultSubdomain);
+        Optional<Tenant> existingTenant = Optional.empty();
+        try {
+            existingTenant = tenantRepository.findBySubdomain(defaultSubdomain);
+        } catch (Exception e) {
+            log.error("EXCEPTION IN FIND_BY_SUBDOMAIN: ", e);
+        }
         Tenant tenant;
         if (existingTenant.isPresent()) {
             tenant = existingTenant.get();
@@ -53,7 +58,8 @@ public class DataSeeder implements CommandLineRunner {
             try {
                 tenant = tenantService.registerNewTenant(request);
             } catch (Exception e) {
-                log.warn("Notice during tenant registration: {}", e.getMessage());
+                log.warn("Notice during tenant registration: {}", e.getMessage(), e);
+                com.awais.hr.module.tenant.infrastructure.context.TenantContextHolder.clear();
                 tenant = tenantRepository.findBySubdomain(defaultSubdomain).orElse(null);
             }
         }

@@ -1,48 +1,63 @@
 'use client';
 
 import React, { useEffect, useState, useTransition } from 'react';
+import { Network, Plus, Trash2, Building, Shield, ChevronRight, Layers, Tag } from 'lucide-react';
 import apiClient from '../../../services/api';
-import styles from '../../../modules/auth/styles/register.module.css';
+import { Button } from '@/components/primitives/Button';
+import { Input } from '@/components/primitives/Input';
+import { Badge } from '@/components/primitives/Badge';
+import { Card, CardHeader, CardTitle } from '@/components/primitives/Card';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/primitives/Dialog';
 
-// Recursive React component to render the visual tree nodes and connection lines
 function OrgTreeNode({ node, onAddChild, onDeleteNode }) {
   const isLeaf = !node.children || node.children.length === 0;
 
+  const getBadgeVariant = (type) => {
+    switch (type) {
+      case 'LEGAL_ENTITY': return 'warning';
+      case 'COST_CENTER': return 'purple';
+      case 'DEPARTMENT': return 'primary';
+      default: return 'default';
+    }
+  };
+
   return (
-    <div className="org-node-wrapper">
-      <div className="org-node">
-        <div className={`org-node-badge badge-${node.type.toLowerCase()}`}>
-          {node.type.replace('_', ' ')}
+    <div className="flex flex-col items-center">
+      <Card className="w-64 bg-[var(--bg-surface-l1)] border border-[var(--border-strong)] shadow-xl relative group hover:border-[var(--accent-primary)] transition-all p-4">
+        <div className="flex justify-between items-center mb-2">
+          <Badge variant={getBadgeVariant(node.type)}>
+            {node.type.replace('_', ' ')}
+          </Badge>
+          {node.costCode && (
+            <span className="text-[10px] font-mono text-[var(--text-muted)] bg-[var(--bg-surface-l2)] px-1.5 py-0.5 rounded border border-[var(--border-subtle)]">
+              {node.costCode}
+            </span>
+          )}
         </div>
-        <div className="org-node-title">{node.name}</div>
-        {node.costCode && <div className="org-node-meta">Code: {node.costCode}</div>}
-        
-        <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', marginTop: '12px' }}>
-          <button 
-            onClick={() => onAddChild(node)}
-            style={{ fontSize: '0.7rem', padding: '4px 8px', borderRadius: '4px', border: '1px solid var(--border-light)', cursor: 'pointer', background: 'rgba(255,255,255,0.02)', color: 'var(--accent-primary)' }}
-          >
-            + Add Child
-          </button>
-          <button 
-            onClick={() => onDeleteNode(node.id)}
-            style={{ fontSize: '0.7rem', padding: '4px 8px', borderRadius: '4px', border: '1px solid var(--border-light)', cursor: 'pointer', background: 'rgba(255,255,255,0.02)', color: 'var(--accent-danger)' }}
-          >
-            Delete
-          </button>
+
+        <h4 className="font-bold text-xs text-[var(--text-primary)] truncate">{node.name}</h4>
+
+        <div className="flex gap-2 mt-3 pt-3 border-t border-[var(--border-subtle)]">
+          <Button variant="secondary" size="sm" className="flex-1 text-[10px] h-7" onClick={() => onAddChild(node)} icon={Plus}>
+            Add Child
+          </Button>
+          <Button variant="ghost" size="sm" className="h-7 text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 px-2" onClick={() => onDeleteNode(node.id)} icon={Trash2} />
         </div>
-      </div>
+      </Card>
 
       {!isLeaf && (
-        <div className="org-children">
-          {node.children.map((child) => (
-            <OrgTreeNode 
-              key={child.id} 
-              node={child} 
-              onAddChild={onAddChild} 
-              onDeleteNode={onDeleteNode} 
-            />
-          ))}
+        <div className="flex flex-col items-center w-full">
+          <div className="w-[1px] h-6 bg-[var(--border-strong)]" />
+          <div className="flex gap-6 items-start pt-2 border-t border-[var(--border-strong)]">
+            {node.children.map((child) => (
+              <OrgTreeNode 
+                key={child.id} 
+                node={child} 
+                onAddChild={onAddChild} 
+                onDeleteNode={onDeleteNode} 
+              />
+            ))}
+          </div>
         </div>
       )}
     </div>
@@ -54,7 +69,6 @@ export default function OrgChartPage() {
   const [allUnits, setAllUnits] = useState([]);
   const [showForm, setShowForm] = useState(false);
   
-  // Form fields
   const [name, setName] = useState('');
   const [type, setType] = useState('DEPARTMENT');
   const [parentId, setParentId] = useState('');
@@ -65,14 +79,18 @@ export default function OrgChartPage() {
   const [message, setMessage] = useState('');
 
   const loadData = () => {
-    // Fetch hierarchical tree
-    apiClient.get('/org/tree')
-      .then(res => setTreeData(res))
+    apiClient.get('/org')
+      .then(res => {
+        if (Array.isArray(res)) setTreeData(res);
+        else setTreeData(res.data || []);
+      })
       .catch(err => console.error(err));
 
-    // Fetch flat list for parent dropdown selectors
     apiClient.get('/org')
-      .then(res => setAllUnits(res))
+      .then(res => {
+        if (Array.isArray(res)) setAllUnits(res);
+        else setAllUnits(res.data || []);
+      })
       .catch(err => console.error(err));
   };
 
@@ -103,7 +121,6 @@ export default function OrgChartPage() {
         setShowForm(false);
         loadData();
       } catch (err) {
-        // Displays circular loop dependency warnings from backend
         setError(err.message || 'Failed to create organization unit');
       }
     });
@@ -118,7 +135,7 @@ export default function OrgChartPage() {
   };
 
   const handleDeleteNode = async (nodeId) => {
-    if (!window.confirm('Are you sure you want to delete this organizational unit? Children nodes will have their parent links unlinked.')) return;
+    if (!window.confirm('Are you sure you want to delete this organizational unit?')) return;
     try {
       await apiClient.delete(`/org/${nodeId}`);
       loadData();
@@ -128,115 +145,117 @@ export default function OrgChartPage() {
   };
 
   return (
-    <div>
-      <header className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+    <div className="space-y-6 max-w-7xl mx-auto">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-[var(--border-subtle)] pb-5">
         <div>
-          <h1 className="page-title">Organization Chart</h1>
-          <p className="page-subtitle">Define legal entities, cost centers, departments, and team hierarchies</p>
+          <h1 className="text-2xl font-bold text-[var(--text-primary)] tracking-tight">Organization Chart</h1>
+          <p className="text-xs text-[var(--text-secondary)] mt-1">
+            Define legal entities, cost centers, departments, and team hierarchies.
+          </p>
         </div>
-        <button 
-          onClick={() => { setShowForm(!showForm); setError(''); setMessage(''); }} 
-          className={`${styles.btn} ${styles.btnPrimary}`} 
-          style={{ width: 'auto', height: '40px', padding: '0 20px' }}
-        >
-          {showForm ? 'Cancel' : '+ Create Unit'}
-        </button>
-      </header>
 
-      {showForm && (
-        <form onSubmit={handleCreateNode} className="form-card" style={{ maxWidth: '600px', marginBottom: '32px' }} noValidate>
-          <h3>Create Org Unit</h3>
-          
+        <Button variant="primary" onClick={() => { setShowForm(true); setError(''); setMessage(''); }} icon={Plus} size="sm">
+          Create Org Unit
+        </Button>
+      </div>
+
+      {message && (
+        <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-lg text-xs">
+          {message}
+        </div>
+      )}
+
+      {/* CREATE NODE MODAL DIALOG */}
+      <Dialog open={showForm} onOpenChange={setShowForm}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add Organizational Unit</DialogTitle>
+            <DialogDescription>
+              Create a new department, team, cost center, or legal entity node in the corporate hierarchy tree.
+            </DialogDescription>
+          </DialogHeader>
+
           {error && (
-            <div className={`${styles.alert} ${styles.alertDanger}`} style={{ marginBottom: '16px' }}>
+            <div className="p-3 bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-lg text-xs">
               {error}
             </div>
           )}
 
-          <div style={{ display: 'flex', gap: '16px', marginBottom: '16px' }}>
-            <div style={{ flex: 2 }} className={styles.formGroup}>
-              <label className={styles.label}>Unit Name</label>
-              <input
-                type="text"
-                className={styles.input}
-                placeholder="e.g. Finance Department"
+          <form onSubmit={handleCreateNode} className="space-y-4 py-2">
+            <div>
+              <label className="block text-xs font-semibold text-[var(--text-primary)] mb-1">Unit Name</label>
+              <Input
+                placeholder="e.g. Engineering Department"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                disabled={isPending}
+                required
               />
             </div>
-            <div style={{ flex: 1 }} className={styles.formGroup}>
-              <label className={styles.label}>Type</label>
-              <select
-                className={styles.input}
-                value={type}
-                onChange={(e) => setType(e.target.value)}
-                disabled={isPending}
-                style={{ appearance: 'none', background: 'var(--bg-tertiary)' }}
-              >
-                <option value="LEGAL_ENTITY">Legal Entity</option>
-                <option value="COST_CENTER">Cost Center</option>
-                <option value="DEPARTMENT">Department</option>
-                <option value="TEAM">Team</option>
-              </select>
-            </div>
-          </div>
 
-          <div style={{ display: 'flex', gap: '16px', marginBottom: '16px' }}>
-            <div style={{ flex: 1 }} className={styles.formGroup}>
-              <label className={styles.label}>Parent Unit (Optional)</label>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-semibold text-[var(--text-primary)] mb-1">Unit Type</label>
+                <select
+                  value={type}
+                  onChange={(e) => setType(e.target.value)}
+                  className="w-full h-9 bg-[var(--bg-surface-l2)] text-xs text-[var(--text-primary)] border border-[var(--border-subtle)] rounded-lg px-3 focus:outline-none focus:border-[var(--accent-primary)]"
+                >
+                  <option value="LEGAL_ENTITY">Legal Entity</option>
+                  <option value="COST_CENTER">Cost Center</option>
+                  <option value="DEPARTMENT">Department</option>
+                  <option value="TEAM">Team</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-[var(--text-primary)] mb-1">Cost Code</label>
+                <Input
+                  placeholder="e.g. CC-100"
+                  value={costCode}
+                  onChange={(e) => setCostCode(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-[var(--text-primary)] mb-1">Parent Unit</label>
               <select
-                className={styles.input}
                 value={parentId}
                 onChange={(e) => setParentId(e.target.value)}
-                disabled={isPending}
-                style={{ appearance: 'none', background: 'var(--bg-tertiary)' }}
+                className="w-full h-9 bg-[var(--bg-surface-l2)] text-xs text-[var(--text-primary)] border border-[var(--border-subtle)] rounded-lg px-3 focus:outline-none focus:border-[var(--accent-primary)]"
               >
-                <option value="">-- No Parent (Root Node) --</option>
+                <option value="">-- Root Level (No Parent) --</option>
                 {allUnits.map(u => (
                   <option key={u.id} value={u.id}>{u.name} ({u.type.replace('_', ' ')})</option>
                 ))}
               </select>
             </div>
-            <div style={{ flex: 1 }} className={styles.formGroup}>
-              <label className={styles.label}>Cost Code (Optional)</label>
-              <input
-                type="text"
-                className={styles.input}
-                placeholder="e.g. CC-100"
-                value={costCode}
-                onChange={(e) => setCostCode(e.target.value)}
-                disabled={isPending}
-              />
-            </div>
-          </div>
 
-          <button type="submit" className={`${styles.btn} ${styles.btnPrimary}`} disabled={isPending}>
-            {isPending ? 'Saving...' : 'Add Node to Tree'}
-          </button>
-        </form>
-      )}
+            <DialogFooter>
+              <Button type="button" variant="secondary" onClick={() => setShowForm(false)}>
+                Cancel
+              </Button>
+              <Button type="submit" variant="primary" isLoading={isPending}>
+                Create Unit
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
 
-      {message && (
-        <div className={`${styles.alert}`} style={{ background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.2)', color: 'var(--accent-success)', marginBottom: '24px' }}>
-          {message}
-        </div>
-      )}
-
-      <div className="org-chart-container">
+      {/* VISUAL HIERARCHY TREE CANVAS */}
+      <div className="bg-[var(--bg-surface-l1)] border border-[var(--border-subtle)] rounded-xl p-8 overflow-x-auto min-h-[400px] flex justify-center items-start">
         {treeData.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '64px 0', color: 'var(--text-secondary)' }}>
-            <p>No organizational units found.</p>
-            <button 
-              onClick={() => setShowForm(true)} 
-              className={`${styles.btn} ${styles.btnPrimary}`} 
-              style={{ width: 'auto', display: 'inline-flex', marginTop: '16px' }}
-            >
-              Add First Org Node
-            </button>
+          <div className="text-center py-12 text-[var(--text-muted)]">
+            <Network className="w-12 h-12 mx-auto mb-3 opacity-50" />
+            <h3 className="text-sm font-bold text-[var(--text-primary)]">No Hierarchy Units Found</h3>
+            <p className="text-xs text-[var(--text-secondary)] mt-1 mb-4">Start by adding your root organizational legal entity or main department.</p>
+            <Button variant="primary" onClick={() => setShowForm(true)} icon={Plus} size="sm">
+              Add Root Node
+            </Button>
           </div>
         ) : (
-          <div className="org-tree">
+          <div className="flex gap-8 items-start">
             {treeData.map((root) => (
               <OrgTreeNode 
                 key={root.id} 

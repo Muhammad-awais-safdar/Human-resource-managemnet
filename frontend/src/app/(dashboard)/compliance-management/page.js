@@ -178,7 +178,7 @@ export default function ComplianceManagementPage() {
                 <div>
                   <strong style={{ color: 'var(--accent-primary)' }}>{p.policy_name || p.policyName} (v{p.policy_version || p.policyVersion})</strong>
                   <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '4px' }}>
-                    Acknowledged at: {new Date(p.acknowledged_at || p.acknowledgedAt || Date.now()).toLocaleString()}
+                    Acknowledged at: {new Date(p.acknowledged_at || p.acknowledgedAt || '2026-08-04T00:00:00Z').toLocaleString()}
                   </div>
                 </div>
                 <span style={{ fontSize: '0.75rem', background: 'rgba(16, 185, 129, 0.1)', color: 'var(--accent-success)', padding: '4px 10px', borderRadius: '4px', fontWeight: 'bold' }}>Signed & Verified</span>

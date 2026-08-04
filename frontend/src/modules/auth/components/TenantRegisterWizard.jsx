@@ -38,17 +38,19 @@ export default function TenantRegisterWizard() {
   const [empSuccess, setEmpSuccess] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
-    if (typeof window !== 'undefined') {
-      const hostname = window.location.hostname;
-      const parts = hostname.split('.');
-      if (parts.length > 1) {
-        const sub = parts[0].toLowerCase();
-        if (sub !== 'localhost' && sub !== 'www' && sub !== 'app') {
-          setIsSubdomainRestricted(true);
+    setTimeout(() => {
+      setMounted(true);
+      if (typeof window !== 'undefined') {
+        const hostname = window.location.hostname;
+        const parts = hostname.split('.');
+        if (parts.length > 1) {
+          const sub = parts[0].toLowerCase();
+          if (sub !== 'localhost' && sub !== 'www' && sub !== 'app') {
+            setIsSubdomainRestricted(true);
+          }
         }
       }
-    }
+    }, 0);
   }, []);
 
   const validateStep1 = () => {

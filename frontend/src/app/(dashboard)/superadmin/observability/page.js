@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
-import { getLogs, getTailLogs, getSecurityEvents, getExceptions, getAlerts, createAlert } from '@/services/platformOperationsService';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { getTailLogs, getSecurityEvents, getExceptions, getAlerts, createAlert } from '@/services/platformOperationsService';
 
 export default function ObservabilityDashboardPage() {
   const [activeTab, setActiveTab] = useState('LOGS');
@@ -18,22 +18,7 @@ export default function ObservabilityDashboardPage() {
 
   const terminalEndRef = useRef(null);
 
-  useEffect(() => {
-    fetchData();
-    let interval;
-    if (isTailMode) {
-      interval = setInterval(fetchTail, 2000);
-    }
-    return () => clearInterval(interval);
-  }, [isTailMode, filterLevel, linesCount]);
-
-  useEffect(() => {
-    if (isTailMode) {
-      terminalEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }
-  }, [logs]);
-
-  const fetchTail = async () => {
+  const fetchTail = useCallback(async () => {
     try {
       const res = await getTailLogs(linesCount);
       if (res?.data) {
@@ -42,9 +27,9 @@ export default function ObservabilityDashboardPage() {
     } catch (e) {
       console.error('Tail -f stream error:', e);
     }
-  };
+  }, [linesCount]);
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       setLoading(true);
       const [logsRes, secRes, excRes, alertsRes] = await Promise.allSettled([
@@ -75,7 +60,27 @@ export default function ObservabilityDashboardPage() {
       console.error('Failed to query real-time observability telemetry data:', e);
       setLoading(false);
     }
-  };
+  }, [linesCount]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchData();
+    }, 0);
+    let interval;
+    if (isTailMode) {
+      interval = setInterval(fetchTail, 2000);
+    }
+    return () => {
+      clearTimeout(timer);
+      clearInterval(interval);
+    };
+  }, [isTailMode, filterLevel, linesCount, fetchData, fetchTail]);
+
+  useEffect(() => {
+    if (isTailMode) {
+      terminalEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [logs, isTailMode]);
 
   const handleCreateAlertRule = async (e) => {
     e.preventDefault();

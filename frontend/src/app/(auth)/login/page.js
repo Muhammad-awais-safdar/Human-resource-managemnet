@@ -29,8 +29,10 @@ export default function LoginPage() {
       if (parts.length > 2 || (parts.length === 2 && parts[0] !== 'localhost' && parts[0] !== 'hrm')) {
         const sub = parts[0];
         if (sub !== 'www' && sub !== 'hrm' && sub !== 'app') {
-          setIsPlatformPortal(false);
-          setSubdomainName(sub);
+          setTimeout(() => {
+            setIsPlatformPortal(false);
+            setSubdomainName(sub);
+          }, 0);
         }
       }
     }

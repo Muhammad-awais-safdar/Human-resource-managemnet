@@ -29,6 +29,7 @@ public class PlatformSeeder implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
+        com.awais.hr.module.tenant.infrastructure.context.TenantContextHolder.clear();
         log.info("========================================================================");
         log.info("🛡️ SEEDING PLATFORM ROLES & SUPERADMIN ACCOUNTS (MASTER DB)...");
         log.info("========================================================================");
