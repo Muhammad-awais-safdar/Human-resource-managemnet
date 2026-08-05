@@ -213,13 +213,46 @@ public class DataSeeder implements CommandLineRunner {
 
         // 5. Seed Departments / Org Hierarchy
         log.info("Seeding organization units & departments...");
-        List<String> depts = List.of("Executive Leadership", "Engineering", "Human Resources", "Finance & Accounting", "Sales & Marketing");
-        for (String dept : depts) {
-            jdbcTemplate.update(
-                    "INSERT INTO org_unit (id, name, type) VALUES (?, ?, 'DEPARTMENT') ON CONFLICT DO NOTHING",
-                    UUID.randomUUID().toString(), dept
-            );
-        }
+        
+        // Clear existing org units to avoid duplicate records and build a clean tree structure
+        jdbcTemplate.update("DELETE FROM org_unit");
+
+        // Seed Legal Entity (Root Node)
+        String legalEntityId = UUID.randomUUID().toString();
+        jdbcTemplate.update("INSERT INTO org_unit (id, name, type, parent_id) VALUES (?, ?, 'LEGAL_ENTITY', NULL)", 
+                legalEntityId, "Acme Corp Legal Entity");
+
+        // Seed First Level of Departments under Legal Entity
+        String execId = UUID.randomUUID().toString();
+        jdbcTemplate.update("INSERT INTO org_unit (id, name, type, parent_id) VALUES (?, ?, 'DEPARTMENT', ?)", 
+                execId, "Executive Leadership", legalEntityId);
+
+        String financeId = UUID.randomUUID().toString();
+        jdbcTemplate.update("INSERT INTO org_unit (id, name, type, parent_id) VALUES (?, ?, 'COST_CENTER', ?)", 
+                financeId, "Finance & Accounting", legalEntityId);
+
+        String salesId = UUID.randomUUID().toString();
+        jdbcTemplate.update("INSERT INTO org_unit (id, name, type, parent_id) VALUES (?, ?, 'DEPARTMENT', ?)", 
+                salesId, "Sales & Marketing", legalEntityId);
+
+        // Seed Second Level under Executive Leadership
+        String engId = UUID.randomUUID().toString();
+        jdbcTemplate.update("INSERT INTO org_unit (id, name, type, parent_id) VALUES (?, ?, 'DEPARTMENT', ?)", 
+                engId, "Engineering", execId);
+
+        String hrId = UUID.randomUUID().toString();
+        jdbcTemplate.update("INSERT INTO org_unit (id, name, type, parent_id) VALUES (?, ?, 'DEPARTMENT', ?)", 
+                hrId, "Human Resources", execId);
+
+        // Seed Teams under Engineering
+        String devId = UUID.randomUUID().toString();
+        jdbcTemplate.update("INSERT INTO org_unit (id, name, type, parent_id) VALUES (?, ?, 'TEAM', ?)", 
+                devId, "Core Platform Team", engId);
+
+        // Seed Teams under Human Resources
+        String taId = UUID.randomUUID().toString();
+        jdbcTemplate.update("INSERT INTO org_unit (id, name, type, parent_id) VALUES (?, ?, 'TEAM', ?)", 
+                taId, "Talent Acquisition Team", hrId);
 
         // 6. Seed Sample Shift Schedules
         jdbcTemplate.update(

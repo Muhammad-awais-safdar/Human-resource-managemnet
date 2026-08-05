@@ -10,6 +10,21 @@
         </encoder>
     </appender>
 
+    <!-- Structured JSON Appender for Loki Centralized Logging -->
+    <appender name="JSON_CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+            <includeMdcKeyName>tenantId</includeMdcKeyName>
+            <includeMdcKeyName>tenantName</includeMdcKeyName>
+            <includeMdcKeyName>traceId</includeMdcKeyName>
+            <includeMdcKeyName>spanId</includeMdcKeyName>
+            <includeMdcKeyName>correlationId</includeMdcKeyName>
+            <includeMdcKeyName>clientIp</includeMdcKeyName>
+            <includeMdcKeyName>requestUri</includeMdcKeyName>
+            <includeMdcKeyName>method</includeMdcKeyName>
+            <customFields>{"service":"awais-hr-backend","environment":"production","region":"us-east-1"}</customFields>
+        </encoder>
+    </appender>
+
     <!-- Custom Observability Ring Buffer Appender -->
     <appender name="OBSERVABILITY" class="com.awais.hr.module.observability.util.ObservabilityLogbackAppender" />
 
@@ -21,6 +36,7 @@
     <!-- Root Logger -->
     <root level="INFO">
         <appender-ref ref="CONSOLE" />
+        <appender-ref ref="JSON_CONSOLE" />
         <appender-ref ref="OBSERVABILITY" />
     </root>
 

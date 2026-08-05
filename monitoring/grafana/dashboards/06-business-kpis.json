@@ -1,0 +1,77 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "title": "06 - Executive Business KPIs & Financial Metrics",
+  "uid": "awais-hr-business-06",
+  "tags": ["business", "kpi", "finance", "mrr", "arr", "executive"],
+  "timezone": "browser",
+  "schemaVersion": 38,
+  "version": 1,
+  "refresh": "10s",
+  "panels": [
+    {
+      "id": 1,
+      "title": "💰 Monthly Recurring Revenue (MRR)",
+      "description": "Total monthly revenue generated from active SaaS subscriptions. Plain English: Monthly income from paying clients.",
+      "type": "stat",
+      "gridPos": { "h": 6, "w": 6, "x": 0, "y": 0 },
+      "targets": [{ "expr": "hr_finance_mrr_usd", "legendFormat": "MRR ($)" }],
+      "fieldConfig": { "defaults": { "unit": "currencyUSD", "color": { "mode": "thresholds" } } }
+    },
+    {
+      "id": 2,
+      "title": "📅 Annual Recurring Revenue (ARR)",
+      "description": "Annualized revenue projection based on current active subscriptions. Plain English: Expected annual recurring sales.",
+      "type": "stat",
+      "gridPos": { "h": 6, "w": 6, "x": 6, "y": 0 },
+      "targets": [{ "expr": "hr_finance_arr_usd", "legendFormat": "ARR ($)" }],
+      "fieldConfig": { "defaults": { "unit": "currencyUSD", "color": { "mode": "thresholds" } } }
+    },
+    {
+      "id": 3,
+      "title": "🏢 Active Customer Tenants",
+      "description": "Count of customer organization databases currently active. Plain English: Number of active company accounts.",
+      "type": "stat",
+      "gridPos": { "h": 6, "w": 6, "x": 12, "y": 0 },
+      "targets": [{ "expr": "hr_tenants_active", "legendFormat": "Active Tenants" }],
+      "fieldConfig": { "defaults": { "unit": "short", "color": { "mode": "thresholds" } } }
+    },
+    {
+      "id": 4,
+      "title": "👥 Total Managed Employees",
+      "description": "Aggregate active workforce records managed across all client accounts. Plain English: Total employee seats in use.",
+      "type": "stat",
+      "gridPos": { "h": 6, "w": 6, "x": 18, "y": 0 },
+      "targets": [{ "expr": "hr_employees_total", "legendFormat": "Employees" }],
+      "fieldConfig": { "defaults": { "unit": "short", "color": { "mode": "thresholds" } } }
+    },
+    {
+      "id": 5,
+      "title": "⏰ Daily Attendance & Clock In / Out Activity",
+      "description": "Real-time employee clock-in and check-out logs processed today. Technical metric: micrometer gauge hr_attendance_today.",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 6 },
+      "targets": [
+        { "expr": "hr_attendance_today", "legendFormat": "Total Attendance" },
+        { "expr": "hr_attendance_clockin_today", "legendFormat": "Clock Ins" },
+        { "expr": "hr_attendance_clockout_today", "legendFormat": "Clock Outs" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "short", "custom": { "drawStyle": "line", "lineInterpolation": "smooth" } } }
+    },
+    {
+      "id": 6,
+      "title": "💳 Payroll Execution & Failure Monitoring",
+      "description": "Tracks successful payroll disbursements versus any failed runs requiring HR or Engineering attention.",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 6 },
+      "targets": [
+        { "expr": "hr_payroll_runs_total", "legendFormat": "Successful Runs" },
+        { "expr": "hr_payroll_failures_total", "legendFormat": "Failed Runs" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "short", "custom": { "drawStyle": "line", "lineInterpolation": "smooth" } } }
+    }
+  ]
+}
