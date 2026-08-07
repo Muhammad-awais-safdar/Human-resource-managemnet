@@ -137,7 +137,7 @@ export default function ExpensesPage() {
                   </div>
 
                   <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '8px' }}>
-                    Description: "{claim.description || claim.purpose || 'Business Expense'}"
+                    Description: &quot;{claim.description || claim.purpose || 'Business Expense'}&quot;
                   </div>
 
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '12px', paddingTop: '10px', borderTop: '1px solid var(--border-light)' }}>

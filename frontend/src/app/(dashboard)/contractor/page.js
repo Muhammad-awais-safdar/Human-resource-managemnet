@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState, useTransition } from 'react';
+import React, { useEffect, useState, useTransition, useCallback } from 'react';
 import * as contractorService from '../../../services/contractorService';
 import styles from '../../../modules/auth/styles/register.module.css';
 
@@ -20,7 +20,7 @@ export default function ContractorPage() {
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
 
-  const loadData = () => {
+  const loadData = useCallback(() => {
     contractorService.getContractors()
       .then(res => {
         setContractors(res || []);
@@ -29,11 +29,11 @@ export default function ContractorPage() {
         }
       })
       .catch(err => console.error(err));
-  };
+  }, [selectedContractorId]);
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [loadData]);
 
   useEffect(() => {
     if (selectedContractorId) {

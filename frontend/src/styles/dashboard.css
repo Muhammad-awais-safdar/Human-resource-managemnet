@@ -421,9 +421,58 @@
   width: 2px;
   height: 20px;
   background-color: var(--border-light);
+  transform: translateX(-50%);
+}
+
+.org-node-wrapper::before {
+  content: '';
+  position: absolute;
+  top: -20px;
+  left: -13px; /* spans half of the 24px gap plus 1px overlap to eliminate whitespace gaps */
+  right: -13px;
+  height: 2px;
+  background-color: var(--border-light);
+}
+
+/* Hide top connector lines for root node elements */
+.org-tree > .org-node-wrapper::before,
+.org-tree > .org-node-wrapper::after {
+  display: none;
+}
+
+.org-node-wrapper:first-child::before {
+  left: 50%;
+}
+
+.org-node-wrapper:last-child::before {
+  right: 50%;
+}
+
+.org-node-wrapper:only-child::before {
+  display: none;
 }
 
 .org-node-wrapper::after {
+  content: '';
+  position: absolute;
+  top: -20px;
+  left: 50%;
+  width: 2px;
+  height: 20px;
+  background-color: var(--border-light);
+  transform: translateX(-50%);
+}
+
+.org-node-wrapper.leaf::after {
+  display: none;
+}
+
+.org-node {
+  position: relative;
+  z-index: 1;
+}
+
+.org-node-wrapper:not(.leaf) > .org-node::after {
   content: '';
   position: absolute;
   bottom: -20px;
@@ -431,11 +480,8 @@
   width: 2px;
   height: 20px;
   background-color: var(--border-light);
-}
-
-.org-node-wrapper:only-child::after,
-.org-node-wrapper.leaf::after {
-  display: none;
+  transform: translateX(-50%);
+  z-index: 0;
 }
 
 /* Kanban Board Layout */

@@ -45,6 +45,7 @@ public class TenantContextFilter extends OncePerRequestFilter {
 
             if (tenantIdOpt.isPresent()) {
                 String identifier = tenantIdOpt.get();
+                TenantContextHolder.clear();
                 Optional<TenantAggregate> tenantOpt = tenantRepository.findBySubdomain(identifier);
                 if (tenantOpt.isEmpty()) {
                     try {

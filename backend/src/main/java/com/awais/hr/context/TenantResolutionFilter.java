@@ -24,6 +24,7 @@ public class TenantResolutionFilter implements Filter {
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
             throws IOException, ServletException {
         
+        TenantContextHolder.clear();
         HttpServletRequest httpRequest = (HttpServletRequest) request;
         String tenantHeader = httpRequest.getHeader("X-Tenant");
         String resolvedTenantId = null;

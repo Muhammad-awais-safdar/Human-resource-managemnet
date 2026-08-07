@@ -163,7 +163,7 @@ export default function EngagementPage() {
                   <div>
                     <strong style={{ color: 'var(--accent-primary)' }}>Badge: {r.badge_name || r.badgeName} (+{r.points} pts)</strong>
                     <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '4px' }}>
-                      "{r.message || 'Great teamwork and dedication!'}"
+                      &quot;{r.message || 'Great teamwork and dedication!'}&quot;
                     </div>
                   </div>
                   <span style={{ fontSize: '0.75rem', background: 'rgba(99,102,241,0.1)', color: 'var(--accent-primary)', padding: '4px 10px', borderRadius: '4px', fontWeight: 'bold' }}>Awarded</span>
@@ -209,7 +209,7 @@ export default function EngagementPage() {
                   <div>
                     <strong style={{ color: 'var(--accent-primary)' }}>Category: {sg.category}</strong>
                     <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '4px' }}>
-                      "{sg.suggestion_text || sg.suggestionText}"
+                      &quot;{sg.suggestion_text || sg.suggestionText}&quot;
                     </div>
                   </div>
                   <span style={{ fontSize: '0.75rem', background: 'rgba(16, 185, 129, 0.1)', color: 'var(--accent-success)', padding: '4px 10px', borderRadius: '4px', fontWeight: 'bold' }}>{sg.status}</span>

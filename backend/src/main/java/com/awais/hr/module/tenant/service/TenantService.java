@@ -120,6 +120,7 @@ public class TenantService {
         updatedDataSources.put("MASTER", masterDataSource);
         
         routingDataSource.setTargetDataSources(updatedDataSources);
+        routingDataSource.setDefaultTargetDataSource(masterDataSource);
         routingDataSource.afterPropertiesSet();
         
         log.info("Successfully registered dynamic connection pool for tenant: {}", tenant.getId());

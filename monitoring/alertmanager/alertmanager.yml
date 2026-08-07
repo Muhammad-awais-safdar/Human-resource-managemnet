@@ -1,0 +1,45 @@
+global:
+  resolve_timeout: 5m
+  smtp_smarthost: 'smtp.gmail.com:587'
+  smtp_from: 'alerts@awais-hr.com'
+  smtp_auth_username: 'alerts@awais-hr.com'
+  smtp_auth_password: 'secret_password'
+
+route:
+  group_by: ['alertname', 'cluster', 'service']
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 4h
+  receiver: 'default-webhook'
+  routes:
+    - match:
+        severity: critical
+      receiver: 'critical-notifications'
+      continue: true
+    - match:
+        severity: warning
+      receiver: 'warning-notifications'
+
+receivers:
+  - name: 'default-webhook'
+    webhook_configs:
+      - url: 'http://backend:8080/api/v1/observability/alerts/webhook'
+        send_resolved: true
+
+  - name: 'critical-notifications'
+    webhook_configs:
+      - url: 'http://backend:8080/api/v1/observability/alerts/webhook'
+        send_resolved: true
+    email_configs:
+      - to: 'sre-oncall@awais-hr.com'
+        send_resolved: true
+    slack_configs:
+      - api_url: 'http://backend:8080/api/v1/observability/alerts/slack'
+        channel: '#ops-critical-alerts'
+        send_resolved: true
+
+  - name: 'warning-notifications'
+    slack_configs:
+      - api_url: 'http://backend:8080/api/v1/observability/alerts/slack'
+        channel: '#ops-warnings'
+        send_resolved: true

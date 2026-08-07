@@ -112,7 +112,28 @@ const customFetch = async (url, options = {}) => {
     if (data.statusCode !== 200) {
       throw new Error(data.statusMessage || 'API Error');
     }
-    return convertKeysToCamel(data.result);
+    const unpacked = convertKeysToCamel(data.result);
+    if (Array.isArray(unpacked)) {
+      unpacked.success = true;
+      unpacked.statusCode = data.statusCode;
+      unpacked.statusMessage = data.statusMessage;
+      unpacked.data = unpacked;
+      return unpacked;
+    } else if (unpacked && typeof unpacked === 'object') {
+      return {
+        success: true,
+        statusCode: data.statusCode,
+        statusMessage: data.statusMessage,
+        ...unpacked
+      };
+    } else {
+      return {
+        success: true,
+        statusCode: data.statusCode,
+        statusMessage: data.statusMessage,
+        data: unpacked
+      };
+    }
   }
 
   // Check HTTP response status

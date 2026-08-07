@@ -5,6 +5,10 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 BACKEND_DIR="$DIR/backend"
 FRONTEND_DIR="$DIR/frontend"
 
+# Execution commands
+BACKEND_CMD="mvn clean install spring-boot:run"
+FRONTEND_CMD="npm run dev"
+
 # Handle subcommands (e.g. ./run.sh reset-db)
 if [ "$1" = "reset-db" ] || [ "$1" = "db:reset" ] || [ "$1" = "clean-db" ]; then
     bash "$DIR/scripts/reset_db.sh"
@@ -14,7 +18,7 @@ fi
 # Helper to terminate processes occupying a specific port
 kill_port() {
     local port=$1
-    echo "Clearing port $port..."
+    echo "Checking and clearing port $port..."
     if command -v fuser &> /dev/null; then
         fuser -k "$port/tcp" 2>/dev/null || true
     elif command -v lsof &> /dev/null; then
@@ -25,6 +29,10 @@ kill_port() {
         fi
     fi
 }
+
+echo "========================================================"
+echo "          Awais HR Enterprise SaaS Launcher"
+echo "========================================================"
 
 echo "Checking development tool requirements..."
 if ! command -v mvn &> /dev/null; then
@@ -37,37 +45,83 @@ if ! command -v npm &> /dev/null; then
     exit 1
 fi
 
+# Smart Observability & Grafana Launcher (Native Host / Docker Compose / Container detection)
+start_observability_platform() {
+    # Check if running inside a Docker container environment
+    if [ -f /.dockerenv ] || ( [ -f /proc/1/cgroup ] && grep -q 'docker\|containerd\|kubepods' /proc/1/cgroup 2>/dev/null ); then
+        echo "Notice: Executing inside container environment. Skipping nested container orchestration."
+        return 0
+    fi
+
+    echo "Launching Observability Platform & Grafana Services..."
+
+    # 1. Native system service / binary launch (No Docker required)
+    if command -v systemctl &> /dev/null && systemctl list-unit-files 2>/dev/null | grep -q grafana-server; then
+        echo "Starting native systemd grafana-server service..."
+        sudo systemctl start grafana-server 2>/dev/null || systemctl start grafana-server 2>/dev/null || true
+    elif command -v grafana-server &> /dev/null; then
+        echo "Starting native grafana-server binary in background..."
+        grafana-server --homepath /usr/share/grafana > /dev/null 2>&1 &
+    # 2. Host Docker Compose launch (if Docker daemon is active on host machine)
+    elif command -v docker &> /dev/null; then
+        if docker info &> /dev/null; then
+            docker compose up -d 2>/dev/null || docker-compose up -d 2>/dev/null || true
+        else
+            echo "Notice: Docker daemon is stopped or current user lacks docker permissions. Skipping Docker Compose."
+        fi
+    else
+        echo "Notice: Neither Docker nor native Grafana binary found. Running in standalone mode."
+    fi
+}
+
+start_observability_platform
+
 # Clean ports first
 kill_port 8080
+kill_port 3000
 kill_port 5173
 echo "Ports cleared. Launching development environment..."
+echo "--------------------------------------------------------"
+echo "📊 Grafana Enterprise Portal: http://localhost:3001"
+echo "🔥 Prometheus Metrics Engine: http://localhost:9090"
+echo "💻 Frontend Web App:          http://localhost:3000"
+echo "⚙️ Backend API Engine:        http://localhost:8080"
+echo "--------------------------------------------------------"
 
 # Detect desktop environment terminal emulators
-if command -v gnome-terminal &> /dev/null; then
+if command -v ptyxis &> /dev/null; then
+    echo "Launching separate terminal windows using Ptyxis..."
+    ptyxis -d "$BACKEND_DIR" -T "Awais HR - Backend (8080)" -- bash -c "$BACKEND_CMD; exec bash" &
+    ptyxis -d "$FRONTEND_DIR" -T "Awais HR - Frontend (3000)" -- bash -c "$FRONTEND_CMD; exec bash" &
+elif command -v gnome-terminal &> /dev/null; then
     echo "Launching separate terminal tabs using gnome-terminal..."
-    gnome-terminal --title="Awais HR - Backend" --working-directory="$BACKEND_DIR" -- bash -c "mvn spring-boot:run; exec bash" &
-    gnome-terminal --title="Awais HR - Frontend" --working-directory="$FRONTEND_DIR" -- bash -c "npm run dev; exec bash" &
+    gnome-terminal --title="Awais HR - Backend (8080)" --working-directory="$BACKEND_DIR" -- bash -c "$BACKEND_CMD; exec bash" &
+    gnome-terminal --title="Awais HR - Frontend (3000)" --working-directory="$FRONTEND_DIR" -- bash -c "$FRONTEND_CMD; exec bash" &
 elif command -v xfce4-terminal &> /dev/null; then
     echo "Launching separate terminal windows using xfce4-terminal..."
-    xfce4-terminal --title="Awais HR - Backend" --working-directory="$BACKEND_DIR" -e "mvn spring-boot:run" &
-    xfce4-terminal --title="Awais HR - Frontend" --working-directory="$FRONTEND_DIR" -e "npm run dev" &
+    xfce4-terminal --title="Awais HR - Backend" --working-directory="$BACKEND_DIR" -e "$BACKEND_CMD" &
+    xfce4-terminal --title="Awais HR - Frontend" --working-directory="$FRONTEND_DIR" -e "$FRONTEND_CMD" &
 elif command -v konsole &> /dev/null; then
     echo "Launching separate tabs using konsole..."
-    konsole --workdir "$BACKEND_DIR" -e "mvn spring-boot:run" &
-    konsole --workdir "$FRONTEND_DIR" -e "npm run dev" &
+    konsole --workdir "$BACKEND_DIR" -e "$BACKEND_CMD" &
+    konsole --workdir "$FRONTEND_DIR" -e "$FRONTEND_CMD" &
+elif command -v x-terminal-emulator &> /dev/null; then
+    echo "Launching separate windows using x-terminal-emulator..."
+    x-terminal-emulator -e bash -c "cd '$BACKEND_DIR' && $BACKEND_CMD; exec bash" &
+    x-terminal-emulator -e bash -c "cd '$FRONTEND_DIR' && $FRONTEND_CMD; exec bash" &
 elif command -v xterm &> /dev/null; then
     echo "Launching separate windows using xterm..."
-    xterm -title "Awais HR - Backend" -hold -e "cd $BACKEND_DIR && mvn spring-boot:run" &
-    xterm -title "Awais HR - Frontend" -hold -e "cd $FRONTEND_DIR && npm run dev" &
+    xterm -title "Awais HR - Backend" -hold -e "cd $BACKEND_DIR && $BACKEND_CMD" &
+    xterm -title "Awais HR - Frontend" -hold -e "cd $FRONTEND_DIR && $FRONTEND_CMD" &
 else
     echo "No desktop terminal emulator detected. Running as background processes..."
     
     # Spawn background processes and redirect log outputs
-    cd "$BACKEND_DIR" && mvn spring-boot:run > backend.log 2>&1 &
+    cd "$BACKEND_DIR" && $BACKEND_CMD > backend.log 2>&1 &
     BACKEND_PID=$!
     echo "Backend server started with PID $BACKEND_PID. Logs at: backend/backend.log"
     
-    cd "$FRONTEND_DIR" && npm run dev > frontend.log 2>&1 &
+    cd "$FRONTEND_DIR" && $FRONTEND_CMD > frontend.log 2>&1 &
     FRONTEND_PID=$!
     echo "Frontend server started with PID $FRONTEND_PID. Logs at: frontend/frontend.log"
     

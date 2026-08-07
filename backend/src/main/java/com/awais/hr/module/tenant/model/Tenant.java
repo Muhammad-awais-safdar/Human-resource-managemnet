@@ -5,7 +5,7 @@ import lombok.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "tenant_legacy")
+@Table(name = "tenant")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -15,6 +15,7 @@ public class Tenant {
 
     @Id
     @Column(length = 50)
+    @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.VARCHAR)
     private String id;
 
     @Column(nullable = false, length = 100)

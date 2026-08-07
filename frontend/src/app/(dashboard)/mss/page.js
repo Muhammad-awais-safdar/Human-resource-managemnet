@@ -102,7 +102,7 @@ export default function MSSPage() {
                   </div>
                   {req.reason && (
                     <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '4px', fontStyle: 'italic' }}>
-                      Reason: "{req.reason}"
+                      Reason: &quot;{req.reason}&quot;
                     </div>
                   )}
                 </div>

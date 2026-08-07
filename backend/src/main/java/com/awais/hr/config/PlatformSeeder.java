@@ -29,6 +29,7 @@ public class PlatformSeeder implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
+        com.awais.hr.module.tenant.infrastructure.context.TenantContextHolder.clear();
         log.info("========================================================================");
         log.info("🛡️ SEEDING PLATFORM ROLES & SUPERADMIN ACCOUNTS (MASTER DB)...");
         log.info("========================================================================");
@@ -53,26 +54,28 @@ public class PlatformSeeder implements CommandLineRunner {
             }
         }
 
-        // Seed Default Platform SuperAdmin
-        String superAdminEmail = "admin@hrm.com";
-        if (platformUserRepository.findByEmail(superAdminEmail).isEmpty()) {
-            PlatformRole adminRole = platformRoleRepository.findByName("SYSTEM_ADMIN")
-                    .orElseThrow();
+        // Seed Default Platform SuperAdmins
+        List<String> superAdminEmails = List.of("admin@hrm.com", "admin@awais.com");
+        for (String superAdminEmail : superAdminEmails) {
+            if (platformUserRepository.findByEmail(superAdminEmail).isEmpty()) {
+                PlatformRole adminRole = platformRoleRepository.findByName("SYSTEM_ADMIN")
+                        .orElseThrow();
 
-            PlatformUser superAdmin = PlatformUser.builder()
-                    .id(UUID.randomUUID().toString())
-                    .email(superAdminEmail)
-                    .password(passwordEncoder.encode("admin123"))
-                    .firstName("Platform")
-                    .lastName("Administrator")
-                    .status("ACTIVE")
-                    .roles(Set.of(adminRole))
-                    .createdAt(LocalDateTime.now())
-                    .updatedAt(LocalDateTime.now())
-                    .build();
+                PlatformUser superAdmin = PlatformUser.builder()
+                        .id(UUID.randomUUID().toString())
+                        .email(superAdminEmail)
+                        .password(passwordEncoder.encode("admin123"))
+                        .firstName("Platform")
+                        .lastName("Administrator")
+                        .status("ACTIVE")
+                        .roles(Set.of(adminRole))
+                        .createdAt(LocalDateTime.now())
+                        .updatedAt(LocalDateTime.now())
+                        .build();
 
-            platformUserRepository.save(superAdmin);
-            log.info("✅ Platform SuperAdmin created successfully: {} / Password: admin123", superAdminEmail);
+                platformUserRepository.save(superAdmin);
+                log.info("✅ Platform SuperAdmin created successfully: {} / Password: admin123", superAdminEmail);
+            }
         }
 
         log.info("========================================================================");

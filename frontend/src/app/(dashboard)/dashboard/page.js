@@ -25,8 +25,10 @@ export default function DashboardPage() {
         try {
           const parsed = JSON.parse(cachedUser);
           const r = parsed.role || (parsed.roles ? parsed.roles.split(',')[0] : 'TENANT_ADMIN');
-          setUserRole(r.toUpperCase());
-          setUserName(`${parsed.firstName || ''} ${parsed.lastName || ''}`.trim() || parsed.email || '');
+          setTimeout(() => {
+            setUserRole(r.toUpperCase());
+            setUserName(`${parsed.firstName || ''} ${parsed.lastName || ''}`.trim() || parsed.email || '');
+          }, 0);
         } catch (e) {}
       }
     }

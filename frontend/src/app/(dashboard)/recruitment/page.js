@@ -1,8 +1,13 @@
 'use client';
 
-import React, { useEffect, useState, useTransition } from 'react';
+import React, { useEffect, useState, useTransition, useCallback } from 'react';
+import { Briefcase, Plus, Send, ChevronRight, ChevronLeft, Trash2, Sparkles, UserCheck, X } from 'lucide-react';
 import * as recruitmentService from '../../../services/recruitmentService';
-import styles from '../../../modules/auth/styles/register.module.css';
+import { Button } from '@/components/primitives/Button';
+import { Input } from '@/components/primitives/Input';
+import { Badge } from '@/components/primitives/Badge';
+import { Card, CardHeader, CardTitle, CardDescription } from '@/components/primitives/Card';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/primitives/Dialog';
 
 const PIPELINE_STAGES = [
   { id: 'APPLIED', name: 'Applied' },
@@ -15,7 +20,6 @@ export default function RecruitmentATSPage() {
   const [jobs, setJobs] = useState([]);
   const [candidates, setCandidates] = useState([]);
 
-  // Career Portal State
   const [showApplyModal, setShowApplyModal] = useState(false);
   const [showCreateJobModal, setShowCreateJobModal] = useState(false);
   const [selectedJobId, setSelectedJobId] = useState('');
@@ -25,7 +29,6 @@ export default function RecruitmentATSPage() {
   const [applyResumeUrl, setApplyResumeUrl] = useState('');
   const [applyResumeText, setApplyResumeText] = useState('');
 
-  // Create Job Form State
   const [newJobTitle, setNewJobTitle] = useState('');
   const [newJobDescription, setNewJobDescription] = useState('');
   const [newJobOpenings, setNewJobOpenings] = useState(1);
@@ -35,24 +38,25 @@ export default function RecruitmentATSPage() {
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
 
-  const loadData = () => {
+  const loadData = useCallback(() => {
     recruitmentService.getJobs()
       .then(res => {
-        setJobs(res);
-        if (res.length > 0 && !selectedJobId) {
-          setSelectedJobId(res[0].id);
+        const data = Array.isArray(res) ? res : res.data || [];
+        setJobs(data);
+        if (data.length > 0 && !selectedJobId) {
+          setSelectedJobId(data[0].id);
         }
       })
       .catch(err => console.error(err));
 
     recruitmentService.getCandidates()
-      .then(res => setCandidates(res))
+      .then(res => setCandidates(Array.isArray(res) ? res : res.data || []))
       .catch(err => console.error(err));
-  };
+  }, [selectedJobId]);
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [loadData]);
 
   const handleCreateJobSubmit = (e) => {
     e.preventDefault();
@@ -87,7 +91,7 @@ export default function RecruitmentATSPage() {
 
     startTransition(async () => {
       try {
-        const res = await recruitmentService.updateCandidateStage(candidateId, {
+        await recruitmentService.updateCandidateStage(candidateId, {
           stage: nextStage,
         });
         setMessage('Candidate application pipeline stage updated.');
@@ -149,161 +153,155 @@ export default function RecruitmentATSPage() {
   };
 
   return (
-    <div>
-      <header className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
+    <div className="space-y-6 max-w-7xl mx-auto">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-[var(--border-subtle)] pb-5">
         <div>
-          <h1 className="page-title">Applicant Tracking System (ATS)</h1>
-          <p className="page-subtitle">Track job openings and move candidates through the hiring pipeline stages</p>
+          <h1 className="text-2xl font-bold text-[var(--text-primary)] tracking-tight">Recruitment & ATS Kanban</h1>
+          <p className="text-xs text-[var(--text-secondary)] mt-1">
+            Track job requisitions, evaluate CV parsings, and manage applicant pipeline stages.
+          </p>
         </div>
-        <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-          <button 
-            onClick={() => { setShowCreateJobModal(true); setError(''); setMessage(''); }}
-            className={styles.btn}
-            style={{ padding: '10px 18px', background: 'rgba(99,102,241,0.15)', color: 'var(--accent-primary)', border: '1px solid var(--accent-primary)' }}
-          >
-            ➕ Post Job Opening
-          </button>
-          <button 
-            onClick={() => { setShowApplyModal(true); setError(''); setMessage(''); }}
-            className={`${styles.btn} ${styles.btnPrimary}`}
-            style={{ padding: '10px 18px' }}
-          >
-            🚀 Public Careers Portal Simulator
-          </button>
+
+        <div className="flex gap-2">
+          <Button variant="secondary" onClick={() => { setShowCreateJobModal(true); setError(''); setMessage(''); }} icon={Plus} size="sm">
+            Post Job Requisition
+          </Button>
+          <Button variant="primary" onClick={() => { setShowApplyModal(true); setError(''); setMessage(''); }} icon={Send} size="sm">
+            Public Careers Portal
+          </Button>
         </div>
-      </header>
+      </div>
 
       {error && (
-        <div className={`${styles.alert} ${styles.alertDanger}`} style={{ marginBottom: '24px' }}>
+        <div className="p-3 bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-lg text-xs">
           {error}
         </div>
       )}
 
       {message && (
-        <div className={`${styles.alert}`} style={{ background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.2)', color: 'var(--accent-success)', marginBottom: '24px' }}>
+        <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-lg text-xs">
           {message}
         </div>
       )}
 
       {/* Active Job Requisitions List */}
-      <div className="form-card" style={{ maxWidth: '100%', marginBottom: '32px' }}>
-        <h3>Active Job Requisitions</h3>
-        <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', marginTop: '12px' }}>
+      <Card>
+        <CardHeader>
+          <div>
+            <CardTitle>Active Job Requisitions</CardTitle>
+            <CardDescription>Open corporate vacancies accepting candidate submissions.</CardDescription>
+          </div>
+        </CardHeader>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           {jobs.map(job => (
             <div 
               key={job.id} 
-              style={{ 
-                flex: '1 1 280px', 
-                background: 'var(--bg-tertiary)', 
-                border: '1px solid var(--border-light)', 
-                borderRadius: 'var(--radius-md)', 
-                padding: '16px' 
-              }}
+              className="p-3 bg-[var(--bg-surface-l2)] border border-[var(--border-subtle)] rounded-xl space-y-2"
             >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                <strong style={{ color: '#fff', fontSize: '0.95rem' }}>{job.title}</strong>
-                <span style={{ fontSize: '0.65rem', padding: '2px 6px', borderRadius: '4px', background: 'rgba(59,130,246,0.1)', color: 'var(--accent-primary)', fontWeight: '700' }}>
-                  {job.status}
-                </span>
+              <div className="flex justify-between items-center">
+                <span className="font-bold text-xs text-[var(--text-primary)]">{job.title}</span>
+                <Badge variant="primary">{job.status}</Badge>
               </div>
-              <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', margin: '0 0 12px 0', minHeight: '36px' }}>{job.description}</p>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.7rem', color: 'var(--text-muted)' }}>
+              <p className="text-[11px] text-[var(--text-secondary)] line-clamp-2">{job.description}</p>
+              <div className="flex justify-between text-[10px] text-[var(--text-muted)] pt-2 border-t border-[var(--border-subtle)]">
                 <span>Openings: {job.openings}</span>
-                <span>Range: {job.salaryRange || job.salary_range}</span>
+                <span className="font-mono text-indigo-400">{job.salaryRange || job.salary_range}</span>
               </div>
             </div>
           ))}
           {jobs.length === 0 && (
-            <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>No active job requisitions seeded.</p>
+            <p className="text-xs text-[var(--text-muted)] col-span-3 text-center py-6">No active job requisitions found.</p>
           )}
         </div>
-      </div>
+      </Card>
 
-      {/* Interactive Kanban Board */}
-      <div className="kanban-board">
+      {/* Interactive ATS Kanban Board */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         {PIPELINE_STAGES.map(stage => {
           const stageCandidates = getCandidatesInStage(stage.id);
           return (
-            <div key={stage.id} className="kanban-column">
-              <div className="kanban-column-title">
-                <span>{stage.name}</span>
-                <span className="kanban-column-count">{stageCandidates.length}</span>
+            <div key={stage.id} className="bg-[var(--bg-surface-l1)] border border-[var(--border-subtle)] rounded-xl p-3 flex flex-col min-h-[500px]">
+              <div className="flex justify-between items-center pb-3 mb-3 border-b border-[var(--border-subtle)]">
+                <span className="text-xs font-bold text-[var(--text-primary)] uppercase tracking-wider">{stage.name}</span>
+                <Badge variant="default" className="text-[10px] px-2 py-0.5">
+                  {stageCandidates.length}
+                </Badge>
               </div>
-              
-              <div className="kanban-cards-container">
+
+              <div className="space-y-3 flex-1 overflow-y-auto">
                 {stageCandidates.map(candidate => {
                   const firstName = candidate.firstName || candidate.first_name || '';
                   const lastName = candidate.lastName || candidate.last_name || '';
                   const jobTitle = candidate.jobTitle || candidate.job_title || 'General Applicant';
                   const skills = candidate.extractedSkills || candidate.extracted_skills || '';
-                  const phone = candidate.phone || '';
 
                   return (
-                    <div key={candidate.id} className="kanban-card">
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                        <div className="kanban-card-name">{firstName} {lastName}</div>
+                    <div key={candidate.id} className="p-3 bg-[var(--bg-surface-l2)] border border-[var(--border-subtle)] rounded-xl space-y-2 shadow-md hover:border-[var(--accent-primary)] transition-all">
+                      <div className="flex justify-between items-start">
+                        <div className="font-bold text-xs text-[var(--text-primary)]">{firstName} {lastName}</div>
                         <button 
                           onClick={() => handleDeleteCandidate(candidate.id)}
-                          title="Dismiss Candidate"
-                          style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '0.8rem', padding: '0 2px' }}
+                          className="text-[var(--text-muted)] hover:text-rose-400 p-0.5 transition-colors"
                         >
-                          ✕
+                          <X className="w-3.5 h-3.5" />
                         </button>
                       </div>
-                      <div className="kanban-card-email">{candidate.email} {phone ? `• ${phone}` : ''}</div>
+
+                      <div className="text-[11px] text-[var(--text-secondary)] truncate">{candidate.email}</div>
                       
-                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '8px' }}>
-                        Position: <strong style={{ color: '#fff' }}>{jobTitle}</strong>
+                      <div className="text-[10px] text-[var(--text-muted)]">
+                        Position: <strong className="text-[var(--text-primary)]">{jobTitle}</strong>
                       </div>
 
                       {skills && (
-                        <div style={{ fontSize: '0.7rem', color: 'var(--accent-primary)', background: 'rgba(99,102,241,0.1)', padding: '4px 8px', borderRadius: '4px', marginBottom: '10px' }}>
-                          💡 <strong>AI Parsed Skills:</strong> {skills}
+                        <div className="text-[10px] text-indigo-400 bg-indigo-500/10 p-1.5 rounded border border-indigo-500/20">
+                          ⚡ AI Skills: {skills}
                         </div>
                       )}
 
-                      {/* Stage transition controls */}
-                      <div style={{ display: 'flex', gap: '6px', marginTop: '12px', flexWrap: 'wrap' }}>
+                      {/* Stage Transitions */}
+                      <div className="flex gap-1 pt-2 border-t border-[var(--border-subtle)]">
                         {stage.id !== 'APPLIED' && (
-                          <button 
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="flex-1 text-[10px] h-7 px-1"
                             onClick={() => {
                               const prev = PIPELINE_STAGES[PIPELINE_STAGES.findIndex(s => s.id === stage.id) - 1].id;
                               handleMoveStage(candidate.id, prev);
                             }}
-                            style={{ flex: 1, fontSize: '0.65rem', padding: '4px 6px', borderRadius: '4px', border: '1px solid var(--border-light)', cursor: 'pointer', background: 'none', color: 'var(--text-secondary)' }}
-                            disabled={isPending}
+                            icon={ChevronLeft}
                           >
-                            ◀ Back
-                          </button>
+                            Back
+                          </Button>
                         )}
                         
                         {stage.id !== 'OFFER' ? (
-                          <button 
+                          <Button 
+                            variant="primary" 
+                            size="sm" 
+                            className="flex-1 text-[10px] h-7 px-1"
                             onClick={() => {
                               const next = PIPELINE_STAGES[PIPELINE_STAGES.findIndex(s => s.id === stage.id) + 1].id;
                               handleMoveStage(candidate.id, next);
                             }}
-                            style={{ flex: 1, fontSize: '0.65rem', padding: '4px 6px', borderRadius: '4px', border: '1px solid var(--accent-primary)', cursor: 'pointer', background: 'rgba(99,102,241,0.1)', color: 'var(--accent-primary)', fontWeight: '600' }}
-                            disabled={isPending}
                           >
-                            Next ▶
-                          </button>
+                            Advance <ChevronRight className="w-3 h-3 ml-0.5" />
+                          </Button>
                         ) : (
-                          <button 
-                            style={{ flex: 1, fontSize: '0.65rem', padding: '4px 6px', borderRadius: '4px', border: '1px solid var(--accent-success)', background: 'rgba(16,185,129,0.1)', color: 'var(--accent-success)', fontWeight: '600', cursor: 'default' }}
-                            disabled
-                          >
-                            Offer Sent!
-                          </button>
+                          <Badge variant="success" className="w-full justify-center text-[10px]">
+                            Offer Sent
+                          </Badge>
                         )}
                       </div>
                     </div>
                   );
                 })}
-                
+
                 {stageCandidates.length === 0 && (
-                  <div style={{ textAlign: 'center', padding: '32px 0', fontSize: '0.75rem', color: 'var(--text-muted)', border: '1px dashed var(--border-light)', borderRadius: 'var(--radius-md)' }}>
-                    Empty Column
+                  <div className="text-center py-10 text-[11px] text-[var(--text-muted)] border border-dashed border-[var(--border-subtle)] rounded-xl">
+                    No candidates in this stage.
                   </div>
                 )}
               </div>
@@ -312,208 +310,119 @@ export default function RecruitmentATSPage() {
         })}
       </div>
 
-      {/* Career Portal Modal Simulation */}
-      {showApplyModal && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'rgba(0,0,0,0.85)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 1000,
-          padding: '16px'
-        }}>
-          <div className="form-card" style={{ width: '100%', maxWidth: '520px', position: 'relative' }}>
-            <button 
-              onClick={() => setShowApplyModal(false)}
-              style={{ position: 'absolute', top: '16px', right: '16px', background: 'none', border: 'none', color: 'var(--text-secondary)', fontSize: '1.25rem', cursor: 'pointer' }}
-            >
-              ✕
-            </button>
-            <h3>Public Careers Portal Application</h3>
-            <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '20px' }}>Apply to active positions and trigger the automatic AI CV extraction engine.</p>
-            
-            <form onSubmit={handleApplySubmit} noValidate>
-              <div className={styles.formGroup} style={{ marginBottom: '12px' }}>
-                <label className={styles.label}>Select Job Opening</label>
-                <select 
-                  className={styles.input}
-                  value={selectedJobId}
-                  onChange={(e) => setSelectedJobId(e.target.value)}
-                  style={{ background: 'var(--bg-tertiary)' }}
-                >
-                  {jobs.map(job => (
-                    <option key={job.id} value={job.id}>{job.title} ({job.salaryRange})</option>
-                  ))}
-                </select>
-              </div>
+      {/* CREATE JOB REQUISITION DIALOG */}
+      <Dialog open={showCreateJobModal} onOpenChange={setShowCreateJobModal}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Post New Job Requisition</DialogTitle>
+            <DialogDescription>Create an open position to accept career applicants.</DialogDescription>
+          </DialogHeader>
 
-              <div style={{ display: 'flex', gap: '12px', marginBottom: '12px' }}>
-                <div className={styles.formGroup} style={{ flex: 1 }}>
-                  <label className={styles.label}>First Name</label>
-                  <input 
-                    type="text" 
-                    className={styles.input} 
-                    value={applyFirstName} 
-                    onChange={(e) => setApplyFirstName(e.target.value)} 
-                  />
-                </div>
-                <div className={styles.formGroup} style={{ flex: 1 }}>
-                  <label className={styles.label}>Last Name</label>
-                  <input 
-                    type="text" 
-                    className={styles.input} 
-                    value={applyLastName} 
-                    onChange={(e) => setApplyLastName(e.target.value)} 
-                  />
-                </div>
-              </div>
+          <form onSubmit={handleCreateJobSubmit} className="space-y-3 py-2">
+            <div>
+              <label className="block text-xs font-semibold text-[var(--text-primary)] mb-1">Job Position Title</label>
+              <Input
+                placeholder="e.g. Senior Frontend Engineer"
+                value={newJobTitle}
+                onChange={(e) => setNewJobTitle(e.target.value)}
+                required
+              />
+            </div>
 
-              <div className={styles.formGroup} style={{ marginBottom: '12px' }}>
-                <label className={styles.label}>Email Address</label>
-                <input 
-                  type="email" 
-                  className={styles.input} 
-                  value={applyEmail} 
-                  onChange={(e) => setApplyEmail(e.target.value)} 
+            <div>
+              <label className="block text-xs font-semibold text-[var(--text-primary)] mb-1">Job Description</label>
+              <textarea
+                className="w-full h-20 bg-[var(--bg-surface-l2)] text-xs text-[var(--text-primary)] border border-[var(--border-subtle)] rounded-lg p-2 focus:outline-none focus:border-[var(--accent-primary)]"
+                placeholder="Responsibilities, scope, and technical requirements..."
+                value={newJobDescription}
+                onChange={(e) => setNewJobDescription(e.target.value)}
+                required
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-semibold text-[var(--text-primary)] mb-1">Openings</label>
+                <Input
+                  type="number"
+                  min="1"
+                  value={newJobOpenings}
+                  onChange={(e) => setNewJobOpenings(e.target.value)}
                 />
               </div>
-
-              <div className={styles.formGroup} style={{ marginBottom: '12px' }}>
-                <label className={styles.label}>Resume Filename</label>
-                <input 
-                  type="text" 
-                  className={styles.input} 
-                  placeholder="e.g. John_Resume_SDE.pdf"
-                  value={applyResumeUrl} 
-                  onChange={(e) => setApplyResumeUrl(e.target.value)} 
+              <div>
+                <label className="block text-xs font-semibold text-[var(--text-primary)] mb-1">Salary Range</label>
+                <Input
+                  placeholder="e.g. $90k - $120k"
+                  value={newJobSalaryRange}
+                  onChange={(e) => setNewJobSalaryRange(e.target.value)}
                 />
               </div>
+            </div>
 
-              <div className={styles.formGroup} style={{ marginBottom: '16px' }}>
-                <label className={styles.label}>CV Raw Text Content (For AI Parser extraction)</label>
-                <textarea 
-                  className={styles.input} 
-                  rows={3}
-                  value={applyResumeText} 
-                  onChange={(e) => setApplyResumeText(e.target.value)}
-                  style={{ resize: 'vertical', fontFamily: 'monospace', fontSize: '0.75rem', padding: '10px' }}
-                />
-              </div>
+            <DialogFooter>
+              <Button type="button" variant="secondary" onClick={() => setShowCreateJobModal(false)}>Cancel</Button>
+              <Button type="submit" variant="primary" isLoading={isPending}>Publish Vacancy</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
 
-              <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
-                <button 
-                  type="button" 
-                  onClick={() => setShowApplyModal(false)}
-                  className={styles.btn} 
-                  style={{ border: '1px solid var(--border-light)', background: 'none', color: 'var(--text-secondary)' }}
-                >
-                  Cancel
-                </button>
-                <button type="submit" className={`${styles.btn} ${styles.btnPrimary}`} disabled={isPending}>
-                  Submit Candidate Application
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      {/* PUBLIC CAREERS SIMULATION DIALOG */}
+      <Dialog open={showApplyModal} onOpenChange={setShowApplyModal}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Public Careers Portal Simulator</DialogTitle>
+            <DialogDescription>Simulate a job candidate application with automated AI CV parsing.</DialogDescription>
+          </DialogHeader>
 
-      {/* Create Job Opening Modal */}
-      {showCreateJobModal && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'rgba(0,0,0,0.85)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 1000,
-          padding: '16px'
-        }}>
-          <div className="form-card" style={{ width: '100%', maxWidth: '520px', position: 'relative' }}>
-            <button 
-              onClick={() => setShowCreateJobModal(false)}
-              style={{ position: 'absolute', top: '16px', right: '16px', background: 'none', border: 'none', color: 'var(--text-secondary)', fontSize: '1.25rem', cursor: 'pointer' }}
-            >
-              ✕
-            </button>
-            <h3>➕ Post New Job Opening Requisition</h3>
-            <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '20px' }}>
-              Create a new active vacancy that will immediately appear on the Public Careers Portal.
-            </p>
-            
-            <form onSubmit={handleCreateJobSubmit} noValidate>
-              <div className={styles.formGroup} style={{ marginBottom: '12px' }}>
-                <label className={styles.label}>Job Title *</label>
-                <input 
-                  type="text" 
-                  className={styles.input} 
-                  placeholder="e.g. Senior Frontend Engineer"
-                  value={newJobTitle} 
-                  onChange={(e) => setNewJobTitle(e.target.value)} 
-                />
-              </div>
+          <form onSubmit={handleApplySubmit} className="space-y-3 py-2">
+            <div>
+              <label className="block text-xs font-semibold text-[var(--text-primary)] mb-1">Target Job Vacancy</label>
+              <select
+                value={selectedJobId}
+                onChange={(e) => setSelectedJobId(e.target.value)}
+                className="w-full h-9 bg-[var(--bg-surface-l2)] text-xs text-[var(--text-primary)] border border-[var(--border-subtle)] rounded-lg px-3 focus:outline-none focus:border-[var(--accent-primary)]"
+              >
+                {jobs.map(job => (
+                  <option key={job.id} value={job.id}>{job.title} ({job.salaryRange})</option>
+                ))}
+              </select>
+            </div>
 
-              <div className={styles.formGroup} style={{ marginBottom: '12px' }}>
-                <label className={styles.label}>Job Description *</label>
-                <textarea 
-                  className={styles.input} 
-                  rows={3}
-                  placeholder="e.g. Lead dynamic UI design systems and state management."
-                  value={newJobDescription} 
-                  onChange={(e) => setNewJobDescription(e.target.value)}
-                  style={{ resize: 'vertical' }}
-                />
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-semibold text-[var(--text-primary)] mb-1">First Name</label>
+                <Input value={applyFirstName} onChange={(e) => setApplyFirstName(e.target.value)} required />
               </div>
+              <div>
+                <label className="block text-xs font-semibold text-[var(--text-primary)] mb-1">Last Name</label>
+                <Input value={applyLastName} onChange={(e) => setApplyLastName(e.target.value)} required />
+              </div>
+            </div>
 
-              <div style={{ display: 'flex', gap: '12px', marginBottom: '16px' }}>
-                <div className={styles.formGroup} style={{ flex: 1 }}>
-                  <label className={styles.label}>Openings Count</label>
-                  <input 
-                    type="number" 
-                    min="1"
-                    className={styles.input} 
-                    value={newJobOpenings} 
-                    onChange={(e) => setNewJobOpenings(e.target.value)} 
-                  />
-                </div>
-                <div className={styles.formGroup} style={{ flex: 1 }}>
-                  <label className={styles.label}>Salary Budget Range</label>
-                  <input 
-                    type="text" 
-                    className={styles.input} 
-                    placeholder="e.g. $100k - $140k"
-                    value={newJobSalaryRange} 
-                    onChange={(e) => setNewJobSalaryRange(e.target.value)} 
-                  />
-                </div>
-              </div>
+            <div>
+              <label className="block text-xs font-semibold text-[var(--text-primary)] mb-1">Email Address</label>
+              <Input type="email" value={applyEmail} onChange={(e) => setApplyEmail(e.target.value)} required />
+            </div>
 
-              <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
-                <button 
-                  type="button" 
-                  onClick={() => setShowCreateJobModal(false)}
-                  className={styles.btn} 
-                  style={{ border: '1px solid var(--border-light)', background: 'none', color: 'var(--text-secondary)' }}
-                >
-                  Cancel
-                </button>
-                <button type="submit" className={`${styles.btn} ${styles.btnPrimary}`} disabled={isPending}>
-                  Publish Job Requisition
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+            <div>
+              <label className="block text-xs font-semibold text-[var(--text-primary)] mb-1">CV Raw Text Content (For AI Skill Extraction)</label>
+              <textarea
+                className="w-full h-20 bg-[var(--bg-surface-l2)] text-xs font-mono text-[var(--text-primary)] border border-[var(--border-subtle)] rounded-lg p-2 focus:outline-none focus:border-[var(--accent-primary)]"
+                placeholder="Paste resume skills, experience, or bio..."
+                value={applyResumeText}
+                onChange={(e) => setApplyResumeText(e.target.value)}
+              />
+            </div>
+
+            <DialogFooter>
+              <Button type="button" variant="secondary" onClick={() => setShowApplyModal(false)}>Cancel</Button>
+              <Button type="submit" variant="primary" isLoading={isPending}>Submit Application</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
