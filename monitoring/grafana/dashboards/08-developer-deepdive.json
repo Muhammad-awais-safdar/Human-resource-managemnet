@@ -6,11 +6,11 @@
   "id": null,
   "title": "08 - Developer Deep-Dive & Tracing Diagnostics",
   "uid": "awais-hr-developer-08",
-  "tags": ["developer", "tracing", "opentelemetry", "hikari", "query"],
+  "tags": ["developer", "tracing", "logs", "loki", "opentelemetry", "hikari"],
   "timezone": "browser",
   "schemaVersion": 38,
-  "version": 1,
-  "refresh": "10s",
+  "version": 2,
+  "refresh": "5s",
   "panels": [
     {
       "id": 1,
@@ -63,6 +63,30 @@
         }
       ],
       "fieldConfig": { "defaults": { "unit": "s", "custom": { "drawStyle": "line", "lineInterpolation": "smooth" } } }
+    },
+    {
+      "id": 5,
+      "title": "💻 Live Server & Application Logs Terminal (Loki)",
+      "type": "logs",
+      "datasource": { "type": "loki", "uid": "Loki" },
+      "gridPos": { "h": 12, "w": 24, "x": 0, "y": 16 },
+      "targets": [
+        {
+          "datasource": { "type": "loki", "uid": "Loki" },
+          "expr": "{container=~\".+\"}",
+          "queryType": "range",
+          "refId": "A"
+        }
+      ],
+      "options": {
+        "showLabels": true,
+        "wrapLogMessage": true,
+        "enableLogDetails": true,
+        "showTime": true,
+        "showLogLabels": true,
+        "sortOrder": "Descending",
+        "dedupStrategy": "none"
+      }
     }
   ]
 }

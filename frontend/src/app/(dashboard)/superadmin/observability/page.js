@@ -531,7 +531,7 @@ export default function ObservabilityDashboardPage() {
                   { name: '05 - API Requests, Latency & Error Rate', id: 'awais-hr-api-05/05-api-requests-latency-error-rate', desc: 'RPS, P50/P95/P99 latency histograms, 4xx/5xx error rates' },
                   { name: '06 - Executive Business KPIs & Financial Metrics', id: 'awais-hr-business-06/06-executive-business-kpis-financial-metrics', desc: 'MRR, ARR, Active Tenants, Attendance, Payroll status' },
                   { name: '07 - Multi-Tenant Operations & Resource Usage', id: 'awais-hr-tenant-07/07-multi-tenant-operations-resource-usage', desc: 'Per-tenant CPU, Requests, Errors, Seats, Storage (MB)' },
-                  { name: '08 - Developer Deep-Dive & Tracing Diagnostics', id: 'awais-hr-developer-08/08-developer-deep-dive-tracing-diagnostics', desc: 'JDBC connection acquire times, Slow SQL queries, OTel traces' },
+                  { name: '08 - Developer Deep-Dive & Live Server Logs', id: 'awais-hr-developer-08/08-developer-deep-dive-tracing-diagnostics', desc: 'Live Loki container & server logs, JDBC pool acquire times, Slow SQL queries, OTel traces' },
                 ].map((d, idx) => (
                   <a
                     key={idx}

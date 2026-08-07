@@ -116,6 +116,9 @@ services:
       - GF_SECURITY_ADMIN_USER=admin
       - GF_SECURITY_ADMIN_PASSWORD=admin
       - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_NEWS_NEWS_FEED_ENABLED=false
+      - GF_ANALYTICS_REPORTING_ENABLED=false
+      - GF_ANALYTICS_CHECK_FOR_UPDATES=false
       - GF_SECURITY_DISABLE_INITIAL_ADMIN_CREATION=false
     volumes:
       - ./monitoring/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources:ro
@@ -137,9 +140,24 @@ services:
     networks:
       - awais-hr-network
 
+  promtail:
+    image: grafana/promtail:3.0.0
+    container_name: awais-hr-promtail
+    volumes:
+      - ./monitoring/promtail/promtail-config.yml:/etc/promtail/promtail-config.yml:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+    command: -config.file=/etc/promtail/promtail-config.yml
+    depends_on:
+      - loki
+    restart: unless-stopped
+    networks:
+      - awais-hr-network
+
   loki:
     image: grafana/loki:2.9.4
     container_name: awais-hr-loki
+    user: "0:0"
     volumes:
       - ./monitoring/loki/loki-config.yml:/etc/loki/loki-config.yml:ro
       - loki_data:/tmp/loki

@@ -3,7 +3,7 @@ global:
   smtp_smarthost: 'smtp.gmail.com:587'
   smtp_from: 'alerts@awais-hr.com'
   smtp_auth_username: 'alerts@awais-hr.com'
-  smtp_auth_password: '${SMTP_PASSWORD:secret_password}'
+  smtp_auth_password: 'secret_password'
 
 route:
   group_by: ['alertname', 'cluster', 'service']
@@ -34,12 +34,12 @@ receivers:
       - to: 'sre-oncall@awais-hr.com'
         send_resolved: true
     slack_configs:
-      - api_url: '${SLACK_WEBHOOK_URL:http://localhost:8080/api/v1/observability/alerts/slack}'
+      - api_url: 'http://backend:8080/api/v1/observability/alerts/slack'
         channel: '#ops-critical-alerts'
         send_resolved: true
 
   - name: 'warning-notifications'
     slack_configs:
-      - api_url: '${SLACK_WEBHOOK_URL:http://localhost:8080/api/v1/observability/alerts/slack}'
+      - api_url: 'http://backend:8080/api/v1/observability/alerts/slack'
         channel: '#ops-warnings'
         send_resolved: true
