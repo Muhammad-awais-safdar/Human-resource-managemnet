@@ -2,7 +2,44 @@
 
 Awais HR is a state-of-the-art, high-performance, enterprise-grade SaaS Human Resource Management System (HRMS) built using a **Modular Monolith** architecture with a **Database-per-Tenant** isolation strategy. 
 
-The platform supports 64 fully-integrated functional phases ranging from core onboarding, HR analytics, and automated multi-currency payroll processing to succession planning, ATS, shift calendars, asset management, AI resume parsing, and an **Enterprise Payment Integration Framework**.
+The platform supports 65 fully-integrated functional modules ranging from core onboarding, HR analytics, and automated multi-currency payroll processing to succession planning, ATS, shift calendars, asset management, AI resume parsing, an **Enterprise Payment Integration Framework**, and a full-stack **Enterprise Observability & Telemetry Suite**.
+
+---
+
+## 🚀 Complete Platform Infrastructure & Service Endpoints
+
+| Service Module | Technology Stack | Access URL / Port | Container Name | Status |
+| :--- | :--- | :--- | :--- | :--- |
+| **Frontend Web App** | Next.js 16 (App Router) / React 19 | [http://localhost:3000](http://localhost:3000) | `awais-hr-frontend` | 🟢 **Operational** |
+| **Backend REST API** | Spring Boot 3.3.1 (Java 21 LTS) | [http://localhost:8080](http://localhost:8080) | `awais-hr-backend` | 🟢 **Operational** |
+| **Grafana Enterprise** | Grafana 10.4 | [http://localhost:3001](http://localhost:3001) | `awais-hr-grafana` | 🟢 **Operational** |
+| **Prometheus Metrics** | Prometheus 2.51 | [http://localhost:9090](http://localhost:9090) | `awais-hr-prometheus` | 🟢 **Operational** |
+| **Loki Centralized Logs** | Grafana Loki 2.9.4 | `http://localhost:3100` | `awais-hr-loki` | 🟢 **Operational** |
+| **Promtail Log Shipper** | Grafana Promtail 3.0.0 | Internal Service | `awais-hr-promtail` | 🟢 **Operational** |
+| **Tempo Distributed Tracing**| Grafana Tempo 2.4 | `http://localhost:3200` | `awais-hr-tempo` | 🟢 **Operational** |
+| **Alertmanager** | Prometheus Alertmanager 0.27 | [http://localhost:9093](http://localhost:9093) | `awais-hr-alertmanager` | 🟢 **Operational** |
+| **PostgreSQL Database** | PostgreSQL 16 (Master + Tenant DBs) | `localhost:5432` | `awais-hr-db` | 🟢 **Healthy** |
+| **Redis Cache Engine** | Redis 7 (Tenant-prefixed keys) | `localhost:6379` | `awais-hr-redis` | 🟢 **Healthy** |
+
+---
+
+## 🌐 Full-Stack Enterprise Observability Platform
+
+The platform includes an integrated **Observability & Operational Telemetry Suite** accessible directly from the Super Admin Portal (`/superadmin/observability`) as well as Grafana:
+
+### 1. Dual-Persona Telemetry UI
+* 👔 **Executive View**: High-level business growth metrics, MRR/ARR, tenant seat counts, system uptime, and explanatory cards for non-technical stakeholders.
+* 💻 **SRE & Technical Deep-Dive**: Real-time server log streaming (`tail -f`), audit trails, exception stack trace viewer, and active incident alerting rule configurations.
+
+### 2. 8 Provisioned Enterprise Grafana Dashboards
+1. **01 - Infrastructure & Docker Overview**: Host CPU, Memory, Disk I/O, Network, and cAdvisor container metrics.
+2. **02 - JVM & Spring Boot Metrics**: Heap memory, metaspace, GC pause durations, and active thread counts.
+3. **03 - PostgreSQL Database Overview**: DB connection pools, transactions per second (TPS), lock contention, and HikariCP acquire latency.
+4. **04 - Redis Cache Performance**: Memory usage, commands/sec, cache hit/miss ratio, and evicted keys.
+5. **05 - API Requests, Latency & Error Rate**: RPS, P50/P95/P99 latency histograms, and HTTP 4xx/5xx error rates.
+6. **06 - Executive Business KPIs & Financial Metrics**: Active tenant metrics, MRR, ARR, employee seat usage, and payroll run success rate.
+7. **07 - Multi-Tenant Operations & Resource Usage**: Per-tenant CPU usage, API traffic, storage consumption, and tenant activity.
+8. **08 - Developer Deep-Dive & Live Server Logs**: Live Loki container log stream, slow SQL query traces (>500ms), and OpenTelemetry traces.
 
 ---
 
@@ -28,7 +65,7 @@ The platform includes a provider-agnostic, dual-domain payment architecture supp
 
 ---
 
-## 🔐 Repository Privileges & Role-Based Access Control (RBAC)
+## 🔐 Role-Based Access Control (RBAC) & Security
 
 Access control across backend endpoints and frontend views is enforced via custom annotation-driven aspects (`@HasPermission`) and JWT tenant context tokens:
 
@@ -44,8 +81,8 @@ public ApiResponse<Map<String, Object>> savePlan(@RequestBody Map<String, Object
 
 | Role Tier | Required Permission | Access Privileges & Functional Boundaries |
 | :--- | :--- | :--- |
-| **👑 Super Admin** | `SUPER_ADMIN` | Master DB tenant provisioning, global subscription plan creation, platform pricing control (`/superadmin/pricing-plans`), system health & audit monitoring. |
-| **🏢 Tenant Admin** | `MANAGE_TENANT_SETTINGS`, `MANAGE_PAYROLL` | Self-service subscription upgrades (`/settings/billing`), seat add-ons, payroll batch creation, MFA salary disbursement execution, bank gateway configuration. |
+| **👑 Super Admin** | `SUPER_ADMIN` | Master DB tenant provisioning, global pricing control, system health monitoring, live log stream access, alert configuration. |
+| **🏢 Tenant Admin** | `MANAGE_TENANT_SETTINGS`, `MANAGE_PAYROLL` | Self-service subscription upgrades, seat add-ons, payroll batch execution, bank gateway configuration. |
 | **👥 HR Manager** | `MANAGE_EMPLOYEE`, `MANAGE_LEAVE`, `MANAGE_ATTENDANCE` | Employee onboarding, shift assignments, leave approvals, recruitment job postings, performance appraisals. |
 | **🧑‍💻 Employee (ESS)** | `VIEW_ESS`, `SUBMIT_LEAVE`, `SUBMIT_EXPENSE` | Self-service profile, clock-in/out, leave requests, expense reimbursements, payslip downloads. |
 
@@ -56,19 +93,21 @@ public ApiResponse<Map<String, Object>> savePlan(@RequestBody Map<String, Object
 ### Backend
 - **Core Engine:** Spring Boot 3.3.1 (Java 21 LTS)
 - **Security:** Spring Security (Stateless JWT Authentication)
-- **Database Access:** Spring JDBC Template (Optimized raw SQL queries avoiding heavy ORM overhead where speed is critical)
+- **Database Access:** Spring JDBC Template (Optimized raw SQL queries for speed)
 - **Database Migrations:** Flyway (Master metadata schema + dynamic per-tenant schema migrations V1 to V50)
 - **Aspects (AOP):** AspectJ for declarative permission-gating (`@HasPermission`) and RLS tenant routing.
+- **Logging & Tracing:** Logback (Logstash JSON Encoder) + Micrometer Tracing + OpenTelemetry.
 
 ### Frontend
 - **Framework:** Next.js 16 (App Router) / React 19
 - **Styling:** Vanilla CSS & TailwindCSS v4
 - **HTTP Client:** Custom Fetch Wrapper with automatic Bearer JWT & `X-Tenant` header injection interceptors.
 
-### Infrastructure, Database & Cache
+### Infrastructure, Database & Observability
 - **Database:** PostgreSQL 16
 - **Cache Engine:** Redis 7 (Configured with dynamic key prefixing for multi-tenant cache isolation)
-- **Containerization:** Docker & Docker Compose (Multi-stage optimized builds)
+- **Observability:** Grafana, Prometheus, Loki, Promtail 3.0, Tempo, Alertmanager, cAdvisor, Node Exporter.
+- **Containerization:** Docker & Docker Compose (Multi-stage builds)
 
 ---
 
@@ -93,6 +132,7 @@ public ApiResponse<Map<String, Object>> savePlan(@RequestBody Map<String, Object
 │  - Intercept permissions with AOP @HasPermission Aspect│
 │  - Select connection from DynamicRoutingDataSource     │
 │  - @Cacheable reads from Redis (tenant-prefixed keys)  │
+│  - Emit Logstash JSON logs -> Ingested by Promtail/Loki│
 └──────┬─────────────────────────┬───────────────────────┘
        │ Cache Miss              │ Dynamic DB Connection
        ▼                         ▼
@@ -101,24 +141,21 @@ public ApiResponse<Map<String, Object>> savePlan(@RequestBody Map<String, Object
 │  (7-alpine)  │          ├──────────────┬───────────────┤
 │  Port 6379   │          │  Master DB   │ Tenant DB(s)  │
 │  TTL: 10 min │          │(awais_master)│(awais_<slug>) │
-│  Tenant-keyed│          └──────────────┴───────────────┘
-└──────────────┘
+└──────────────┘          └──────────────┴───────────────┘
 ```
 
 ---
 
-## 🚀 How to Run the Project
+## 🚀 Deployment & Local Execution
 
-### Option 1: Using Docker (Recommended — Single Command)
+### Option 1: Docker Compose (Recommended)
+Launch the entire platform including backend, frontend, databases, and observability stack:
+
 ```bash
-docker-compose up --build
+docker compose up -d
 ```
-1. Builds the Spring Boot backend JAR artifact using Java 21 JRE.
-2. Builds the Next.js production bundle.
-3. Launches PostgreSQL (`5432`) and Redis (`6379`).
-4. Access the application at **`http://localhost:3000`**.
 
-### Option 2: Running Locally for Development
+### Option 2: Running Host Environment Locally
 ```bash
 ./run.sh
 ```
@@ -127,46 +164,16 @@ docker-compose up --build
 
 ## ⚡ Stress Testing & Capacity Benchmarking (`scripts/stress_test.py`)
 
-The platform includes a custom multi-threaded Python stress-testing suite [`scripts/stress_test.py`](file:///home/awais/awais/projects/spring-boot/Human-resource-managemnet/scripts/stress_test.py) to measure backend throughput, latencies, response status codes, and P95/P99 metrics under concurrent tenant load.
+The platform includes a multi-threaded Python stress-testing suite to measure throughput, latencies, and percentile benchmarks under concurrent tenant load:
 
-### How to Run Stress Tests
-
-#### Prerequisites
-- Python 3.8+ (No external third-party library installations required; relies on Python standard libraries).
-
-#### Command Syntax
 ```bash
-python3 scripts/stress_test.py [CONCURRENCY_THREADS] [TOTAL_REQUESTS]
+# Run load test with 50 concurrent threads, 1000 total requests
+python3 scripts/stress_test.py 50 1000
 ```
-
-#### Execution Examples
-
-1. **Quick Smoke Test (20 Concurrent Threads, 200 Total Requests)**:
-   ```bash
-   python3 scripts/stress_test.py 20 200
-   ```
-
-2. **Medium Workload Test (50 Concurrent Threads, 1,000 Total Requests)**:
-   ```bash
-   python3 scripts/stress_test.py 50 1000
-   ```
-
-3. **Heavy Enterprise Load Test (100 Concurrent Threads, 5,000 Total Requests)**:
-   ```bash
-   python3 scripts/stress_test.py 100 5000
-   ```
-
-#### Output Metrics Provided
-- **Total Execution Time (Seconds)**
-- **Throughput (Requests Per Second — RPS)**
-- **Average Latency (ms)**
-- **Min / Max Latency (ms)**
-- **Percentile Benchmarks**: P50 (Median), P95, and P99 latency percentiles
-- **HTTP Status Code Breakdown & Success/Failure Rates**
 
 ---
 
-## 📂 Project Structure
+## 📂 Project Directory Structure
 
 ```text
 Human-resource-managemnet/
@@ -175,12 +182,10 @@ Human-resource-managemnet/
 │   │   ├── config/              # Security, AOP Aspect, and DB routing configs
 │   │   ├── context/             # TenantContextHolder & TenantResolutionFilter
 │   │   ├── common/              # API payload wraps (ApiResponse)
-│   │   └── module/              # 64 business modules (billing, bankpayroll, etc.)
+│   │   └── module/              # 65 business modules (billing, observability, etc.)
 │   ├── src/main/resources/
-│   │   ├── db/migration/
-│   │   │   ├── master/          # Tenant database registry schema
-│   │   │   └── tenant/core/     # Core HRMS tenant schemas (V1 to V50)
-│   │   └── application.properties
+│   │   ├── db/migration/        # Dynamic per-tenant schema migrations (V1 to V50)
+│   │   └── logback-spring.xml   # Logstash JSON + Console + Observability Appenders
 │   ├── Dockerfile
 │   └── pom.xml
 │
