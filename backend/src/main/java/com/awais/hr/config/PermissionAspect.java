@@ -69,8 +69,10 @@ public class PermissionAspect {
             boolean isAdmin = authentication.getAuthorities().stream()
                     .anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()) ||
                                    "ROLE_SYSTEM_ADMIN".equals(a.getAuthority()) ||
+                                   "ROLE_SUPER_ADMIN".equals(a.getAuthority()) ||
                                    "ADMIN".equals(a.getAuthority()) ||
-                                   "SYSTEM_ADMIN".equals(a.getAuthority()));
+                                   "SYSTEM_ADMIN".equals(a.getAuthority()) ||
+                                   "SUPER_ADMIN".equals(a.getAuthority()));
             if (isAdmin) {
                 return;
             }

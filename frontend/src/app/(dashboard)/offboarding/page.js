@@ -130,7 +130,7 @@ export default function OffboardingPage() {
                   </span>
                 </div>
                 <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '6px' }}>
-                  Reason: "{res.reason}"
+                  Reason: &quot;{res.reason}&quot;
                 </div>
                 <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '4px' }}>
                   Resignation: {res.resignationDate} | Target Exit: {res.lastWorkingDate}
@@ -143,7 +143,7 @@ export default function OffboardingPage() {
                     </div>
                     {res.exitInterviewFeedback && (
                       <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '4px' }}>
-                        Exit Feedback: "{res.exitInterviewFeedback}"
+                        Exit Feedback: &quot;{res.exitInterviewFeedback}&quot;
                       </div>
                     )}
                   </div>

@@ -20,6 +20,7 @@ public abstract class BaseEntity {
 
     @jakarta.persistence.Id
     @Column(name = "id", nullable = false, updatable = false)
+    @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.VARCHAR)
     private UUID id;
 
     @Column(name = "created_at", nullable = false, updatable = false)

@@ -1,0 +1,197 @@
+groups:
+  - name: InfrastructureAlerts
+    rules:
+      - alert: ApplicationDown
+        expr: up{job="awais-hr-backend"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Awais HR Backend Instance Down"
+          description: "Backend service on {{ $labels.instance }} has been unreachable for more than 1 minute."
+
+      - alert: HighCPUUsage
+        expr: (100 - (avg by (instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100)) > 85
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High CPU Usage Detected"
+          description: "CPU usage on {{ $labels.instance }} is above 85% for 5 minutes."
+
+      - alert: HighMemoryUsage
+        expr: ((node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / node_memory_MemTotal_bytes) * 100 > 90
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "High Memory Usage Detected"
+          description: "Host system memory usage on {{ $labels.instance }} exceeded 90%."
+
+      - alert: DiskFullWarning
+        expr: ((node_filesystem_size_bytes{mountpoint="/"} - node_filesystem_free_bytes{mountpoint="/"}) / node_filesystem_size_bytes{mountpoint="/"}) * 100 > 85
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Disk Space Usage High"
+          description: "Disk partition / is above 85% capacity."
+
+      - alert: DiskFullCritical
+        expr: ((node_filesystem_size_bytes{mountpoint="/"} - node_filesystem_free_bytes{mountpoint="/"}) / node_filesystem_size_bytes{mountpoint="/"}) * 100 > 95
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Disk Space Critically Low"
+          description: "Disk partition / is above 95% capacity."
+
+  - name: CoreServicesAlerts
+    rules:
+      - alert: PostgresDown
+        expr: pg_up == 0 or up{job="postgres-exporter"} == 0
+        for: 30s
+        labels:
+          severity: critical
+        annotations:
+          summary: "PostgreSQL Database Down"
+          description: "PostgreSQL database exporter reported instance down."
+
+      - alert: RedisDown
+        expr: redis_up == 0 or up{job="redis-exporter"} == 0
+        for: 30s
+        labels:
+          severity: critical
+        annotations:
+          summary: "Redis Cache Server Down"
+          description: "Redis cache instance is unreachable."
+
+      - alert: PrometheusDown
+        expr: up{job="prometheus"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Prometheus Monitoring Down"
+          description: "Prometheus self-health metric is reporting 0."
+
+      - alert: GrafanaDown
+        expr: up{job="grafana"} == 0
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Grafana Service Down"
+          description: "Grafana visualization endpoint is unreachable."
+
+      - alert: LokiDown
+        expr: up{job="loki"} == 0
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Loki Logging Service Down"
+          description: "Loki log aggregation cluster node is down."
+
+      - alert: TempoDown
+        expr: up{job="tempo"} == 0
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Tempo Tracing Service Down"
+          description: "Tempo distributed tracing receiver is down."
+
+  - name: ApplicationPerformanceAlerts
+    rules:
+      - alert: HighHttpErrorRate
+        expr: (sum(rate(http_server_requests_seconds_count{status=~"5.."}[5m])) / sum(rate(http_server_requests_seconds_count[5m]))) * 100 > 5
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "High HTTP 5xx Error Rate"
+          description: "HTTP 5xx error rate exceeded 5% over 5 minutes."
+
+      - alert: SlowApiResponses
+        expr: (histogram_quantile(0.95, sum(rate(http_server_requests_seconds_bucket[5m])) by (le))) > 2.0
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High API Latency (P95 > 2s)"
+          description: "95th percentile latency for HTTP requests is above 2 seconds."
+
+      - alert: HighJvmHeapUsage
+        expr: (jvm_memory_used_bytes{area="heap"} / jvm_memory_max_bytes{area="heap"}) * 100 > 90
+        for: 3m
+        labels:
+          severity: critical
+        annotations:
+          summary: "JVM Heap Memory > 90%"
+          description: "JVM Heap memory usage is critical."
+
+      - alert: DatabaseConnectionPoolExhaustion
+        expr: (hikaricp_connections_active / hikaricp_connections_max) * 100 > 90
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Hikari Connection Pool Near Capacity"
+          description: "HikariCP active connections exceeded 90% of pool maximum."
+
+      - alert: LongGarbageCollectionPause
+        expr: rate(jvm_gc_pause_seconds_sum[5m]) > 0.5
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Elevated JVM GC Pause Time"
+          description: "JVM GC pause duration is exceeding 500ms/sec."
+
+  - name: BusinessAndTenantAlerts
+    rules:
+      - alert: PayrollProcessingFailure
+        expr: hr_payroll_failures_total > 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Payroll Execution Failure"
+          description: "Payroll run failure detected in tenant engine."
+
+      - alert: AttendanceProcessingFailure
+        expr: rate(hr_attendance_today[15m]) == 0 and hour() >= 9 and hour() <= 17
+        for: 1h
+        labels:
+          severity: warning
+        annotations:
+          summary: "Zero Attendance Ingestion During Working Hours"
+          description: "No clock-in or attendance records registered across active tenants."
+
+      - alert: SubscriptionFailure
+        expr: hr_subscriptions_active < 1
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Active Subscriptions Drop Detected"
+          description: "Active tenant subscriptions dropped below baseline standard."
+
+      - alert: TenantDatabaseOffline
+        expr: hr_tenants_total > hr_tenants_active
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Tenant Database Connection Inactive"
+          description: "One or more registered SaaS tenant databases are reported offline or unreachable."
+
+      - alert: BackupFailureAlert
+        expr: hr_storage_usage_mb == 0
+        for: 12h
+        labels:
+          severity: warning
+        annotations:
+          summary: "Tenant Database Backup Verification Alert"
+          description: "Storage metrics reporting anomaly or unverified backup check."

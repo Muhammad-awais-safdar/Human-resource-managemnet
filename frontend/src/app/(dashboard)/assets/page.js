@@ -1,7 +1,13 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
+import { Laptop, Plus, CheckCircle2, AlertCircle, Package, UserCheck, RefreshCw, Smartphone, HardDrive, Truck } from 'lucide-react';
 import * as suiteService from '../../../services/suiteService';
+import { Button } from '@/components/primitives/Button';
+import { Input } from '@/components/primitives/Input';
+import { Badge } from '@/components/primitives/Badge';
+import { Card, CardHeader, CardTitle, CardDescription } from '@/components/primitives/Card';
+import { TableSkeleton } from '@/components/primitives/Skeleton';
 
 export default function AssetPage() {
   const [assets, setAssets] = useState([]);
@@ -20,22 +26,34 @@ export default function AssetPage() {
   const [assignAssetId, setAssignAssetId] = useState('');
   const [assignEmpId, setAssignEmpId] = useState('');
 
-  const loadData = () => {
+  const loadData = useCallback(() => {
+    setLoading(true);
     Promise.all([
       suiteService.getAllAssets().catch(() => []),
       suiteService.getMyAssets().catch(() => []),
-    ]).then(([all, mine]) => { setAssets(all); setMyAssets(mine); }).finally(() => setLoading(false));
-  };
+    ]).then(([all, mine]) => { 
+      setAssets(Array.isArray(all) ? all : all.data || []); 
+      setMyAssets(Array.isArray(mine) ? mine : mine.data || []); 
+    }).finally(() => setLoading(false));
+  }, []);
 
-  useEffect(() => { loadData(); }, []);
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      loadData();
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [loadData]);
 
   const handleAddAsset = async (e) => {
     e.preventDefault();
     try {
       await suiteService.addAsset({ name, category, serialNumber, purchaseDate });
-      setMessage('✅ Asset added!'); setName(''); setSerialNumber(''); setPurchaseDate('');
+      setMessage('✅ Asset registered successfully!'); 
+      setName(''); 
+      setSerialNumber(''); 
+      setPurchaseDate('');
       loadData();
-    } catch { setMessage('❌ Failed to add asset.'); }
+    } catch { setMessage('❌ Failed to register asset.'); }
   };
 
   const handleAssign = async (e) => {
@@ -43,100 +61,128 @@ export default function AssetPage() {
     try {
       const result = await suiteService.assignAsset(assignAssetId, assignEmpId);
       setMessage(result.success ? `✅ ${result.message}` : `❌ ${result.message}`);
-      setAssignAssetId(''); setAssignEmpId(''); loadData();
+      setAssignAssetId(''); 
+      setAssignEmpId(''); 
+      loadData();
     } catch { setMessage('❌ Failed to assign asset.'); }
   };
 
   const handleReturn = async (assetId) => {
     try {
       const result = await suiteService.returnAsset(assetId);
-      setMessage(result.success ? '✅ Asset returned.' : '❌ Failed to return asset.');
+      setMessage(result.success ? '✅ Asset returned to available inventory.' : '❌ Failed to return asset.');
       loadData();
     } catch { setMessage('❌ Error returning asset.'); }
   };
 
-  const statusColor = { AVAILABLE: '#10b981', ASSIGNED: '#f59e0b', MAINTENANCE: '#ef4444' };
-  const categoryIcons = { HARDWARE: '💻', LAPTOP: '💻', MOBILE: '📱', FURNITURE: '🪑', GENERAL: '📦', VEHICLE: '🚗', OTHER: '🔧' };
-
   return (
-    <div style={styles.page}>
-      <div style={styles.header}>
-        <span style={styles.icon}>📦</span>
-        <h1 style={styles.title}>Asset Management</h1>
-        <p style={styles.subtitle}>Track, assign, and manage company assets across the organization</p>
+    <div className="space-y-6 max-w-7xl mx-auto">
+      <div className="border-b border-[var(--border-subtle)] pb-5">
+        <h1 className="text-2xl font-bold text-[var(--text-primary)] tracking-tight">Corporate Asset Management</h1>
+        <p className="text-xs text-[var(--text-secondary)] mt-1">
+          Track hardware inventory, assign hardware assets to employees, and process return clearances.
+        </p>
       </div>
 
       {message && (
-        <div style={{ ...styles.alert, background: message.startsWith('✅') ? '#064e3b' : '#7f1d1d' }}>
-          {message}
+        <div className={`p-3 border rounded-lg text-xs flex items-center gap-2 ${message.startsWith('✅') ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' : 'bg-rose-500/10 border-rose-500/20 text-rose-400'}`}>
+          {message.startsWith('✅') ? <CheckCircle2 className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
+          <span>{message}</span>
         </div>
       )}
 
-      {/* Summary Cards */}
-      <div style={styles.statsGrid}>
+      {/* METRICS SUMMARY */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
-          { label: 'Total Assets', value: assets.length, color: '#06b6d4', icon: '📦' },
-          { label: 'Available', value: assets.filter(a => a.status === 'AVAILABLE').length, color: '#10b981', icon: '✅' },
-          { label: 'Assigned', value: assets.filter(a => a.status === 'ASSIGNED').length, color: '#f59e0b', icon: '🔗' },
-          { label: 'My Assets', value: myAssets.length, color: '#818cf8', icon: '👤' },
+          { label: 'Total Assets', value: assets.length, icon: Package, color: 'text-cyan-400' },
+          { label: 'Available Inventory', value: assets.filter(a => a.status === 'AVAILABLE').length, icon: CheckCircle2, color: 'text-emerald-400' },
+          { label: 'Currently Assigned', value: assets.filter(a => a.status === 'ASSIGNED').length, icon: UserCheck, color: 'text-amber-400' },
+          { label: 'Assigned to Me', value: myAssets.length, icon: Laptop, color: 'text-indigo-400' },
         ].map(stat => (
-          <div key={stat.label} style={styles.statCard}>
-            <span style={{ fontSize: '28px' }}>{stat.icon}</span>
-            <div>
-              <p style={{ color: '#64748b', fontSize: '0.75rem', margin: '0 0 2px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{stat.label}</p>
-              <p style={{ color: stat.color, fontSize: '1.8rem', fontWeight: 700, margin: 0 }}>{stat.value}</p>
+          <Card key={stat.label} className="p-4 flex items-center gap-3">
+            <div className={`p-2.5 rounded-xl bg-[var(--bg-surface-l2)] ${stat.color} border border-[var(--border-subtle)]`}>
+              <stat.icon className="w-5 h-5" />
             </div>
-          </div>
+            <div>
+              <div className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider">{stat.label}</div>
+              <div className="text-xl font-extrabold text-[var(--text-primary)] font-mono">{stat.value}</div>
+            </div>
+          </Card>
         ))}
       </div>
 
-      {/* Tabs */}
-      <div style={styles.tabs}>
-        {[
-          { id: 'all', label: '📋 All Assets' },
-          { id: 'mine', label: '👤 My Assets' },
-          { id: 'add', label: '➕ Add Asset' },
-          { id: 'assign', label: '🔗 Assign Asset' },
-        ].map(t => (
-          <button key={t.id} onClick={() => setActiveTab(t.id)}
-            style={{ ...styles.tab, ...(activeTab === t.id ? styles.tabActive : {}) }}>
-            {t.label}
-          </button>
-        ))}
+      {/* NAVIGATION TAB CONTROLS */}
+      <div className="flex gap-2 border-b border-[var(--border-subtle)] pb-2">
+        <Button
+          variant={activeTab === 'all' ? 'primary' : 'ghost'}
+          size="sm"
+          onClick={() => setActiveTab('all')}
+        >
+          All Inventory ({assets.length})
+        </Button>
+        <Button
+          variant={activeTab === 'mine' ? 'primary' : 'ghost'}
+          size="sm"
+          onClick={() => setActiveTab('mine')}
+        >
+          My Allocated Assets ({myAssets.length})
+        </Button>
+        <Button
+          variant={activeTab === 'add' ? 'primary' : 'ghost'}
+          size="sm"
+          onClick={() => setActiveTab('add')}
+          icon={Plus}
+        >
+          Add New Asset
+        </Button>
+        <Button
+          variant={activeTab === 'assign' ? 'primary' : 'ghost'}
+          size="sm"
+          onClick={() => setActiveTab('assign')}
+          icon={UserCheck}
+        >
+          Assign Asset
+        </Button>
       </div>
 
+      {/* CONTENT PANELS */}
       {loading ? (
-        <div style={styles.loadingBar}><div style={styles.loadingProgress} /></div>
+        <TableSkeleton rows={5} columns={5} />
       ) : (
-        <div style={styles.card}>
-          {/* All Assets */}
+        <Card className="p-0 overflow-hidden">
           {activeTab === 'all' && (
-            assets.length === 0 ? <p style={styles.empty}>No assets found. Add some!</p> : (
-              <div style={{ overflowX: 'auto' }}>
-                <table style={styles.table}>
+            assets.length === 0 ? (
+              <div className="p-12 text-center text-xs text-[var(--text-muted)]">No corporate assets registered.</div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs border-collapse">
                   <thead>
-                    <tr>
-                      {['', 'Name', 'Category', 'Serial No.', 'Status', 'Assigned To', 'Actions'].map(h => (
-                        <th key={h} style={styles.th}>{h}</th>
-                      ))}
+                    <tr className="bg-[var(--bg-surface-l2)] border-b border-[var(--border-subtle)] text-[var(--text-muted)] font-semibold uppercase tracking-wider text-[10px]">
+                      <th className="py-3 px-4">Asset Name</th>
+                      <th className="py-3 px-4">Category</th>
+                      <th className="py-3 px-4">Serial Number</th>
+                      <th className="py-3 px-4">Status</th>
+                      <th className="py-3 px-4">Assigned Employee</th>
+                      <th className="py-3 px-4 text-right">Actions</th>
                     </tr>
                   </thead>
-                  <tbody>
+                  <tbody className="divide-y divide-[var(--border-subtle)]">
                     {assets.map((a, i) => (
-                      <tr key={i} style={{ background: i % 2 === 0 ? 'rgba(255,255,255,0.03)' : 'transparent' }}>
-                        <td style={{ ...styles.td, fontSize: '1.2rem' }}>{categoryIcons[a.category] || '📦'}</td>
-                        <td style={{ ...styles.td, fontWeight: 600 }}>{a.name}</td>
-                        <td style={styles.td}>{a.category}</td>
-                        <td style={{ ...styles.td, fontFamily: 'monospace', fontSize: '0.8rem', color: '#64748b' }}>{a.serial_number || '—'}</td>
-                        <td style={styles.td}>
-                          <span style={{ color: statusColor[a.status] || '#64748b', background: `${statusColor[a.status] || '#64748b'}20`, borderRadius: '6px', padding: '2px 10px', fontSize: '0.78rem', fontWeight: 700 }}>
+                      <tr key={i} className="hover:bg-[var(--bg-surface-l2)]/50 transition-colors">
+                        <td className="py-3 px-4 font-bold text-[var(--text-primary)]">{a.name}</td>
+                        <td className="py-3 px-4 text-[var(--text-secondary)]">{a.category}</td>
+                        <td className="py-3 px-4 font-mono text-[var(--text-muted)]">{a.serial_number || '—'}</td>
+                        <td className="py-3 px-4">
+                          <Badge variant={a.status === 'AVAILABLE' ? 'success' : a.status === 'ASSIGNED' ? 'warning' : 'danger'}>
                             {a.status}
-                          </span>
+                          </Badge>
                         </td>
-                        <td style={styles.td}>{a.first_name ? `${a.first_name} ${a.last_name}` : '—'}</td>
-                        <td style={styles.td}>
+                        <td className="py-3 px-4 text-[var(--text-secondary)]">{a.first_name ? `${a.first_name} ${a.last_name}` : '—'}</td>
+                        <td className="py-3 px-4 text-right">
                           {a.status === 'ASSIGNED' && (
-                            <button style={styles.returnBtn} onClick={() => handleReturn(a.id)}>Return</button>
+                            <Button variant="danger" size="sm" onClick={() => handleReturn(a.id)}>
+                              Return
+                            </Button>
                           )}
                         </td>
                       </tr>
@@ -147,87 +193,86 @@ export default function AssetPage() {
             )
           )}
 
-          {/* My Assets */}
           {activeTab === 'mine' && (
-            myAssets.length === 0 ? <p style={styles.empty}>No assets assigned to you.</p> : (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '14px' }}>
-                {myAssets.map((a, i) => (
-                  <div key={i} style={styles.assetCard}>
-                    <span style={{ fontSize: '32px' }}>{categoryIcons[a.category] || '📦'}</span>
-                    <p style={{ fontWeight: 700, margin: '8px 0 2px' }}>{a.name}</p>
-                    <p style={{ color: '#64748b', fontSize: '0.8rem', margin: 0, fontFamily: 'monospace' }}>{a.serial_number}</p>
-                    <span style={{ color: '#10b981', fontSize: '0.78rem', fontWeight: 600, marginTop: '6px' }}>{a.status}</span>
-                  </div>
-                ))}
-              </div>
-            )
+            <div className="p-6">
+              {myAssets.length === 0 ? (
+                <div className="text-center text-xs text-[var(--text-muted)] py-8">No hardware assets currently assigned to your account.</div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {myAssets.map((a, i) => (
+                    <div key={i} className="p-4 bg-[var(--bg-surface-l2)] border border-[var(--border-subtle)] rounded-xl space-y-2">
+                      <div className="flex justify-between items-center">
+                        <Laptop className="w-5 h-5 text-indigo-400" />
+                        <Badge variant="success">{a.status}</Badge>
+                      </div>
+                      <div className="font-bold text-sm text-[var(--text-primary)]">{a.name}</div>
+                      <div className="text-xs font-mono text-[var(--text-muted)]">Serial: {a.serial_number}</div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           )}
 
-          {/* Add Asset Form */}
           {activeTab === 'add' && (
-            <form onSubmit={handleAddAsset} style={styles.form}>
-              <label style={styles.label}>Asset Name</label>
-              <input style={styles.input} value={name} onChange={e => setName(e.target.value)} required placeholder="e.g., MacBook Pro 14" />
-              <label style={styles.label}>Category</label>
-              <select style={styles.select} value={category} onChange={e => setCategory(e.target.value)}>
-                {['HARDWARE', 'LAPTOP', 'MOBILE', 'FURNITURE', 'VEHICLE', 'GENERAL', 'OTHER'].map(c => (
-                  <option key={c} value={c} style={styles.option}>{c}</option>
-                ))}
-              </select>
-              <label style={styles.label}>Serial Number</label>
-              <input style={styles.input} value={serialNumber} onChange={e => setSerialNumber(e.target.value)} placeholder="Optional" />
-              <label style={styles.label}>Purchase Date</label>
-              <input type="date" style={styles.input} value={purchaseDate} onChange={e => setPurchaseDate(e.target.value)} />
-              <button type="submit" style={styles.button}>Add Asset</button>
-            </form>
+            <div className="p-6 max-w-md">
+              <form onSubmit={handleAddAsset} className="space-y-4">
+                <div>
+                  <label className="block text-xs font-semibold text-[var(--text-primary)] mb-1">Asset Name</label>
+                  <Input value={name} onChange={e => setName(e.target.value)} required placeholder="e.g. MacBook Pro 16" />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-[var(--text-primary)] mb-1">Category</label>
+                  <select
+                    value={category}
+                    onChange={e => setCategory(e.target.value)}
+                    className="w-full h-9 bg-[var(--bg-surface-l2)] text-xs text-[var(--text-primary)] border border-[var(--border-subtle)] rounded-lg px-3 focus:outline-none focus:border-[var(--accent-primary)]"
+                  >
+                    {['HARDWARE', 'LAPTOP', 'MOBILE', 'FURNITURE', 'VEHICLE', 'GENERAL', 'OTHER'].map(c => (
+                      <option key={c} value={c}>{c}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-[var(--text-primary)] mb-1">Serial Code</label>
+                  <Input value={serialNumber} onChange={e => setSerialNumber(e.target.value)} placeholder="e.g. C02FX019MD6M" />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-[var(--text-primary)] mb-1">Purchase Date</label>
+                  <Input type="date" value={purchaseDate} onChange={e => setPurchaseDate(e.target.value)} />
+                </div>
+                <Button type="submit" variant="primary">Add Asset Record</Button>
+              </form>
+            </div>
           )}
 
-          {/* Assign Asset Form */}
           {activeTab === 'assign' && (
-            <form onSubmit={handleAssign} style={styles.form}>
-              <label style={styles.label}>Asset</label>
-              <select style={styles.select} value={assignAssetId} onChange={e => setAssignAssetId(e.target.value)} required>
-                <option value="" style={styles.option}>Select available asset…</option>
-                {assets.filter(a => a.status === 'AVAILABLE').map((a, i) => (
-                  <option key={i} value={a.id} style={styles.option}>{a.name} ({a.serial_number})</option>
-                ))}
-              </select>
-              <label style={styles.label}>Employee ID</label>
-              <input style={styles.input} value={assignEmpId} onChange={e => setAssignEmpId(e.target.value)} required placeholder="Enter employee UUID" />
-              <button type="submit" style={styles.button}>Assign Asset</button>
-            </form>
+            <div className="p-6 max-w-md">
+              <form onSubmit={handleAssign} className="space-y-4">
+                <div>
+                  <label className="block text-xs font-semibold text-[var(--text-primary)] mb-1">Select Available Asset</label>
+                  <select
+                    value={assignAssetId}
+                    onChange={e => setAssignAssetId(e.target.value)}
+                    required
+                    className="w-full h-9 bg-[var(--bg-surface-l2)] text-xs text-[var(--text-primary)] border border-[var(--border-subtle)] rounded-lg px-3 focus:outline-none focus:border-[var(--accent-primary)]"
+                  >
+                    <option value="">Select asset from available pool...</option>
+                    {assets.filter(a => a.status === 'AVAILABLE').map((a, i) => (
+                      <option key={i} value={a.id}>{a.name} ({a.serial_number})</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-[var(--text-primary)] mb-1">Assignee Employee ID</label>
+                  <Input value={assignEmpId} onChange={e => setAssignEmpId(e.target.value)} required placeholder="Enter employee UUID" />
+                </div>
+                <Button type="submit" variant="primary">Confirm Asset Allocation</Button>
+              </form>
+            </div>
           )}
-        </div>
+        </Card>
       )}
     </div>
   );
 }
-
-const styles = {
-  page: { minHeight: '100vh', background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', padding: '32px', color: '#f1f5f9', fontFamily: "'Inter', sans-serif" },
-  header: { textAlign: 'center', marginBottom: '32px' },
-  icon: { fontSize: '48px' },
-  title: { fontSize: '2rem', fontWeight: 700, margin: '8px 0 4px', background: 'linear-gradient(90deg, #06b6d4, #10b981)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' },
-  subtitle: { color: '#94a3b8', fontSize: '0.95rem', margin: 0 },
-  alert: { borderRadius: '10px', padding: '12px 20px', marginBottom: '20px', color: '#fff', fontWeight: 500 },
-  statsGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '14px', marginBottom: '24px' },
-  statCard: { background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '14px', padding: '18px', display: 'flex', gap: '14px', alignItems: 'center' },
-  tabs: { display: 'flex', gap: '8px', marginBottom: '20px', flexWrap: 'wrap' },
-  tab: { padding: '9px 16px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.12)', background: 'transparent', color: '#94a3b8', cursor: 'pointer', fontWeight: 500, fontSize: '0.85rem', transition: 'all 0.2s' },
-  tabActive: { background: 'rgba(6,182,212,0.2)', border: '1px solid #06b6d4', color: '#06b6d4' },
-  card: { background: 'rgba(255,255,255,0.05)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '16px', padding: '24px' },
-  form: { display: 'flex', flexDirection: 'column', gap: '12px', maxWidth: '480px' },
-  label: { fontSize: '0.85rem', color: '#94a3b8', fontWeight: 500 },
-  input: { width: '100%', padding: '10px 14px', background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '8px', color: '#f1f5f9', fontSize: '0.9rem', boxSizing: 'border-box' },
-  select: { width: '100%', padding: '10px 14px', background: '#1e293b', color: '#f1f5f9', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '8px', fontSize: '0.9rem', boxSizing: 'border-box', cursor: 'pointer' },
-  option: { background: '#1e293b', color: '#f1f5f9', padding: '8px' },
-  button: { padding: '11px 24px', background: 'linear-gradient(90deg, #06b6d4, #10b981)', border: 'none', borderRadius: '8px', color: '#fff', fontWeight: 700, cursor: 'pointer', fontSize: '0.95rem', width: 'fit-content' },
-  table: { width: '100%', borderCollapse: 'collapse' },
-  th: { padding: '10px 14px', textAlign: 'left', fontSize: '0.78rem', color: '#64748b', borderBottom: '1px solid rgba(255,255,255,0.1)', textTransform: 'uppercase', letterSpacing: '0.05em' },
-  td: { padding: '12px 14px', fontSize: '0.88rem', borderBottom: '1px solid rgba(255,255,255,0.05)' },
-  returnBtn: { padding: '4px 12px', background: 'rgba(239,68,68,0.15)', border: '1px solid #ef4444', borderRadius: '6px', color: '#ef4444', cursor: 'pointer', fontSize: '0.78rem', fontWeight: 600 },
-  assetCard: { background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', padding: '18px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' },
-  empty: { color: '#475569', textAlign: 'center', padding: '32px 0' },
-  loadingBar: { height: '4px', background: 'rgba(255,255,255,0.1)', borderRadius: '2px', overflow: 'hidden', marginBottom: '20px' },
-  loadingProgress: { height: '100%', width: '60%', background: 'linear-gradient(90deg, #06b6d4, #10b981)', borderRadius: '2px' },
-};

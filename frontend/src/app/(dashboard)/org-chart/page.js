@@ -9,7 +9,7 @@ function OrgTreeNode({ node, onAddChild, onDeleteNode }) {
   const isLeaf = !node.children || node.children.length === 0;
 
   return (
-    <div className="org-node-wrapper">
+    <div className={`org-node-wrapper ${isLeaf ? 'leaf' : ''}`}>
       <div className="org-node">
         <div className={`org-node-badge badge-${node.type.toLowerCase()}`}>
           {node.type.replace('_', ' ')}
@@ -65,10 +65,14 @@ export default function OrgChartPage() {
   const [message, setMessage] = useState('');
 
   const loadData = () => {
+    setError('');
     // Fetch hierarchical tree
     apiClient.get('/org/tree')
       .then(res => setTreeData(res))
-      .catch(err => console.error(err));
+      .catch(err => {
+        console.error(err);
+        setError(err.message || 'Failed to load organization tree hierarchy');
+      });
 
     // Fetch flat list for parent dropdown selectors
     apiClient.get('/org')

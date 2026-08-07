@@ -1,28 +1,37 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration scan="true" scanPeriod="30 seconds">
-
     <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
-
     <!-- Console Appender with MDC context formatting -->
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
             <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %clr(%-5level) %clr([tenant:%X{tenantId:-system}]){cyan} %clr([trace:%X{traceId:-none}]){magenta} %clr(%logger{36}){blue} - %msg%n%wEx</pattern>
         </encoder>
     </appender>
-
+    <!-- Structured JSON Appender for Loki Centralized Logging -->
+    <appender name="JSON_CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+            <includeMdcKeyName>tenantId</includeMdcKeyName>
+            <includeMdcKeyName>tenantName</includeMdcKeyName>
+            <includeMdcKeyName>traceId</includeMdcKeyName>
+            <includeMdcKeyName>spanId</includeMdcKeyName>
+            <includeMdcKeyName>correlationId</includeMdcKeyName>
+            <includeMdcKeyName>clientIp</includeMdcKeyName>
+            <includeMdcKeyName>requestUri</includeMdcKeyName>
+            <includeMdcKeyName>method</includeMdcKeyName>
+            <customFields>{"service":"awais-hr-backend","environment":"production","region":"us-east-1"}</customFields>
+        </encoder>
+    </appender>
     <!-- Custom Observability Ring Buffer Appender -->
     <appender name="OBSERVABILITY" class="com.awais.hr.module.observability.util.ObservabilityLogbackAppender" />
-
     <!-- Logger configurations -->
     <logger name="com.awais.hr" level="DEBUG" />
     <logger name="org.springframework.web" level="INFO" />
     <logger name="org.hibernate.SQL" level="INFO" />
-
     <!-- Root Logger -->
     <root level="INFO">
         <appender-ref ref="CONSOLE" />
+        <appender-ref ref="JSON_CONSOLE" />
         <appender-ref ref="OBSERVABILITY" />
     </root>
-
 </configuration>
 

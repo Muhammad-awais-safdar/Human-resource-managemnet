@@ -163,7 +163,7 @@ export default function CareerDevelopmentPage() {
                   <div>
                     <strong style={{ color: 'var(--accent-primary)' }}>Mentor: {m.mentor_id || m.mentorId} & Mentee: {m.mentee_id || m.menteeId}</strong>
                     <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '4px' }}>
-                      Goal: "{m.goal_description || m.goalDescription || 'Executive leadership development'}"
+                      Goal: &quot;{m.goal_description || m.goalDescription || 'Executive leadership development'}&quot;
                     </div>
                   </div>
                   <span style={{ fontSize: '0.75rem', background: 'rgba(16, 185, 129, 0.1)', color: 'var(--accent-success)', padding: '4px 10px', borderRadius: '4px', fontWeight: 'bold' }}>{m.status}</span>

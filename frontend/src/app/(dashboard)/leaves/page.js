@@ -1,8 +1,11 @@
 'use client';
 
 import React, { useEffect, useState, useTransition } from 'react';
+import { Calendar as CalendarIcon, CheckCircle2, XCircle, Clock, ShieldAlert, Plane } from 'lucide-react';
 import * as leaveService from '../../../services/leaveService';
-import styles from '../../../modules/auth/styles/register.module.css';
+import { Button } from '@/components/primitives/Button';
+import { Badge } from '@/components/primitives/Badge';
+import { Card, CardHeader, CardTitle, CardDescription } from '@/components/primitives/Card';
 
 export default function LeavesPage() {
   const [policies, setPolicies] = useState([]);
@@ -14,11 +17,11 @@ export default function LeavesPage() {
 
   const loadData = () => {
     leaveService.getPolicies()
-      .then(res => setPolicies(res))
+      .then(res => setPolicies(Array.isArray(res) ? res : res.data || []))
       .catch(err => console.error(err));
 
     leaveService.getRequests()
-      .then(res => setRequests(res))
+      .then(res => setRequests(Array.isArray(res) ? res : res.data || []))
       .catch(err => console.error(err));
   };
 
@@ -35,7 +38,7 @@ export default function LeavesPage() {
         const res = await leaveService.updateRequestStatus(requestId, {
           status: approved ? 'APPROVED' : 'REJECTED',
         });
-        if (res.success) {
+        if (res.success || res) {
           setMessage(`Leave application status successfully updated.`);
           loadData();
         }
@@ -46,97 +49,138 @@ export default function LeavesPage() {
   };
 
   return (
-    <div>
-      <header className="page-header">
-        <h1 className="page-title">Leaves & Vacation Control</h1>
-        <p className="page-subtitle">Administer annual vacation allocations, approve leave applications, and view team calendar blocks</p>
-      </header>
+    <div className="space-y-6 max-w-7xl mx-auto">
+      <div className="border-b border-[var(--border-subtle)] pb-5">
+        <h1 className="text-2xl font-bold text-[var(--text-primary)] tracking-tight">Leaves & Vacation Control</h1>
+        <p className="text-xs text-[var(--text-secondary)] mt-1">
+          Administer annual vacation allocations, approve leave applications, and view team calendar blocks.
+        </p>
+      </div>
 
-      {error && <div className={`${styles.alert} ${styles.alertDanger}`} style={{ marginBottom: '24px' }}>{error}</div>}
-      {message && <div className={styles.alert} style={{ background: 'rgba(16, 185, 129, 0.1)', color: 'var(--accent-success)', marginBottom: '24px' }}>{message}</div>}
+      {error && (
+        <div className="p-3 bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-lg text-xs">
+          {error}
+        </div>
+      )}
 
-      <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap', marginBottom: '32px' }}>
-        
+      {message && (
+        <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-lg text-xs">
+          {message}
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Vacation policies allowance card */}
-        <div className="form-card" style={{ flex: 1, minWidth: '300px', margin: 0 }}>
-          <h3>Vacation Policy Allowances</h3>
-          <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Leave allocations granted to dynamic company employees.</p>
+        <Card className="lg:col-span-1">
+          <CardHeader>
+            <div>
+              <CardTitle>Vacation Allowances</CardTitle>
+              <CardDescription>Configured annual leave policy limits.</CardDescription>
+            </div>
+          </CardHeader>
           
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '16px' }}>
+          <div className="space-y-3">
             {policies.map(p => (
-              <div key={p.id} style={{ padding: '12px', background: 'var(--bg-tertiary)', border: '1px solid var(--border-light)', borderRadius: 'var(--radius-md)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div 
+                key={p.id} 
+                className="p-3 bg-[var(--bg-surface-l2)] border border-[var(--border-subtle)] rounded-xl flex justify-between items-center"
+              >
                 <div>
-                  <strong style={{ color: '#fff', fontSize: '0.9rem' }}>{p.name}</strong>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>{p.description}</div>
+                  <div className="text-xs font-bold text-[var(--text-primary)]">{p.name}</div>
+                  <div className="text-[11px] text-[var(--text-secondary)]">{p.description}</div>
                 </div>
-                <span style={{ color: 'var(--accent-primary)', fontWeight: '800', fontSize: '1.1rem' }}>{p.allowance} Days</span>
+                <div className="text-sm font-extrabold text-[var(--accent-primary)] font-mono">
+                  {p.allowance} Days
+                </div>
               </div>
             ))}
           </div>
-        </div>
+        </Card>
 
         {/* Requests & Approvals checklist */}
-        <div className="form-card" style={{ flex: 2, minWidth: '400px', margin: 0 }}>
-          <h3>Leave Applications Approvals</h3>
-          
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginTop: '16px' }}>
+        <Card className="lg:col-span-2">
+          <CardHeader>
+            <div>
+              <CardTitle>Leave Applications & Approvals</CardTitle>
+              <CardDescription>Review pending employee leave requests.</CardDescription>
+            </div>
+          </CardHeader>
+
+          <div className="space-y-3">
             {requests.map(req => (
-              <div key={req.id} style={{ padding: '16px', background: 'var(--bg-tertiary)', border: '1px solid var(--border-light)', borderRadius: 'var(--radius-md)' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <strong style={{ color: '#fff' }}>{req.firstName} {req.lastName}</strong>
-                  <span style={{ fontSize: '0.75rem', padding: '2px 8px', borderRadius: '4px', background: req.status === 'APPROVED' ? 'rgba(16,185,129,0.1)' : 'rgba(245,158,11,0.1)', color: req.status === 'APPROVED' ? 'var(--accent-success)' : 'var(--accent-warning)' }}>
+              <div 
+                key={req.id} 
+                className="p-4 bg-[var(--bg-surface-l2)] border border-[var(--border-subtle)] rounded-xl space-y-2"
+              >
+                <div className="flex justify-between items-center">
+                  <div className="font-bold text-xs text-[var(--text-primary)]">
+                    {req.firstName} {req.lastName}
+                  </div>
+                  <Badge variant={req.status === 'APPROVED' ? 'success' : req.status === 'PENDING' ? 'warning' : 'danger'}>
                     {req.status}
-                  </span>
+                  </Badge>
                 </div>
-                <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '6px' }}>
-                  Type: {req.policyName} | Range: {req.startDate} to {req.endDate}
+
+                <div className="text-xs text-[var(--text-secondary)]">
+                  Policy: <span className="text-[var(--text-primary)] font-semibold">{req.policyName}</span> | Range: <span className="font-mono text-indigo-400">{req.startDate}</span> to <span className="font-mono text-indigo-400">{req.endDate}</span>
                 </div>
-                {req.reason && <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '4px' }}>Reason: "{req.reason}"</div>}
+
+                {req.reason && (
+                  <div className="text-[11px] text-[var(--text-muted)] italic">
+                    &quot;{req.reason}&quot;
+                  </div>
+                )}
 
                 {req.status === 'PENDING' && (
-                  <div style={{ marginTop: '12px', display: 'flex', gap: '8px' }}>
-                    <button 
+                  <div className="flex gap-2 pt-2 border-t border-[var(--border-subtle)]">
+                    <Button 
+                      variant="success" 
+                      size="sm" 
                       onClick={() => handleApprove(req.id, true)} 
-                      className={`${styles.btn} ${styles.btnPrimary}`} 
-                      style={{ padding: '6px 14px', fontSize: '0.75rem' }}
-                      disabled={isPending}
+                      isLoading={isPending}
+                      icon={CheckCircle2}
                     >
                       Approve Request
-                    </button>
-                    <button 
+                    </Button>
+                    <Button 
+                      variant="danger" 
+                      size="sm" 
                       onClick={() => handleApprove(req.id, false)} 
-                      className={styles.btn} 
-                      style={{ padding: '6px 14px', fontSize: '0.75rem', background: 'var(--accent-danger)', border: 'none', color: '#fff' }}
-                      disabled={isPending}
+                      isLoading={isPending}
+                      icon={XCircle}
                     >
                       Reject
-                    </button>
+                    </Button>
                   </div>
                 )}
               </div>
             ))}
+
             {requests.length === 0 && (
-              <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', textAlign: 'center', padding: '24px' }}>No leave requests filed.</p>
+              <p className="text-xs text-[var(--text-muted)] text-center py-8">No active leave requests found.</p>
             )}
           </div>
-        </div>
-
+        </Card>
       </div>
 
       {/* Visual Team Leave Calendar */}
-      <div className="form-card">
-        <h3>Overlapping Team Leave Calendar</h3>
-        <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '20px' }}>Active timeline mappings of overlapping vacation blocks across the organization.</p>
-        
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '8px', border: '1px solid var(--border-light)', borderRadius: 'var(--radius-md)', padding: '16px', background: 'var(--bg-tertiary)' }}>
+      <Card>
+        <CardHeader>
+          <div>
+            <CardTitle>Team Vacation Calendar Mappings</CardTitle>
+            <CardDescription>Active overlapping timeline schedules across departments.</CardDescription>
+          </div>
+        </CardHeader>
+
+        <div className="grid grid-cols-7 gap-2 bg-[var(--bg-surface-l2)] border border-[var(--border-subtle)] p-4 rounded-xl">
           {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => (
-            <div key={day} style={{ textAlign: 'center', fontWeight: '700', fontSize: '0.8rem', color: 'var(--text-muted)', paddingBottom: '8px', borderBottom: '1px solid var(--border-light)' }}>
+            <div key={day} className="text-center font-bold text-[10px] text-[var(--text-muted)] pb-2 uppercase tracking-wider border-b border-[var(--border-subtle)]">
               {day}
             </div>
           ))}
           {Array.from({ length: 14 }).map((_, idx) => {
             const dayNum = idx + 1;
-            const currentDayDate = new Date(2026, 6, dayNum); // July 2026
+            const currentDayDate = new Date(2026, 6, dayNum);
             const activeLeavesOnDay = requests.filter(r => {
               if (r.status !== 'APPROVED') return false;
               if (!r.startDate || !r.endDate) return true;
@@ -146,19 +190,19 @@ export default function LeavesPage() {
             });
 
             return (
-              <div key={idx} style={{ minHeight: '80px', border: '1px solid var(--border-light)', borderRadius: 'var(--radius-sm)', padding: '6px', background: 'rgba(255,255,255,0.01)' }}>
-                <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>July {dayNum}</span>
+              <div key={idx} className="min-h-20 border border-[var(--border-subtle)] rounded-lg p-2 bg-[var(--bg-surface-l1)]/50">
+                <span className="text-[10px] font-mono text-[var(--text-muted)]">July {dayNum}</span>
                 {activeLeavesOnDay.map(l => (
-                  <div key={l.id} style={{ fontSize: '0.65rem', background: 'rgba(99, 102, 241, 0.15)', color: 'var(--accent-primary)', padding: '3px 6px', borderRadius: '3px', marginTop: '4px', fontWeight: '700', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                    ✈ {l.firstName} ({l.policyName})
+                  <div key={l.id} className="text-[9px] bg-indigo-500/15 text-indigo-300 border border-indigo-500/20 px-1.5 py-1 rounded mt-1 font-semibold truncate flex items-center gap-1">
+                    <Plane className="w-2.5 h-2.5 shrink-0" />
+                    <span className="truncate">{l.firstName}</span>
                   </div>
                 ))}
               </div>
             );
           })}
         </div>
-      </div>
-
+      </Card>
     </div>
   );
 }

@@ -1,0 +1,92 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "title": "08 - Developer Deep-Dive & Tracing Diagnostics",
+  "uid": "awais-hr-developer-08",
+  "tags": ["developer", "tracing", "logs", "loki", "opentelemetry", "hikari"],
+  "timezone": "browser",
+  "schemaVersion": 38,
+  "version": 2,
+  "refresh": "5s",
+  "panels": [
+    {
+      "id": 1,
+      "title": "JDBC Connection Pool Acquisition Time",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "targets": [
+        {
+          "expr": "rate(hikaricp_connections_acquire_seconds_sum[5m]) / rate(hikaricp_connections_acquire_seconds_count[5m])",
+          "legendFormat": "Avg Acquire Time (s)"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "s", "custom": { "drawStyle": "line", "lineInterpolation": "smooth" } } }
+    },
+    {
+      "id": 2,
+      "title": "JDBC Connection Usage Duration",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "targets": [
+        {
+          "expr": "rate(hikaricp_connections_usage_seconds_sum[5m]) / rate(hikaricp_connections_usage_seconds_count[5m])",
+          "legendFormat": "Avg Usage Duration (s)"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "s", "custom": { "drawStyle": "line", "lineInterpolation": "smooth" } } }
+    },
+    {
+      "id": 3,
+      "title": "Slow SQL Query Invocations (> 500ms)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "targets": [
+        {
+          "expr": "hr_api_requests_slow",
+          "legendFormat": "Slow Request Threshold Crossings"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "short", "custom": { "drawStyle": "line", "lineInterpolation": "smooth" } } }
+    },
+    {
+      "id": 4,
+      "title": "OpenTelemetry Distributed Trace Duration Summary",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+      "targets": [
+        {
+          "expr": "rate(http_server_requests_seconds_sum[5m]) / rate(http_server_requests_seconds_count[5m])",
+          "legendFormat": "Avg Traced Latency (s)"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "s", "custom": { "drawStyle": "line", "lineInterpolation": "smooth" } } }
+    },
+    {
+      "id": 5,
+      "title": "💻 Live Server & Application Logs Terminal (Loki)",
+      "type": "logs",
+      "datasource": { "type": "loki", "uid": "Loki" },
+      "gridPos": { "h": 12, "w": 24, "x": 0, "y": 16 },
+      "targets": [
+        {
+          "datasource": { "type": "loki", "uid": "Loki" },
+          "expr": "{container=~\".+\"}",
+          "queryType": "range",
+          "refId": "A"
+        }
+      ],
+      "options": {
+        "showLabels": true,
+        "wrapLogMessage": true,
+        "enableLogDetails": true,
+        "showTime": true,
+        "showLogLabels": true,
+        "sortOrder": "Descending",
+        "dedupStrategy": "none"
+      }
+    }
+  ]
+}
