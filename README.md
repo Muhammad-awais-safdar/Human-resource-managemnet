@@ -65,26 +65,31 @@ The platform includes a provider-agnostic, dual-domain payment architecture supp
 
 ---
 
-## 🔐 Role-Based Access Control (RBAC) & Security
+## 🎛️ Dynamic Feature Flags & Module Control System
 
-Access control across backend endpoints and frontend views is enforced via custom annotation-driven aspects (`@HasPermission`) and JWT tenant context tokens:
+The Super Admin / Product Owner can dynamically enable or disable any of the 65 business modules platform-wide or per-tenant:
 
-```java
-@PostMapping("/plans")
-@HasPermission("SUPER_ADMIN")
-public ApiResponse<Map<String, Object>> savePlan(@RequestBody Map<String, Object> body) {
-    return ApiResponse.success(paymentGatewayService.saveOrUpdatePlan(body));
-}
-```
+* **Global Kill Switches**: Disable a module across all tenants instantly (e.g., emergency hotfixes).
+* **Per-Tenant Overrides**: Enable add-on modules for specific enterprise tiers (`ALLOW`, `BLOCK`, `RESET`).
+* **AOP Backend Enforcement**: High-speed AOP aspect (`@RequiresModule("RECRUITMENT")`) intercepts requests and throws `ModuleDisabledException` (HTTP 402 Payment Required).
+* **Super Admin Control Center**: Accessible at `/superadmin/modules`.
 
-### Privileges & Role Hierarchy
+---
 
-| Role Tier | Required Permission | Access Privileges & Functional Boundaries |
-| :--- | :--- | :--- |
-| **👑 Super Admin** | `SUPER_ADMIN` | Master DB tenant provisioning, global pricing control, system health monitoring, live log stream access, alert configuration. |
-| **🏢 Tenant Admin** | `MANAGE_TENANT_SETTINGS`, `MANAGE_PAYROLL` | Self-service subscription upgrades, seat add-ons, payroll batch execution, bank gateway configuration. |
-| **👥 HR Manager** | `MANAGE_EMPLOYEE`, `MANAGE_LEAVE`, `MANAGE_ATTENDANCE` | Employee onboarding, shift assignments, leave approvals, recruitment job postings, performance appraisals. |
-| **🧑‍💻 Employee (ESS)** | `VIEW_ESS`, `SUBMIT_LEAVE`, `SUBMIT_EXPENSE` | Self-service profile, clock-in/out, leave requests, expense reimbursements, payslip downloads. |
+## 🔐 Dual-Scope Role-Based Access Control (RBAC) System
+
+Awais HR enforces a strict **Dual-Scope RBAC Architecture** separating SaaS Product Owner operations from Tenant Workspace management:
+
+1. **Super Admin Platform Scope (Master DB Schema)**:
+   - Managed at `/superadmin/rbac`.
+   - Seeded Roles: `SUPER_ADMIN`, `SUPPORT_ENGINEER`, `FINANCE_AUDITOR`, `PRODUCT_OPERATOR`.
+   - Seeded Permissions: `tenant:create`, `tenant:suspend`, `module:feature_flag:edit`, `observability:view`, `audit:export`, `billing:override`, `platform:rbac:manage`, `impersonate:tenant`.
+   - Features an interactive permission matrix and operator role assignment.
+
+2. **Tenant Workspace Scope (Tenant DB Schema)**:
+   - Managed at `/roles`.
+   - Seeded Roles: `TENANT_ADMIN`, `HR_MANAGER`, `LINE_MANAGER`, `FINANCE_ADMIN`, `RECRUITER`, `EMPLOYEE`.
+   - Custom workspace roles and granular permissions (`corehr:employee:read`, `payroll:run:execute`, `leave:approve`).
 
 ---
 
