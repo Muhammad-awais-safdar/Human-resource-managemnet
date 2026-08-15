@@ -34,5 +34,7 @@ public class TenantRegisterRequestDTO {
 
     private String planTier;
 
+    private String industryType;
+
     private Boolean paymentConfirmed;
 }

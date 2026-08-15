@@ -45,6 +45,10 @@ public class Tenant {
     @Column(name = "secondary_color", length = 50)
     private String secondaryColor;
 
+    @Column(name = "industry_type", length = 50)
+    @Builder.Default
+    private String industryType = "GENERAL";
+
     @Column(nullable = false, length = 20)
     @Builder.Default
     private String status = "ACTIVE";

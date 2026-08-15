@@ -90,6 +90,8 @@ export default function DashboardLayout({ children }) {
     };
   }, [mounted]);
 
+  const [activeModules, setActiveModules] = useState([]);
+
   useEffect(() => {
     apiClient.get('/tenants/active')
       .then((res) => {
@@ -110,7 +112,20 @@ export default function DashboardLayout({ children }) {
         console.error("Failed to load active tenant branding context", err);
         setIsLoading(false);
       });
+
+    apiClient.get('/tenants/active-modules')
+      .then((res) => {
+        if (res && res.activeModules) {
+          setActiveModules(res.activeModules);
+        }
+      })
+      .catch(() => {});
   }, [pathname]);
+
+  const hasModule = (modKey) => {
+    if (!activeModules || activeModules.length === 0) return true; // fallback to show if loading
+    return activeModules.includes(modKey.toUpperCase());
+  };
 
   const handleLogout = () => {
     if (typeof window !== 'undefined') {
@@ -361,6 +376,41 @@ export default function DashboardLayout({ children }) {
             <Link href="/ai-copilot" className={`nav-link flex items-center gap-2 px-3 py-2 text-xs rounded-lg ${isActive('/ai-copilot') ? 'bg-indigo-500/15 text-indigo-400 font-semibold' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface-l2)]'}`}>
               🤖 AI HR Copilot
             </Link>
+            {(userRole === 'SYSTEM_ADMIN' || userRole === 'TENANT_ADMIN' || userRole === 'HR_MANAGER') && (
+              <>
+                {hasModule('CROP_YIELD') && (
+                  <Link href="/agritech" className={`nav-link flex items-center gap-2 px-3 py-2 text-xs rounded-lg ${isActive('/agritech') ? 'bg-emerald-500/15 text-emerald-400 font-semibold' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface-l2)]'}`}>
+                    🌾 Agritech Crop Yield
+                  </Link>
+                )}
+                {hasModule('CLINICAL_LMS') && (
+                  <Link href="/healthcare" className={`nav-link flex items-center gap-2 px-3 py-2 text-xs rounded-lg ${isActive('/healthcare') ? 'bg-rose-500/15 text-rose-400 font-semibold' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface-l2)]'}`}>
+                    🩺 Healthcare & Clinical
+                  </Link>
+                )}
+                {hasModule('DEV_TIMESHEET') && (
+                  <Link href="/it-services" className={`nav-link flex items-center gap-2 px-3 py-2 text-xs rounded-lg ${isActive('/it-services') ? 'bg-blue-500/15 text-blue-400 font-semibold' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface-l2)]'}`}>
+                    💻 IT & Software Services
+                  </Link>
+                )}
+                {hasModule('PIECE_RATE_FACTORY') && (
+                  <Link href="/manufacturing" className={`nav-link flex items-center gap-2 px-3 py-2 text-xs rounded-lg ${isActive('/manufacturing') ? 'bg-amber-500/15 text-amber-400 font-semibold' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface-l2)]'}`}>
+                    🏭 Manufacturing & Factory
+                  </Link>
+                )}
+                {hasModule('RESTAURANT_TIPS') && (
+                  <Link href="/hospitality" className={`nav-link flex items-center gap-2 px-3 py-2 text-xs rounded-lg ${isActive('/hospitality') ? 'bg-orange-500/15 text-orange-400 font-semibold' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface-l2)]'}`}>
+                    🏨 Hospitality & HoReCa
+                  </Link>
+                )}
+                {hasModule('RETAIL_POS') && (
+                  <Link href="/retail" className={`nav-link flex items-center gap-2 px-3 py-2 text-xs rounded-lg ${isActive('/retail') ? 'bg-purple-500/15 text-purple-400 font-semibold' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface-l2)]'}`}>
+                    🛍️ Retail & Supermarkets
+                  </Link>
+                )}
+              </>
+            )}
+
             {(userRole === 'SYSTEM_ADMIN' || userRole === 'TENANT_ADMIN') && (
               <Link href="/marketplace" className={`nav-link flex items-center gap-2 px-3 py-2 text-xs rounded-lg ${isActive('/marketplace') ? 'bg-indigo-500/15 text-indigo-400 font-semibold' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface-l2)]'}`}>
                 🛍️ Integration Apps
