@@ -14,6 +14,7 @@ export default function TenantRegisterWizard() {
   const [subdomain, setSubdomain] = useState('');
   const [adminEmail, setAdminEmail] = useState('');
   const [adminPassword, setAdminPassword] = useState('admin123');
+  const [industryType, setIndustryType] = useState('GENERAL');
 
   // Branding Fields
   const [logoUrl, setLogoUrl] = useState('https://via.placeholder.com/150?text=Company+Logo');
@@ -103,6 +104,7 @@ export default function TenantRegisterWizard() {
           primaryColor,
           secondaryColor,
           planTier,
+          industryType,
           paymentConfirmed,
         });
 
@@ -411,6 +413,28 @@ export default function TenantRegisterWizard() {
                 </span>
               </div>
               {errors.subdomain && <span className={styles.errorText}>{errors.subdomain}</span>}
+            </div>
+
+            <div className={styles.formGroup}>
+              <label className={styles.label}>Industry Capability Pack *</label>
+              <select
+                className={styles.input}
+                value={industryType}
+                onChange={(e) => setIndustryType(e.target.value)}
+                style={{ backgroundColor: 'var(--bg-card)', color: 'var(--text-primary)', cursor: 'pointer' }}
+              >
+                <option value="GENERAL">🏢 General Corporate Enterprise (Standard Core HR)</option>
+                <option value="HEALTHCARE">🏥 Healthcare & Hospitals (Ward Shifts, Clinical LMS, Medical Licenses)</option>
+                <option value="IT_SERVICES">💻 Software & IT Services (Dev Worklogs, Equity Grants, OKRs)</option>
+                <option value="MANUFACTURING">🏭 Manufacturing & Assembly (Piece-Rate Wage, Biometric Gateways)</option>
+                <option value="HOSPITALITY">🏨 Hospitality & HoReCa (Hotel Rosters, Restaurant Tips, Permits)</option>
+                <option value="AGRICULTURE">🌾 Agritech & Agriculture (Crop Yield Tracking, Harvest Output Wager)</option>
+                <option value="RETAIL">🛍️ Retail & Supermarkets (POS Commissions, Shift Bidding Board)</option>
+                <option value="EDUCATION">🎓 Education & Universities (Tenure Track, Academic Calendar)</option>
+                <option value="CONSTRUCTION">🏗️ Construction & Engineering (Site Geofencing, Safety Permits)</option>
+                <option value="LOGISTICS">🚚 Logistics & Fleet (DOT Logs, Route Mileage Calculation)</option>
+                <option value="FINANCIAL_SERVICES">🏦 Financial Services & Banking (Insurance Commissions, Audits)</option>
+              </select>
             </div>
 
             <div className={styles.formGroup}>

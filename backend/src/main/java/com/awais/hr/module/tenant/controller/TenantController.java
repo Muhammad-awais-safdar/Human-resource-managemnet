@@ -15,6 +15,8 @@ import org.springframework.web.bind.annotation.*;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.List;
+import java.util.ArrayList;
 
 @RestController
 @RequestMapping("/tenants")
@@ -47,6 +49,35 @@ public class TenantController {
                 "subdomain", tenant.getSubdomain(),
                 "logoUrl", tenant.getLogoUrl() != null ? tenant.getLogoUrl() : "",
                 "primaryColor", tenant.getPrimaryColor() != null ? tenant.getPrimaryColor() : "#6366f1"
+        ));
+    }
+
+    @GetMapping("/active-modules")
+    public ResponseEntity<Map<String, Object>> getActiveTenantModules(HttpServletRequest request) {
+        String tenantId = com.awais.hr.context.TenantContextHolder.getCurrentTenant();
+        if (tenantId == null || tenantId.isBlank()) {
+            tenantId = request.getHeader("X-Tenant");
+        }
+        
+        List<String> activeModules = new ArrayList<>();
+        if (tenantId != null && !tenantId.isBlank()) {
+            Optional<Tenant> tenantOpt = tenantRepository.findById(tenantId);
+            if (tenantOpt.isEmpty()) {
+                tenantOpt = tenantRepository.findBySubdomain(tenantId.toLowerCase().trim());
+            }
+            if (tenantOpt.isPresent()) {
+                String industry = tenantOpt.get().getIndustryType();
+                activeModules = com.awais.hr.module.tenant.model.IndustryCapabilityPack.getEnabledModules(industry);
+            }
+        }
+
+        if (activeModules.isEmpty()) {
+            activeModules = com.awais.hr.module.tenant.model.IndustryCapabilityPack.getEnabledModules("GENERAL");
+        }
+
+        return ResponseEntity.ok(Map.of(
+                "tenantId", tenantId != null ? tenantId : "DEFAULT",
+                "activeModules", activeModules
         ));
     }
 

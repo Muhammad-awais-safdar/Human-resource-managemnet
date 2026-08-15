@@ -212,6 +212,8 @@ public class TenantService {
         String secondaryColor = (request.getSecondaryColor() != null && !request.getSecondaryColor().isBlank()) ? request.getSecondaryColor() : "#10b981";
         String logoUrl = (request.getLogoUrl() != null && !request.getLogoUrl().isBlank()) ? request.getLogoUrl() : "https://via.placeholder.com/150?text=" + companyName;
 
+        String industryType = (request.getIndustryType() != null && !request.getIndustryType().isBlank()) ? request.getIndustryType().toUpperCase().trim() : "GENERAL";
+
         Tenant tenant = Tenant.builder()
                 .id(tenantId)
                 .name(companyName)
@@ -222,11 +224,15 @@ public class TenantService {
                 .primaryColor(primaryColor)
                 .secondaryColor(secondaryColor)
                 .logoUrl(logoUrl)
+                .industryType(industryType)
                 .status("ACTIVE")
                 .build();
         
         tenant = tenantRepository.save(tenant);
         
+        // Seed industry capability pack modules into master override table
+        seedIndustryModules(tenant);
+
         // Trigger Let's Encrypt SSL Domain Setup Mock
         triggerSslProvisioning(tenant);
         
@@ -349,6 +355,26 @@ public class TenantService {
                 "INSERT INTO employee_role (employee_id, role_id) VALUES (?, ?) ON CONFLICT DO NOTHING",
                 employeeId, tenantAdminRoleId
         );
+    }
+
+    private void seedIndustryModules(Tenant tenant) {
+        String industry = (tenant.getIndustryType() != null && !tenant.getIndustryType().isBlank()) ? tenant.getIndustryType() : "GENERAL";
+        List<String> enabledModules = com.awais.hr.module.tenant.model.IndustryCapabilityPack.getEnabledModules(industry);
+
+        try {
+            JdbcTemplate masterJdbc = new JdbcTemplate(masterDataSource);
+            masterJdbc.execute("CREATE TABLE IF NOT EXISTS tenant_module_override (tenant_id VARCHAR(100) NOT NULL, module_key VARCHAR(100) NOT NULL, is_enabled BOOLEAN NOT NULL, updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (tenant_id, module_key))");
+            
+            for (String modKey : enabledModules) {
+                masterJdbc.update(
+                        "INSERT INTO tenant_module_override (tenant_id, module_key, is_enabled, updated_at) VALUES (?, ?, true, NOW()) ON CONFLICT (tenant_id, module_key) DO UPDATE SET is_enabled = true",
+                        tenant.getId(), modKey.toUpperCase()
+                );
+            }
+            log.info("Seeded industry capability pack '{}' with {} modules for tenant: {}", industry, enabledModules.size(), tenant.getId());
+        } catch (Exception e) {
+            log.warn("Could not seed tenant module overrides for tenant {}: {}", tenant.getId(), e.getMessage());
+        }
     }
 
     private String fetchPermissionId(JdbcTemplate jdbcTemplate, String permName, String fallbackId) {
