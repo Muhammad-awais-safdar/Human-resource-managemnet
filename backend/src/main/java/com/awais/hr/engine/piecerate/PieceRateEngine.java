@@ -41,9 +41,18 @@ public class PieceRateEngine {
     public List<Map<String, Object>> getEmployeePiecePay(String employeeId) {
         JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
         return jdbcTemplate.queryForList(
-                "SELECT id, production_unit, quantity, unit_rate, quality_factor, total_pay, work_date " +
+                "SELECT id, employee_id, production_unit, quantity, unit_rate, quality_factor, total_pay, work_date " +
                 "FROM piece_rate_entry WHERE employee_id = ? ORDER BY work_date DESC",
                 employeeId
+        );
+    }
+
+    public List<Map<String, Object>> getByProductionUnit(String productionUnit) {
+        JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+        return jdbcTemplate.queryForList(
+                "SELECT id, employee_id, production_unit, quantity, unit_rate, quality_factor, total_pay, work_date " +
+                "FROM piece_rate_entry WHERE production_unit = ? ORDER BY work_date DESC LIMIT 50",
+                productionUnit
         );
     }
 }
