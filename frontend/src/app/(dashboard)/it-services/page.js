@@ -9,25 +9,28 @@ export default function ItServicesPage() {
   const [equityGrants, setEquityGrants] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchData = async () => {
-    try {
-      const [mRes, wRes, eRes] = await Promise.all([
-        apiClient.get('/verticals/it-services/metrics').catch(() => ({})),
-        apiClient.get('/verticals/it-services/dev-worklogs').catch(() => ([])),
-        apiClient.get('/verticals/it-services/equity-grants').catch(() => ([])),
-      ]);
-      setMetrics(mRes);
-      setWorklogs(Array.isArray(wRes) ? wRes : []);
-      setEquityGrants(Array.isArray(eRes) ? eRes : []);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
-    fetchData();
+    let isMounted = true;
+    const load = async () => {
+      try {
+        const [mRes, wRes, eRes] = await Promise.all([
+          apiClient.get('/verticals/it-services/metrics').catch(() => ({})),
+          apiClient.get('/verticals/it-services/dev-worklogs').catch(() => ([])),
+          apiClient.get('/verticals/it-services/equity-grants').catch(() => ([])),
+        ]);
+        if (isMounted) {
+          setMetrics(mRes);
+          setWorklogs(Array.isArray(wRes) ? wRes : []);
+          setEquityGrants(Array.isArray(eRes) ? eRes : []);
+        }
+      } catch (err) {
+        console.error(err);
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    };
+    load();
+    return () => { isMounted = false; };
   }, []);
 
   return (

@@ -38,11 +38,11 @@ export default function RolesDashboardPage() {
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
 
-  const loadData = () => {
-    setLoading(true);
+  useEffect(() => {
+    let isMounted = true;
     apiClient.get('/roles')
       .then((res) => {
-        if (res.success) {
+        if (isMounted && res.success) {
           setRoles(res.roles);
           setAllPermissions(res.allPermissions);
 
@@ -56,13 +56,13 @@ export default function RolesDashboardPage() {
       })
       .catch((err) => {
         console.error(err);
-        setError(err.message || 'Failed to load enterprise RBAC roles & permissions.');
+        if (isMounted) setError(err.message || 'Failed to load enterprise RBAC roles & permissions.');
       })
-      .finally(() => setLoading(false));
-  };
+      .finally(() => {
+        if (isMounted) setLoading(false);
+      });
 
-  useEffect(() => {
-    loadData();
+    return () => { isMounted = false; };
   }, []);
 
   // Group permissions by module_key

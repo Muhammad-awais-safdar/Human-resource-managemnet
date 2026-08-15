@@ -17,23 +17,26 @@ export default function AgritechPage() {
   const [pieceRateWagePerKg, setPieceRateWagePerKg] = useState('0.50');
   const [submitting, setSubmitting] = useState(false);
 
-  const fetchData = async () => {
-    try {
-      const [mRes, lRes] = await Promise.all([
-        apiClient.get('/verticals/agritech/metrics').catch(() => ({})),
-        apiClient.get('/verticals/agritech/harvest-logs').catch(() => ([])),
-      ]);
-      setMetrics(mRes);
-      setHarvestLogs(Array.isArray(lRes) ? lRes : []);
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
-    fetchData();
+    let isMounted = true;
+    const load = async () => {
+      try {
+        const [mRes, lRes] = await Promise.all([
+          apiClient.get('/verticals/agritech/metrics').catch(() => ({})),
+          apiClient.get('/verticals/agritech/harvest-logs').catch(() => ([])),
+        ]);
+        if (isMounted) {
+          setMetrics(mRes);
+          setHarvestLogs(Array.isArray(lRes) ? lRes : []);
+        }
+      } catch (e) {
+        console.error(e);
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    };
+    load();
+    return () => { isMounted = false; };
   }, []);
 
   const handleAddLog = async (e) => {

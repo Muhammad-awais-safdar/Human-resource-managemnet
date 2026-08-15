@@ -9,25 +9,28 @@ export default function RetailPage() {
   const [openShifts, setOpenShifts] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchData = async () => {
-    try {
-      const [mRes, cRes, sRes] = await Promise.all([
-        apiClient.get('/verticals/retail/metrics').catch(() => ({})),
-        apiClient.get('/verticals/retail/pos-commissions').catch(() => ([])),
-        apiClient.get('/verticals/retail/shift-bidding').catch(() => ([])),
-      ]);
-      setMetrics(mRes);
-      setCommissions(Array.isArray(cRes) ? cRes : []);
-      setOpenShifts(Array.isArray(sRes) ? sRes : []);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
-    fetchData();
+    let isMounted = true;
+    const load = async () => {
+      try {
+        const [mRes, cRes, sRes] = await Promise.all([
+          apiClient.get('/verticals/retail/metrics').catch(() => ({})),
+          apiClient.get('/verticals/retail/pos-commissions').catch(() => ([])),
+          apiClient.get('/verticals/retail/shift-bidding').catch(() => ([])),
+        ]);
+        if (isMounted) {
+          setMetrics(mRes);
+          setCommissions(Array.isArray(cRes) ? cRes : []);
+          setOpenShifts(Array.isArray(sRes) ? sRes : []);
+        }
+      } catch (err) {
+        console.error(err);
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    };
+    load();
+    return () => { isMounted = false; };
   }, []);
 
   return (
