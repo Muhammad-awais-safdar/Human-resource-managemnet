@@ -1,14 +1,29 @@
 package com.awais.hr.module.payroll.service;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import javax.sql.DataSource;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.*;
 
+/**
+ * PayrollServiceImpl — all monetary arithmetic uses BigDecimal exclusively.
+ * NO double/float conversions for salary, tax, or net pay.
+ */
 @Service
 @Transactional
 public class PayrollServiceImpl implements PayrollService {
+
+    private static final Logger log = LoggerFactory.getLogger(PayrollServiceImpl.class);
+
+    // Statutory slab threshold and rate as exact BigDecimal constants
+    private static final BigDecimal TAX_THRESHOLD = new BigDecimal("3000.00");
+    private static final BigDecimal TAX_RATE      = new BigDecimal("0.10");
+    private static final BigDecimal ZERO_RATE     = BigDecimal.ZERO;
 
     private final DataSource dataSource;
 
@@ -30,16 +45,21 @@ public class PayrollServiceImpl implements PayrollService {
         );
 
         if (payslips.isEmpty()) {
-            Map<String, Object> salary = jdbcTemplate.queryForMap("SELECT basic_salary, allowance, deductions FROM salary_structure WHERE employee_id = ? LIMIT 1", empId);
-            double basic = ((java.math.BigDecimal) salary.get("basic_salary")).doubleValue();
-            double allowance = ((java.math.BigDecimal) salary.get("allowance")).doubleValue();
-            double deductions = ((java.math.BigDecimal) salary.get("deductions")).doubleValue();
-            double net = basic + allowance - deductions;
+            Map<String, Object> salary = jdbcTemplate.queryForMap(
+                    "SELECT basic_salary, allowance, deductions FROM salary_structure WHERE employee_id = ? LIMIT 1", empId);
 
-            jdbcTemplate.update("INSERT INTO payslip (id, employee_id, pay_period, net_salary, status) VALUES (?, ?, 'June 2026', ?, 'PAID')",
+            // BigDecimal only — no double conversion
+            BigDecimal basic      = (BigDecimal) salary.get("basic_salary");
+            BigDecimal allowance  = (BigDecimal) salary.get("allowance");
+            BigDecimal deductions = (BigDecimal) salary.get("deductions");
+            BigDecimal net        = basic.add(allowance).subtract(deductions).setScale(2, RoundingMode.HALF_UP);
+
+            jdbcTemplate.update(
+                    "INSERT INTO payslip (id, employee_id, pay_period, net_salary, status) VALUES (?, ?, 'June 2026', ?, 'PAID')",
                     UUID.randomUUID().toString(), empId, net);
-            
-            payslips = jdbcTemplate.queryForList("SELECT id, pay_period, net_salary, status FROM payslip WHERE employee_id = ?", empId);
+
+            payslips = jdbcTemplate.queryForList(
+                    "SELECT id, pay_period, net_salary, status FROM payslip WHERE employee_id = ?", empId);
         }
         return payslips;
     }
@@ -57,30 +77,33 @@ public class PayrollServiceImpl implements PayrollService {
         }
 
         Map<String, Object> salary = salaries.get(0);
-        double basic      = ((java.math.BigDecimal) salary.get("basic_salary")).doubleValue();
-        double allowance  = ((java.math.BigDecimal) salary.get("allowance")).doubleValue();
-        double deductions = ((java.math.BigDecimal) salary.get("deductions")).doubleValue();
 
-        // Statutory income tax slab: 10% on income > 3000
-        double grossPay = basic + allowance;
-        double taxRate  = grossPay > 3000 ? 0.10 : 0.0;
-        double taxAmount = grossPay * taxRate;
-        double net = grossPay - deductions - taxAmount;
+        // BigDecimal only — exact decimal arithmetic for all monetary values
+        BigDecimal basic      = (BigDecimal) salary.get("basic_salary");
+        BigDecimal allowance  = (BigDecimal) salary.get("allowance");
+        BigDecimal deductions = (BigDecimal) salary.get("deductions");
+
+        BigDecimal grossPay   = basic.add(allowance).setScale(2, RoundingMode.HALF_UP);
+        BigDecimal taxRate    = grossPay.compareTo(TAX_THRESHOLD) > 0 ? TAX_RATE : ZERO_RATE;
+        BigDecimal taxAmount  = grossPay.multiply(taxRate).setScale(2, RoundingMode.HALF_UP);
+        BigDecimal netSalary  = grossPay.subtract(deductions).subtract(taxAmount).setScale(2, RoundingMode.HALF_UP);
 
         String period = java.time.YearMonth.now().toString();
-        String id = UUID.randomUUID().toString();
+        String id     = UUID.randomUUID().toString();
+
         jdbcTemplate.update(
                 "INSERT INTO payslip (id, employee_id, pay_period, net_salary, status) VALUES (?, ?, ?, ?, 'PAID')",
-                id, empId, period, net
-        );
+                id, empId, period, netSalary);
+
+        log.info("Payroll run complete: empId={} period={} gross={} tax={} net={}", empId, period, grossPay, taxAmount, netSalary);
 
         return Map.of(
                 "payslipId", id,
-                "period", period,
-                "gross", grossPay,
+                "period",    period,
+                "gross",     grossPay,
                 "taxAmount", taxAmount,
                 "deductions", deductions,
-                "netSalary", net
+                "netSalary", netSalary
         );
     }
 
@@ -93,4 +116,3 @@ public class PayrollServiceImpl implements PayrollService {
         );
     }
 }
-

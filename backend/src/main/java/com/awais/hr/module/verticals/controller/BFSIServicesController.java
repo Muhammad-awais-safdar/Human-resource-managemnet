@@ -12,7 +12,6 @@ import java.util.*;
 
 @RestController
 @RequestMapping("/api/v1/bfsi")
-@CrossOrigin(origins = "*")
 public class BFSIServicesController {
 
     private final DataSource dataSource;
