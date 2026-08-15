@@ -37,6 +37,10 @@ public class IntegrationGateway {
         return true;
     }
 
+    public String generateIdempotencyKey(String provider, String externalEventId) {
+        return provider + ":" + externalEventId;
+    }
+
     public List<Map<String, Object>> getWebhookEvents(String provider) {
         JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
         return jdbcTemplate.queryForList(

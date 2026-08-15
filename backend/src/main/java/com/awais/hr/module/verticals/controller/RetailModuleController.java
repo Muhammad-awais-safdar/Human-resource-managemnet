@@ -40,7 +40,8 @@ public class RetailModuleController {
         List<Map<String, Object>> commissions = jdbcTemplate.queryForList(
                 "SELECT COALESCE(SUM(commission_amount), 0) as total_commission, COUNT(*) as total_entries FROM pos_commission"
         );
-        double totalCommission = commissions.isEmpty() ? 0 : ((Number) commissions.get(0).getOrDefault("total_commission", 0)).doubleValue();
+        BigDecimal totalCommission = commissions.isEmpty() ? BigDecimal.ZERO
+                : new BigDecimal(commissions.get(0).getOrDefault("total_commission", "0").toString()).setScale(2, java.math.RoundingMode.HALF_UP);
         long totalEntries = commissions.isEmpty() ? 0 : ((Number) commissions.get(0).getOrDefault("total_entries", 0)).longValue();
 
         return ResponseEntity.ok(Map.of(
