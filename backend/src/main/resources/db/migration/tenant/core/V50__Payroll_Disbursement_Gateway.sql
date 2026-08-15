@@ -2,7 +2,7 @@
 -- Tenant Schema setup for Multi-Bank Payroll Salary Disbursement Engine (Payment Domain 2)
 
 CREATE TABLE IF NOT EXISTS tenant_payment_credential (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id VARCHAR(36) PRIMARY KEY DEFAULT gen_random_uuid()::text,
     provider_code VARCHAR(50) NOT NULL, -- WISE, PAYONEER, ACH_DIRECT, SEPA_ISO20022, LOCAL_BANK
     environment VARCHAR(20) DEFAULT 'PRODUCTION',
     encrypted_api_key TEXT,
@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS tenant_payment_credential (
 );
 
 CREATE TABLE IF NOT EXISTS tenant_bank_account (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id VARCHAR(36) PRIMARY KEY DEFAULT gen_random_uuid()::text,
     bank_name VARCHAR(100) NOT NULL,
     account_number_encrypted TEXT NOT NULL,
     routing_number_encrypted TEXT,
@@ -26,7 +26,7 @@ CREATE TABLE IF NOT EXISTS tenant_bank_account (
 );
 
 CREATE TABLE IF NOT EXISTS payroll_disbursement_batch (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id VARCHAR(36) PRIMARY KEY DEFAULT gen_random_uuid()::text,
     batch_name VARCHAR(150) NOT NULL,
     payroll_run_id VARCHAR(100) NOT NULL,
     provider_code VARCHAR(50) NOT NULL,
@@ -43,8 +43,8 @@ CREATE TABLE IF NOT EXISTS payroll_disbursement_batch (
 );
 
 CREATE TABLE IF NOT EXISTS payroll_disbursement_item (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    batch_id UUID NOT NULL REFERENCES payroll_disbursement_batch(id) ON DELETE CASCADE,
+    id VARCHAR(36) PRIMARY KEY DEFAULT gen_random_uuid()::text,
+    batch_id VARCHAR(36) NOT NULL REFERENCES payroll_disbursement_batch(id) ON DELETE CASCADE,
     employee_id VARCHAR(100) NOT NULL,
     recipient_name VARCHAR(150) NOT NULL,
     bank_account_number_encrypted TEXT NOT NULL,
@@ -58,8 +58,8 @@ CREATE TABLE IF NOT EXISTS payroll_disbursement_item (
 );
 
 CREATE TABLE IF NOT EXISTS payroll_transaction_log (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    batch_id UUID NOT NULL REFERENCES payroll_disbursement_batch(id) ON DELETE CASCADE,
+    id VARCHAR(36) PRIMARY KEY DEFAULT gen_random_uuid()::text,
+    batch_id VARCHAR(36) NOT NULL REFERENCES payroll_disbursement_batch(id) ON DELETE CASCADE,
     event_type VARCHAR(50) NOT NULL,
     payload TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL

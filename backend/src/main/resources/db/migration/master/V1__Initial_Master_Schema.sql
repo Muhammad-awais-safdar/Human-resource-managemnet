@@ -1,6 +1,6 @@
 -- Initial Master Schema creation script
 CREATE TABLE IF NOT EXISTS tenant (
-    id UUID PRIMARY KEY,
+    id VARCHAR(50) PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
     subdomain VARCHAR(50) UNIQUE NOT NULL,
     type VARCHAR(50) DEFAULT 'SHARED_SCHEMA',
@@ -18,7 +18,7 @@ CREATE TABLE IF NOT EXISTS tenant (
 
 CREATE TABLE IF NOT EXISTS subscription (
     id VARCHAR(50) PRIMARY KEY,
-    tenant_id UUID REFERENCES tenant(id) ON DELETE CASCADE,
+    tenant_id VARCHAR(50) REFERENCES tenant(id) ON DELETE CASCADE,
     plan_tier VARCHAR(20) NOT NULL,
     status VARCHAR(20) NOT NULL,
     stripe_subscription_id VARCHAR(100) UNIQUE,

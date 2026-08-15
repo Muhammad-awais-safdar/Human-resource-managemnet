@@ -1,6 +1,7 @@
 package com.awais.hr.module.recruitment.controller;
 
 import com.awais.hr.common.ApiResponse;
+import com.awais.hr.config.RequiresModule;
 import com.awais.hr.module.recruitment.dto.CandidateStageUpdateDTO;
 import com.awais.hr.module.recruitment.dto.JobRequisitionRequestDTO;
 import com.awais.hr.module.recruitment.service.RecruitmentService;
@@ -12,6 +13,7 @@ import java.util.*;
 @RestController
 @RequestMapping("/recruitment")
 @CrossOrigin(origins = "*")
+@RequiresModule("RECRUITMENT")
 public class RecruitmentController {
 
     private final RecruitmentService recruitmentService;

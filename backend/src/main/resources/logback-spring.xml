@@ -1,36 +1,66 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration scan="true" scanPeriod="30 seconds">
     <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
-    <!-- Console Appender with MDC context formatting -->
+
+    <springProperty scope="context" name="CONSOLE_LOG_LEVEL" source="logging.console.level" defaultValue="INFO"/>
+
+    <property name="LOG_PATH" value="logs" />
+
+    <!-- Console Appender: Clean Terminal (INFO, WARN, ERROR logs, excluding raw SQL queries) -->
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>${CONSOLE_LOG_LEVEL}</level>
+        </filter>
         <encoder>
-            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %clr(%-5level) %clr([tenant:%X{tenantId:-system}]){cyan} %clr([trace:%X{traceId:-none}]){magenta} %clr(%logger{36}){blue} - %msg%n%wEx</pattern>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss} %clr(%-5level) %clr([tenant:%X{tenantId:-system}]){cyan} %clr(%logger{36}){blue} - %msg%n%wEx</pattern>
         </encoder>
     </appender>
-    <!-- Structured JSON Appender for Loki Centralized Logging -->
-    <appender name="JSON_CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
-        <encoder class="net.logstash.logback.encoder.LogstashEncoder">
-            <includeMdcKeyName>tenantId</includeMdcKeyName>
-            <includeMdcKeyName>tenantName</includeMdcKeyName>
-            <includeMdcKeyName>traceId</includeMdcKeyName>
-            <includeMdcKeyName>spanId</includeMdcKeyName>
-            <includeMdcKeyName>correlationId</includeMdcKeyName>
-            <includeMdcKeyName>clientIp</includeMdcKeyName>
-            <includeMdcKeyName>requestUri</includeMdcKeyName>
-            <includeMdcKeyName>method</includeMdcKeyName>
-            <customFields>{"service":"awais-hr-backend","environment":"production","region":"us-east-1"}</customFields>
+
+
+    <!-- File Appender: Full Application Logs -->
+    <appender name="FILE_ALL" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_PATH}/application.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_PATH}/archived/application-%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+            <maxFileSize>10MB</maxFileSize>
+            <maxHistory>30</maxHistory>
+        </rollingPolicy>
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level [tenant:%X{tenantId:-system}] [trace:%X{traceId:-none}] %logger{36} - %msg%n%wEx</pattern>
         </encoder>
     </appender>
+
+    <!-- Error File Appender: Caught Exceptions & System Errors Only -->
+    <appender name="FILE_ERROR" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_PATH}/error.log</file>
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>ERROR</level>
+        </filter>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_PATH}/archived/error-%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+            <maxFileSize>10MB</maxFileSize>
+            <maxHistory>30</maxHistory>
+        </rollingPolicy>
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level [tenant:%X{tenantId:-system}] [trace:%X{traceId:-none}] %logger{36} - %msg%n%wEx</pattern>
+        </encoder>
+    </appender>
+
     <!-- Custom Observability Ring Buffer Appender -->
     <appender name="OBSERVABILITY" class="com.awais.hr.module.observability.util.ObservabilityLogbackAppender" />
+
     <!-- Logger configurations -->
-    <logger name="com.awais.hr" level="DEBUG" />
-    <logger name="org.springframework.web" level="INFO" />
-    <logger name="org.hibernate.SQL" level="INFO" />
+    <logger name="com.awais.hr" level="INFO" />
+    <logger name="org.springframework" level="WARN" />
+    <logger name="org.hibernate" level="WARN" />
+    <logger name="io.opentelemetry" level="OFF" />
+
+
     <!-- Root Logger -->
     <root level="INFO">
         <appender-ref ref="CONSOLE" />
-        <appender-ref ref="JSON_CONSOLE" />
+        <appender-ref ref="FILE_ALL" />
+        <appender-ref ref="FILE_ERROR" />
         <appender-ref ref="OBSERVABILITY" />
     </root>
 </configuration>

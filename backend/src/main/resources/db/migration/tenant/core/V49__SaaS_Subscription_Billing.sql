@@ -2,7 +2,7 @@
 -- Master & Tenant Schema setup for Enterprise SaaS Subscription & Billing Engine (Payment Domain 1)
 
 CREATE TABLE IF NOT EXISTS subscription_plan (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id VARCHAR(36) PRIMARY KEY DEFAULT gen_random_uuid()::text,
     code VARCHAR(50) NOT NULL UNIQUE,
     name VARCHAR(100) NOT NULL,
     base_price_usd NUMERIC(12, 2) NOT NULL DEFAULT 0.00,
@@ -15,7 +15,7 @@ CREATE TABLE IF NOT EXISTS subscription_plan (
 );
 
 CREATE TABLE IF NOT EXISTS billing_credit_note (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id VARCHAR(36) PRIMARY KEY DEFAULT gen_random_uuid()::text,
     tenant_id VARCHAR(100) NOT NULL,
     credit_note_number VARCHAR(100) NOT NULL UNIQUE,
     amount NUMERIC(12, 2) NOT NULL,
@@ -26,7 +26,7 @@ CREATE TABLE IF NOT EXISTS billing_credit_note (
 );
 
 CREATE TABLE IF NOT EXISTS billing_refund (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id VARCHAR(36) PRIMARY KEY DEFAULT gen_random_uuid()::text,
     tenant_id VARCHAR(100) NOT NULL,
     invoice_id VARCHAR(100) NOT NULL,
     amount NUMERIC(12, 2) NOT NULL,
@@ -36,7 +36,7 @@ CREATE TABLE IF NOT EXISTS billing_refund (
 );
 
 CREATE TABLE IF NOT EXISTS tenant_usage_metric (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id VARCHAR(36) PRIMARY KEY DEFAULT gen_random_uuid()::text,
     tenant_id VARCHAR(100) NOT NULL,
     metric_type VARCHAR(50) NOT NULL,
     quantity BIGINT NOT NULL,

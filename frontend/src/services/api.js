@@ -57,10 +57,11 @@ const customFetch = async (url, options = {}) => {
       headers['Authorization'] = `Bearer ${token}`;
     }
     
-    const tenant = getSubdomain();
+    const tenant = getSubdomain() || localStorage.getItem('tenant_subdomain') || 'awais';
     if (tenant) {
       headers['X-Tenant'] = tenant;
     }
+
   }
 
   const response = await fetch(`${BASE_URL}${url}`, {

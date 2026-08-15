@@ -45,12 +45,19 @@ public class TenantContextFilter extends OncePerRequestFilter {
 
             if (tenantIdOpt.isPresent()) {
                 String identifier = tenantIdOpt.get();
-                TenantContextHolder.clear();
-                Optional<TenantAggregate> tenantOpt = tenantRepository.findBySubdomain(identifier);
-                if (tenantOpt.isEmpty()) {
-                    try {
-                        tenantOpt = tenantRepository.findById(java.util.UUID.fromString(identifier));
-                    } catch (IllegalArgumentException ignored) {}
+                
+                // Query master tenant database under MASTER context
+                TenantContextHolder.setCurrentTenant("MASTER");
+                Optional<TenantAggregate> tenantOpt = Optional.empty();
+                try {
+                    tenantOpt = tenantRepository.findBySubdomain(identifier);
+                    if (tenantOpt.isEmpty()) {
+                        try {
+                            tenantOpt = tenantRepository.findById(java.util.UUID.fromString(identifier));
+                        } catch (IllegalArgumentException ignored) {}
+                    }
+                } finally {
+                    TenantContextHolder.clear();
                 }
 
                 if (tenantOpt.isPresent()) {

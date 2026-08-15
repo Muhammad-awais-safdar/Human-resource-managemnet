@@ -20,6 +20,33 @@ public class RoleController {
         this.routingDataSource = routingDataSource;
     }
 
+    private void ensurePermissionsExist(JdbcTemplate jdbcTemplate) {
+        try {
+            String[] modules = {"corehr", "payroll", "attendance", "recruitment", "performance", "expenses", "assets", "settings", "audit"};
+            String[] actions = {"create", "read", "edit", "delete", "archive", "force_delete"};
+
+            Map<String, String> actionLabels = Map.of(
+                    "create", "Create new records",
+                    "read", "Read & view records",
+                    "edit", "Modify & update records",
+                    "delete", "Temporary soft delete records",
+                    "archive", "Archive historical records",
+                    "force_delete", "Force permanent delete records"
+            );
+
+            for (String mod : modules) {
+                for (String act : actions) {
+                    String permName = mod + ":" + act;
+                    String desc = actionLabels.get(act) + " in " + mod.toUpperCase() + " module";
+                    jdbcTemplate.update(
+                            "INSERT INTO permission (id, name, description) VALUES (?, ?, ?) ON CONFLICT (name) DO NOTHING",
+                            UUID.randomUUID().toString(), permName, desc
+                    );
+                }
+            }
+        } catch (Exception ignored) {}
+    }
+
     @GetMapping
     @HasPermission("corehr:employee:read")
     public ResponseEntity<?> getRoles() {
@@ -30,6 +57,7 @@ public class RoleController {
         }
 
         JdbcTemplate jdbcTemplate = new JdbcTemplate(routingDataSource);
+        ensurePermissionsExist(jdbcTemplate);
 
         try {
             // Get all system permissions

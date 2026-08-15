@@ -6,7 +6,11 @@ public class TenantRoutingDataSource extends AbstractRoutingDataSource {
 
     @Override
     protected Object determineCurrentLookupKey() {
-        return TenantContextHolder.getCurrentTenant();
+        String tenant = TenantContextHolder.getCurrentTenant();
+        if (tenant == null || "MASTER".equalsIgnoreCase(tenant) || "platform".equalsIgnoreCase(tenant) || "system".equalsIgnoreCase(tenant)) {
+            return "MASTER";
+        }
+        return tenant;
     }
 
     public Object getLookupKey() {

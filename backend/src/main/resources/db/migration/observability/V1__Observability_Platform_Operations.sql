@@ -2,7 +2,7 @@
 -- Dedicated Observability Database Schema Migration (awais_hr_observability)
 
 CREATE TABLE IF NOT EXISTS platform_audit_log (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id VARCHAR(36) PRIMARY KEY DEFAULT gen_random_uuid()::text,
     tenant_id VARCHAR(100) NOT NULL,
     user_id VARCHAR(100),
     request_id VARCHAR(100),
@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS platform_audit_log (
 );
 
 CREATE TABLE IF NOT EXISTS platform_security_event (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id VARCHAR(36) PRIMARY KEY DEFAULT gen_random_uuid()::text,
     tenant_id VARCHAR(100),
     user_id VARCHAR(100),
     event_type VARCHAR(50) NOT NULL,
@@ -34,7 +34,7 @@ CREATE TABLE IF NOT EXISTS platform_security_event (
 );
 
 CREATE TABLE IF NOT EXISTS platform_exception_log (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id VARCHAR(36) PRIMARY KEY DEFAULT gen_random_uuid()::text,
     tenant_id VARCHAR(100),
     request_id VARCHAR(100),
     trace_id VARCHAR(100),
@@ -50,7 +50,7 @@ CREATE TABLE IF NOT EXISTS platform_exception_log (
 );
 
 CREATE TABLE IF NOT EXISTS platform_alert_configuration (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id VARCHAR(36) PRIMARY KEY DEFAULT gen_random_uuid()::text,
     rule_name VARCHAR(100) NOT NULL UNIQUE,
     metric_name VARCHAR(100) NOT NULL,
     threshold_value NUMERIC(12, 2) NOT NULL,
@@ -69,6 +69,6 @@ CREATE INDEX IF NOT EXISTS idx_exception_trace ON platform_exception_log (trace_
 -- Seed default production alert rules
 INSERT INTO platform_alert_configuration (id, rule_name, metric_name, threshold_value, comparison_operator, notification_channel, destination_target)
 VALUES 
-    (gen_random_uuid(), 'High API P95 Latency Alert', 'http_server_requests_seconds_max', 500.0, '>', 'SLACK', 'https://hooks.slack.com/services/alert-hook'),
-    (gen_random_uuid(), 'HikariCP DB Connection Pool Exhaustion', 'hikaricp_connections_pending', 10.0, '>', 'PAGERDUTY', 'https://events.pagerduty.com/v2/enqueue')
+    (gen_random_uuid()::text, 'High API P95 Latency Alert', 'http_server_requests_seconds_max', 500.0, '>', 'SLACK', 'https://hooks.slack.com/services/alert-hook'),
+    (gen_random_uuid()::text, 'HikariCP DB Connection Pool Exhaustion', 'hikaricp_connections_pending', 10.0, '>', 'PAGERDUTY', 'https://events.pagerduty.com/v2/enqueue')
 ON CONFLICT (rule_name) DO NOTHING;

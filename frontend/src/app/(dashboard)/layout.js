@@ -239,6 +239,12 @@ export default function DashboardLayout({ children }) {
                 <Link href="/tenants" className={`nav-link flex items-center gap-2 px-3 py-2 text-xs rounded-lg ${isActive('/tenants') ? 'bg-amber-500/15 text-amber-300 font-semibold' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface-l2)]'}`}>
                   🏢 Enterprise Tenant Provisioning
                 </Link>
+                <Link href="/superadmin/modules" className={`nav-link flex items-center gap-2 px-3 py-2 text-xs rounded-lg ${isActive('/superadmin/modules') ? 'bg-amber-500/15 text-amber-300 font-semibold' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface-l2)]'}`}>
+                  🎛️ Feature Flags & Module Control
+                </Link>
+                <Link href="/superadmin/rbac" className={`nav-link flex items-center gap-2 px-3 py-2 text-xs rounded-lg ${isActive('/superadmin/rbac') ? 'bg-amber-500/15 text-amber-300 font-semibold' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface-l2)]'}`}>
+                  🔐 Super Admin RBAC & Security
+                </Link>
                 <Link href="/superadmin/tenants" className={`nav-link flex items-center gap-2 px-3 py-2 text-xs rounded-lg ${isActive('/superadmin/tenants') ? 'bg-amber-500/15 text-amber-300 font-semibold' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface-l2)]'}`}>
                   🛡️ Super Admin Control
                 </Link>

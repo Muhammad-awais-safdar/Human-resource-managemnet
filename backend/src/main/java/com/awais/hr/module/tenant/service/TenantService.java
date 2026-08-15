@@ -53,6 +53,7 @@ public class TenantService {
     public void initializeTenants() {
         log.info("Initializing active tenant connection pools on startup...");
         try {
+            com.awais.hr.module.tenant.infrastructure.context.TenantContextHolder.setCurrentTenant("MASTER");
             List<Tenant> tenants = tenantRepository.findAll();
             for (Tenant tenant : tenants) {
                 if ("ACTIVE".equalsIgnoreCase(tenant.getStatus())) {
@@ -65,6 +66,8 @@ public class TenantService {
             }
         } catch (Exception e) {
             log.warn("Master tenant table not fully ready during startup initialization: {}. DataSeeder will complete setup.", e.getMessage());
+        } finally {
+            com.awais.hr.module.tenant.infrastructure.context.TenantContextHolder.clear();
         }
     }
 
@@ -79,9 +82,15 @@ public class TenantService {
         }
         if (ds == null) {
             // Dynamically load from database repository
-            Optional<Tenant> tenantOpt = tenantRepository.findById(tenantId);
-            if (tenantOpt.isEmpty()) {
-                tenantOpt = tenantRepository.findBySubdomain(key);
+            com.awais.hr.module.tenant.infrastructure.context.TenantContextHolder.setCurrentTenant("MASTER");
+            Optional<Tenant> tenantOpt;
+            try {
+                tenantOpt = tenantRepository.findById(tenantId);
+                if (tenantOpt.isEmpty()) {
+                    tenantOpt = tenantRepository.findBySubdomain(key);
+                }
+            } finally {
+                com.awais.hr.module.tenant.infrastructure.context.TenantContextHolder.clear();
             }
             if (tenantOpt.isPresent()) {
                 registerTenantDataSource(tenantOpt.get());
@@ -142,6 +151,15 @@ public class TenantService {
     }
 
     public Tenant registerNewTenant(TenantRegisterRequestDTO request) {
+        com.awais.hr.module.tenant.infrastructure.context.TenantContextHolder.setCurrentTenant("MASTER");
+        try {
+            return doRegisterNewTenant(request);
+        } finally {
+            com.awais.hr.module.tenant.infrastructure.context.TenantContextHolder.clear();
+        }
+    }
+
+    private Tenant doRegisterNewTenant(TenantRegisterRequestDTO request) {
         String companyName = request.getCompanyName();
         String subdomain = request.getSubdomain();
         String adminEmail = request.getAdminEmail();
@@ -212,6 +230,8 @@ public class TenantService {
         String secondaryColor = (request.getSecondaryColor() != null && !request.getSecondaryColor().isBlank()) ? request.getSecondaryColor() : "#10b981";
         String logoUrl = (request.getLogoUrl() != null && !request.getLogoUrl().isBlank()) ? request.getLogoUrl() : "https://via.placeholder.com/150?text=" + companyName;
 
+        String indType = (request.getIndustryType() != null && !request.getIndustryType().isBlank()) ? request.getIndustryType().toUpperCase() : "IT_TECH";
+
         Tenant tenant = Tenant.builder()
                 .id(tenantId)
                 .name(companyName)
@@ -222,6 +242,7 @@ public class TenantService {
                 .primaryColor(primaryColor)
                 .secondaryColor(secondaryColor)
                 .logoUrl(logoUrl)
+                .industryType(indType)
                 .status("ACTIVE")
                 .build();
         
@@ -241,7 +262,44 @@ public class TenantService {
         String adminPassword = (request.getAdminPassword() != null && !request.getAdminPassword().isBlank()) ? request.getAdminPassword() : "admin123";
         seedTenantMetadata(tenantDs, adminEmail, adminPassword);
         
+        // 7. Auto-provision Industry Capability Pack Entitlements
+        seedIndustryCapabilityPackOverrides(tenant);
+
         return tenant;
+    }
+
+    private void seedIndustryCapabilityPackOverrides(Tenant tenant) {
+        String industryStr = tenant.getIndustryType();
+        com.awais.hr.module.tenant.model.IndustryCapabilityPack pack = com.awais.hr.module.tenant.model.IndustryCapabilityPack.fromString(industryStr);
+        log.info("Auto-provisioning Industry Capability Pack '{}' ({}) for tenantId={}", pack.name(), pack.getDisplayName(), tenant.getId());
+
+        JdbcTemplate masterJdbc = new JdbcTemplate(masterDataSource);
+
+        for (String moduleKey : pack.getEnabledModules()) {
+            try {
+                masterJdbc.update(
+                    "INSERT INTO tenant_module_override (tenant_id, module_key, is_enabled, updated_at) " +
+                    "VALUES (?, ?, true, NOW()) " +
+                    "ON CONFLICT (tenant_id, module_key) DO UPDATE SET is_enabled = true, updated_at = NOW()",
+                    tenant.getId(), moduleKey.toUpperCase()
+                );
+            } catch (Exception e) {
+                log.warn("Could not seed enabled module override {}: {}", moduleKey, e.getMessage());
+            }
+        }
+
+        for (String moduleKey : pack.getDisabledModules()) {
+            try {
+                masterJdbc.update(
+                    "INSERT INTO tenant_module_override (tenant_id, module_key, is_enabled, updated_at) " +
+                    "VALUES (?, ?, false, NOW()) " +
+                    "ON CONFLICT (tenant_id, module_key) DO UPDATE SET is_enabled = false, updated_at = NOW()",
+                    tenant.getId(), moduleKey.toUpperCase()
+                );
+            } catch (Exception e) {
+                log.warn("Could not seed disabled module override {}: {}", moduleKey, e.getMessage());
+            }
+        }
     }
 
     private void triggerSslProvisioning(Tenant tenant) {

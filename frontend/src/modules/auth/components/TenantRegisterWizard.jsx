@@ -14,6 +14,7 @@ export default function TenantRegisterWizard() {
   const [subdomain, setSubdomain] = useState('');
   const [adminEmail, setAdminEmail] = useState('');
   const [adminPassword, setAdminPassword] = useState('admin123');
+  const [industryType, setIndustryType] = useState('IT_TECH');
 
   // Branding Fields
   const [logoUrl, setLogoUrl] = useState('https://via.placeholder.com/150?text=Company+Logo');
@@ -103,6 +104,7 @@ export default function TenantRegisterWizard() {
           primaryColor,
           secondaryColor,
           planTier,
+          industryType,
           paymentConfirmed,
         });
 
@@ -423,6 +425,42 @@ export default function TenantRegisterWizard() {
                 onChange={(e) => setAdminEmail(e.target.value)}
               />
               {errors.adminEmail && <span className={styles.errorText}>{errors.adminEmail}</span>}
+            </div>
+
+            <div className={styles.formGroup}>
+              <label className={styles.label}>Industry Capability Pack *</label>
+              <select
+                className={styles.input}
+                value={industryType}
+                onChange={(e) => setIndustryType(e.target.value)}
+                style={{ cursor: 'pointer', background: 'var(--bg-card-hover)', color: 'var(--text-primary)' }}
+              >
+                <option value="IT_TECH">💻 IT, Technology & Software Services</option>
+                <option value="MANUFACTURING">🏭 Manufacturing & Heavy Industry</option>
+                <option value="RETAIL">🛍️ Retail, Supermarkets & E-Commerce</option>
+                <option value="HEALTHCARE">🏥 Healthcare, Hospitals & Pharma</option>
+                <option value="BFSI">🏦 Banking, Financial Services & Insurance (BFSI)</option>
+                <option value="HOSPITALITY">🏨 Hospitality, Hotels & Restaurants (HoReCa)</option>
+                <option value="CONSTRUCTION">🏗️ Construction, Real Estate & Field Services</option>
+                <option value="LOGISTICS">🚚 Logistics, Supply Chain & Fleet Transport</option>
+                <option value="EDUCATION">🎓 Education, Universities & School Networks</option>
+                <option value="CONSULTING">💼 Professional Services & Law Firms</option>
+                <option value="INSURANCE">🛡️ Insurance Services</option>
+                <option value="LIFE_SCIENCES">💊 Life Sciences & Biotech</option>
+                <option value="TELECOM">📡 Telecommunications</option>
+                <option value="MEDIA">🎬 Media & Entertainment</option>
+                <option value="ENERGY">⚡ Energy & Public Utilities</option>
+                <option value="OIL_GAS">🛢️ Oil, Gas & Petrochemicals</option>
+                <option value="MINING">⛏️ Mining & Raw Extraction</option>
+                <option value="AUTOMOTIVE">🚗 Automotive Manufacturing</option>
+                <option value="AEROSPACE">✈️ Aerospace & Defense</option>
+                <option value="PUBLIC_SECTOR">🏛️ Government & Public Administration</option>
+                <option value="NONPROFIT">🤝 NGO & Non-Profit</option>
+                <option value="AGRICULTURE">🌾 Agriculture & Agribusiness</option>
+                <option value="WHOLESALE">📦 Wholesale & Bulk Distribution</option>
+                <option value="SPORTS_EVENTS">🏟️ Sports, Venues & Entertainment</option>
+                <option value="REAL_ESTATE">🏢 Real Estate & Property Management</option>
+              </select>
             </div>
 
             <div className={styles.formGroup}>

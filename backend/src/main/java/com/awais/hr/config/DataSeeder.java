@@ -25,53 +25,64 @@ public class DataSeeder implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        com.awais.hr.module.tenant.infrastructure.context.TenantContextHolder.clear();
-        log.info("========================================================================");
-        log.info("🚀 EXECUTING ENTERPRISE TENANT & MULTI-ROLE DATA SEEDER...");
-        log.info("========================================================================");
-
-        String defaultSubdomain = "awais";
-        String defaultCompanyName = "Acme HR Enterprise";
-        String defaultAdminEmail = "admin@awais.com";
-
-        Optional<Tenant> existingTenant = Optional.empty();
+        com.awais.hr.module.tenant.infrastructure.context.TenantContextHolder.setCurrentTenant("MASTER");
         try {
-            existingTenant = tenantRepository.findBySubdomain(defaultSubdomain);
-        } catch (Exception e) {
-            log.error("EXCEPTION IN FIND_BY_SUBDOMAIN: ", e);
-        }
-        Tenant tenant;
-        if (existingTenant.isPresent()) {
-            tenant = existingTenant.get();
-            log.info("Found existing master tenant record: {} (Subdomain: {})", tenant.getName(), tenant.getSubdomain());
-        } else {
-            log.info("Provisioning physical database & schema for master tenant subdomain: {}", defaultSubdomain);
-            TenantRegisterRequestDTO request = new TenantRegisterRequestDTO();
-            request.setCompanyName(defaultCompanyName);
-            request.setSubdomain(defaultSubdomain);
-            request.setAdminEmail(defaultAdminEmail);
-            request.setAdminPassword("admin123");
-            request.setLogoUrl("https://via.placeholder.com/150?text=Acme+HR");
-            request.setPrimaryColor("#6366f1");
-            request.setSecondaryColor("#10b981");
+            log.info("========================================================================");
+            log.info("🚀 EXECUTING ENTERPRISE TENANT & MULTI-ROLE DATA SEEDER...");
+            log.info("========================================================================");
 
+            String defaultSubdomain = "awais";
+            String defaultCompanyName = "Acme HR Enterprise";
+            String defaultAdminEmail = "tenant.admin@awais.com";
+
+            Optional<Tenant> existingTenant = Optional.empty();
             try {
-                tenant = tenantService.registerNewTenant(request);
+                existingTenant = tenantRepository.findBySubdomain(defaultSubdomain);
             } catch (Exception e) {
-                log.warn("Notice during tenant registration: {}", e.getMessage(), e);
-                com.awais.hr.module.tenant.infrastructure.context.TenantContextHolder.clear();
-                tenant = tenantRepository.findBySubdomain(defaultSubdomain).orElse(null);
+                log.error("EXCEPTION IN FIND_BY_SUBDOMAIN: ", e);
             }
-        }
+            Tenant tenant;
+            if (existingTenant.isPresent()) {
+                tenant = existingTenant.get();
+                log.info("Found existing master tenant record: {} (Subdomain: {})", tenant.getName(), tenant.getSubdomain());
+            } else {
+                log.info("Provisioning physical database & schema for master tenant subdomain: {}", defaultSubdomain);
+                TenantRegisterRequestDTO request = new TenantRegisterRequestDTO();
+                request.setCompanyName(defaultCompanyName);
+                request.setSubdomain(defaultSubdomain);
+                request.setAdminEmail(defaultAdminEmail);
+                request.setAdminPassword("admin123");
+                request.setLogoUrl("https://via.placeholder.com/150?text=Acme+HR");
+                request.setPrimaryColor("#6366f1");
+                request.setSecondaryColor("#10b981");
 
-        if (tenant != null) {
-            DataSource tenantDataSource = tenantService.getTenantDataSource(tenant.getId());
-            if (tenantDataSource != null) {
-                seedComprehensiveTenantData(tenantDataSource, defaultAdminEmail);
+                try {
+                    tenant = tenantService.registerNewTenant(request);
+                } catch (Exception e) {
+                    log.warn("Notice during tenant registration: {}", e.getMessage(), e);
+                    com.awais.hr.module.tenant.infrastructure.context.TenantContextHolder.setCurrentTenant("MASTER");
+                    tenant = tenantRepository.findBySubdomain(defaultSubdomain).orElse(null);
+                }
             }
-        }
 
-        logSeederCredentialSummary();
+            if (tenant != null) {
+                DataSource tenantDataSource = tenantService.getTenantDataSource(tenant.getId());
+                if (tenantDataSource != null) {
+                    // Ensure Platform Super Admin admin@awais.com is NEVER in tenant Employee Directory
+                    try {
+                        org.springframework.jdbc.core.JdbcTemplate tJdbc = new org.springframework.jdbc.core.JdbcTemplate(tenantDataSource);
+                        tJdbc.update("DELETE FROM employee WHERE email = 'admin@awais.com'");
+                    } catch (Exception e) {
+                        log.warn("Could not clean up super admin from tenant employee directory: {}", e.getMessage());
+                    }
+                    seedComprehensiveTenantData(tenantDataSource, defaultAdminEmail);
+                }
+            }
+
+            logSeederCredentialSummary();
+        } finally {
+            com.awais.hr.module.tenant.infrastructure.context.TenantContextHolder.clear();
+        }
     }
 
     private void seedComprehensiveTenantData(DataSource tenantDataSource, String adminEmail) {

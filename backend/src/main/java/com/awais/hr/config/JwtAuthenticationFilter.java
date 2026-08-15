@@ -55,11 +55,25 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 String email = jwtUtils.getEmailFromToken(token);
                 String tenantId = jwtUtils.getTenantIdFromToken(token);
                 String roles = jwtUtils.getRolesFromToken(token);
-                String requestTenantId = TenantContextHolder.getCurrentTenant();
-                boolean isSystemAdmin = roles != null && (roles.contains("SYSTEM_ADMIN") || roles.contains("ROLE_SYSTEM_ADMIN"));
+                boolean isSystemAdmin = roles != null && (
+                    roles.contains("SYSTEM_ADMIN") || 
+                    roles.contains("ROLE_SYSTEM_ADMIN") || 
+                    roles.contains("SUPER_ADMIN") || 
+                    roles.contains("ROLE_SUPER_ADMIN")
+                );
 
-                // Enforce strict multi-tenant boundary isolation
-                if (requestTenantId != null && tenantId != null && !requestTenantId.equals(tenantId) && !isSystemAdmin) {
+                String requestUri = request.getRequestURI().toLowerCase();
+                boolean isPlatformEndpoint = requestUri.contains("/tenants") || 
+                                             requestUri.contains("/superadmin") || 
+                                             requestUri.contains("/observability") || 
+                                             requestUri.contains("/system") || 
+                                             requestUri.contains("/platform");
+
+                String requestTenantId = TenantContextHolder.getCurrentTenant();
+
+                // Enforce strict multi-tenant boundary isolation (exempt platform endpoints & system admins)
+                if (requestTenantId != null && tenantId != null && !requestTenantId.equals(tenantId) && !isSystemAdmin && !isPlatformEndpoint) {
+
                     log.warn("[CROSS-TENANT ACCESS BLOCKED] User {} (tenant {}) attempted unauthorized access to tenant context {}", email, tenantId, requestTenantId);
                     response.sendError(HttpServletResponse.SC_FORBIDDEN, "Access Denied: Account is not authorized to access this tenant workspace.");
                     return;
@@ -67,20 +81,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
                 // Set active tenant context
                 String effectiveTenantId;
-                if (isSystemAdmin) {
-                    if (requestTenantId != null) {
-                        effectiveTenantId = requestTenantId;
-                    } else {
-                        String requestUri = request.getRequestURI().toLowerCase();
-                        if (requestUri.contains("/tenants") || requestUri.contains("/superadmin") || requestUri.contains("/observability") || requestUri.contains("/system") || requestUri.contains("/auth") || requestUri.contains("/platform")) {
-                            effectiveTenantId = "MASTER";
-                        } else {
-                            effectiveTenantId = "awais"; // Fallback default tenant for tenant operational endpoints
-                        }
-                    }
+                if (isPlatformEndpoint) {
+                    effectiveTenantId = "MASTER";
+                } else if (isSystemAdmin) {
+                    effectiveTenantId = (requestTenantId != null) ? requestTenantId : "awais";
                 } else {
                     effectiveTenantId = tenantId;
                 }
+
 
                 if (effectiveTenantId != null) {
                     TenantContextHolder.setCurrentTenant(effectiveTenantId);

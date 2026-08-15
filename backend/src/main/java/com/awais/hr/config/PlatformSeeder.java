@@ -29,10 +29,11 @@ public class PlatformSeeder implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        com.awais.hr.module.tenant.infrastructure.context.TenantContextHolder.clear();
-        log.info("========================================================================");
-        log.info("🛡️ SEEDING PLATFORM ROLES & SUPERADMIN ACCOUNTS (MASTER DB)...");
-        log.info("========================================================================");
+        com.awais.hr.module.tenant.infrastructure.context.TenantContextHolder.setCurrentTenant("MASTER");
+        try {
+            log.info("========================================================================");
+            log.info("🛡️ SEEDING PLATFORM ROLES & SUPERADMIN ACCOUNTS (MASTER DB)...");
+            log.info("========================================================================");
 
         Map<String, String> platformRoles = Map.of(
                 "SYSTEM_ADMIN", "Full SaaS Platform Infrastructure & Multi-Tenant Administrator",
@@ -79,5 +80,8 @@ public class PlatformSeeder implements CommandLineRunner {
         }
 
         log.info("========================================================================");
+        } finally {
+            com.awais.hr.module.tenant.infrastructure.context.TenantContextHolder.clear();
+        }
     }
 }

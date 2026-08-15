@@ -20,9 +20,11 @@ public class TenantRegistry {
     private static final Logger log = LoggerFactory.getLogger(TenantRegistry.class);
     private final Map<Object, Object> targetDataSources = new ConcurrentHashMap<>();
     private final TenantRoutingDataSource routingDataSource;
+    private final DataSource masterDataSource;
 
-    public TenantRegistry(TenantRoutingDataSource routingDataSource) {
+    public TenantRegistry(TenantRoutingDataSource routingDataSource, @org.springframework.beans.factory.annotation.Qualifier("masterDataSource") DataSource masterDataSource) {
         this.routingDataSource = routingDataSource;
+        this.masterDataSource = masterDataSource;
     }
 
     public void registerTenantDataSource(TenantAggregate tenant) {
@@ -38,8 +40,13 @@ public class TenantRegistry {
                 .driverClassName("org.postgresql.Driver")
                 .build();
 
+        targetDataSources.put("MASTER", masterDataSource);
         targetDataSources.put(tenant.getId().toString(), ds);
+        if (tenant.getSubdomain() != null) {
+            targetDataSources.put(tenant.getSubdomain().toLowerCase().trim(), ds);
+        }
         routingDataSource.setTargetDataSources(targetDataSources);
+        routingDataSource.setDefaultTargetDataSource(masterDataSource);
         routingDataSource.afterPropertiesSet();
         log.info("Successfully registered dedicated DataSource for tenant ID: {}", tenant.getId());
     }

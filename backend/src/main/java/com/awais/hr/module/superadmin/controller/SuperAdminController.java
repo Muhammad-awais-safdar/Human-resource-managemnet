@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/suite/superadmin")
+@RequestMapping({"/suite/superadmin", "/superadmin", "/api/v1/superadmin"})
 public class SuperAdminController {
 
     private final SuperAdminTenantService adminService;

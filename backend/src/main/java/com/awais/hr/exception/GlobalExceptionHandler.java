@@ -103,6 +103,17 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(body);
     }
 
+    @ExceptionHandler(ModuleDisabledException.class)
+    public ResponseEntity<Map<String, Object>> handleModuleDisabledException(ModuleDisabledException ex) {
+        log.warn("[MODULE DISABLED] Access attempt to disabled module: {}", ex.getMessage());
+        logExceptionToDb(ex, "ModuleControl");
+        Map<String, Object> body = new HashMap<>();
+        body.put("success", false);
+        body.put("moduleDisabled", true);
+        body.put("message", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.PAYMENT_REQUIRED).body(body);
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, Object>> handleGeneralExceptions(Exception ex) {
         String traceId = MDC.get("traceId");

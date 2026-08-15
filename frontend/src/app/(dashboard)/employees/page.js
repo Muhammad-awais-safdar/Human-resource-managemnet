@@ -73,9 +73,14 @@ export default function EmployeeDirectoryPage() {
   };
 
   const filteredEmployees = employees.filter(emp => {
+    // Platform Super Admin / Product Owner is excluded from tenant Employee Directory
+    if (emp.email === 'admin@awais.com' || emp.roleName === 'SYSTEM_ADMIN' || emp.role === 'SUPER_ADMIN') {
+      return false;
+    }
     const name = `${emp.firstName || ''} ${emp.lastName || ''} ${emp.email || ''} ${emp.employeeCode || ''}`.toLowerCase();
     return name.includes(searchTerm.toLowerCase());
   });
+
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto">

@@ -20,8 +20,9 @@ kill_port() {
     local port=$1
     echo "Checking and clearing port $port..."
     if command -v fuser &> /dev/null; then
-        fuser -k "$port/tcp" 2>/dev/null || true
-    elif command -v lsof &> /dev/null; then
+        fuser -k -9 "$port/tcp" 2>/dev/null || true
+    fi
+    if command -v lsof &> /dev/null; then
         local pid
         pid=$(lsof -t -i:"$port")
         if [ -n "$pid" ]; then
@@ -45,45 +46,39 @@ if ! command -v npm &> /dev/null; then
     exit 1
 fi
 
-# Smart Observability & Grafana Launcher (Native Host / Docker Compose / Container detection)
-start_observability_platform() {
+# Clean conflicting host ports and containers first
+kill_port 8080
+kill_port 3000
+kill_port 3002
+kill_port 5173
+if command -v docker &> /dev/null; then
+    docker stop awais-hr-backend awais-hr-frontend 2>/dev/null || true
+fi
+sleep 1
+
+# Smart Database & Cache Launcher (PostgreSQL & Redis via Docker Compose)
+start_database_and_cache() {
     # Check if running inside a Docker container environment
     if [ -f /.dockerenv ] || ( [ -f /proc/1/cgroup ] && grep -q 'docker\|containerd\|kubepods' /proc/1/cgroup 2>/dev/null ); then
         echo "Notice: Executing inside container environment. Skipping nested container orchestration."
         return 0
     fi
 
-    echo "Launching Observability Platform & Grafana Services..."
-
-    # 1. Native system service / binary launch (No Docker required)
-    if command -v systemctl &> /dev/null && systemctl list-unit-files 2>/dev/null | grep -q grafana-server; then
-        echo "Starting native systemd grafana-server service..."
-        sudo systemctl start grafana-server 2>/dev/null || systemctl start grafana-server 2>/dev/null || true
-    elif command -v grafana-server &> /dev/null; then
-        echo "Starting native grafana-server binary in background..."
-        grafana-server --homepath /usr/share/grafana > /dev/null 2>&1 &
-    # 2. Host Docker Compose launch (if Docker daemon is active on host machine)
-    elif command -v docker &> /dev/null; then
+    # Host Docker Compose launch for PostgreSQL & Redis only (Skipping Grafana & Observability)
+    if command -v docker &> /dev/null; then
         if docker info &> /dev/null; then
-            docker compose up -d 2>/dev/null || docker-compose up -d 2>/dev/null || true
+            echo "Starting PostgreSQL & Redis infrastructure via Docker Compose..."
+            docker compose up -d postgres redis 2>/dev/null || docker-compose up -d postgres redis 2>/dev/null || true
+            docker stop awais-hr-grafana 2>/dev/null || true
         else
             echo "Notice: Docker daemon is stopped or current user lacks docker permissions. Skipping Docker Compose."
         fi
-    else
-        echo "Notice: Neither Docker nor native Grafana binary found. Running in standalone mode."
     fi
 }
 
-start_observability_platform
-
-# Clean ports first
-kill_port 8080
-kill_port 3000
-kill_port 5173
+start_database_and_cache
 echo "Ports cleared. Launching development environment..."
 echo "--------------------------------------------------------"
-echo "📊 Grafana Enterprise Portal: http://localhost:3001"
-echo "🔥 Prometheus Metrics Engine: http://localhost:9090"
 echo "💻 Frontend Web App:          http://localhost:3000"
 echo "⚙️ Backend API Engine:        http://localhost:8080"
 echo "--------------------------------------------------------"

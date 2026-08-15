@@ -31,6 +31,7 @@ public class TenantBootstrapLoader {
     public void onApplicationReady() {
         log.info("Initializing active tenant database connections on startup...");
         try {
+            com.awais.hr.module.tenant.infrastructure.context.TenantContextHolder.setCurrentTenant("MASTER");
             List<TenantAggregate> activeTenants = tenantRepository.findAllActiveTenants();
             for (TenantAggregate tenant : activeTenants) {
                 tenantRegistry.registerTenantDataSource(tenant);
@@ -38,6 +39,8 @@ public class TenantBootstrapLoader {
             log.info("Successfully bootstrapped {} active tenant connections.", activeTenants.size());
         } catch (Exception e) {
             log.warn("Could not bootstrap tenant connections on startup: {}", e.getMessage());
+        } finally {
+            com.awais.hr.module.tenant.infrastructure.context.TenantContextHolder.clear();
         }
     }
 }
