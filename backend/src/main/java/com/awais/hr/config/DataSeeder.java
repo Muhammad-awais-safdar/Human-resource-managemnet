@@ -79,33 +79,41 @@ public class DataSeeder implements CommandLineRunner {
 
         log.info("Seeding security permissions and multi-role employee catalog...");
 
-        // 1. Seed Core Permissions
-        Map<String, String> permissions = Map.of(
-                "corehr:employee:read", "Read access to employee profiles and directories",
-                "corehr:employee:write", "Write & update access to employee records",
-                "corehr:org:write", "Manage organization structure and tree nodes",
-                "corehr:settings:write", "Modify white-label tenant branding configurations",
-                "payroll:process", "Execute payroll calculations and bank export files",
-                "attendance:manage", "Manage employee attendance logs and shifts",
-                "recruitment:manage", "Manage ATS job requisitions and candidate applications",
-                "audit:read", "View security audit ledger logs"
+        // 1. Seed Core Permissions with Human-Readable UI Labels & Module Mapping
+        record PermMeta(String name, String desc, String module, String feature, String action, String label, boolean sensitive) {}
+        List<PermMeta> permList = List.of(
+                new PermMeta("corehr:employee:read", "Read access to employee profiles and directories", "CORE_HR", "EMPLOYEES", "READ", "View Employee Directory & Profiles", false),
+                new PermMeta("corehr:employee:write", "Write & update access to employee records", "CORE_HR", "EMPLOYEES", "WRITE", "Create & Edit Employee Records", false),
+                new PermMeta("corehr:org:write", "Manage organization structure and tree nodes", "CORE_HR", "ORG_STRUCTURE", "WRITE", "Manage Org Chart & Departments", false),
+                new PermMeta("corehr:settings:write", "Modify white-label tenant branding configurations", "CORE_HR", "SETTINGS", "WRITE", "Configure Tenant Branding & Settings", false),
+                new PermMeta("payroll:salary:read", "View employee salary structures and payslips", "PAYROLL", "SALARY", "READ", "View Employee Salaries & Payslips", false),
+                new PermMeta("payroll:salary:write", "Calculate monthly salaries and deductions", "PAYROLL", "SALARY", "WRITE", "Calculate Salaries & Deductions", false),
+                new PermMeta("payroll:salary:approve", "Approve monthly payroll runs for disbursement", "PAYROLL", "DISBURSEMENT", "APPROVE", "Approve Monthly Payroll Runs", true),
+                new PermMeta("payroll:salary:process", "Execute automated bank transfer disbursements", "PAYROLL", "DISBURSEMENT", "PROCESS", "Execute Direct Bank Disbursements", true),
+                new PermMeta("attendance:log:read", "View daily attendance & biometric punch logs", "ATTENDANCE", "LOGS", "READ", "View Daily Attendance & Punch Logs", false),
+                new PermMeta("attendance:log:write", "Adjust clock-in/out timestamps and overtime", "ATTENDANCE", "LOGS", "WRITE", "Edit Attendance & Overtime Logs", false),
+                new PermMeta("leave:request:read", "View leave balances and time-off requests", "LEAVE", "REQUESTS", "READ", "View Vacation & Leave Requests", false),
+                new PermMeta("leave:request:approve", "Approve or reject employee vacation applications", "LEAVE", "REQUESTS", "APPROVE", "Approve Vacation & Leave Applications", false),
+                new PermMeta("recruitment:job:write", "Publish job requisitions and candidate pipeline", "RECRUITMENT", "ATS", "WRITE", "Manage Job Requisitions & Candidates", false),
+                new PermMeta("audit:read", "View security audit ledger logs", "AUDIT", "SECURITY_LOGS", "READ", "View Security Audit Logs", false)
         );
 
         Map<String, String> permIdMap = new HashMap<>();
-        for (Map.Entry<String, String> entry : permissions.entrySet()) {
+        for (PermMeta p : permList) {
             String permId = UUID.randomUUID().toString();
             jdbcTemplate.update(
-                    "INSERT INTO permission (id, name, description) VALUES (?, ?, ?) ON CONFLICT DO NOTHING",
-                    permId, entry.getKey(), entry.getValue()
+                    "INSERT INTO permission (id, name, description, module_key, feature_key, action_key, ui_label, is_sensitive) VALUES (?, ?, ?, ?, ?, ?, ?, ?) " +
+                    "ON CONFLICT (id) DO UPDATE SET module_key = EXCLUDED.module_key, ui_label = EXCLUDED.ui_label, is_sensitive = EXCLUDED.is_sensitive",
+                    permId, p.name(), p.desc(), p.module(), p.feature(), p.action(), p.label(), p.sensitive()
             );
             List<String> foundMap = jdbcTemplate.queryForList(
-                    "SELECT id FROM permission WHERE name = ?", String.class, entry.getKey());
+                    "SELECT id FROM permission WHERE name = ?", String.class, p.name());
             if (!foundMap.isEmpty()) {
-                permIdMap.put(entry.getKey(), foundMap.get(0));
+                permIdMap.put(p.name(), foundMap.get(0));
             }
         }
 
-        // 2. Seed All Standard Roles
+        // 2. Seed All Standard Roles with System Role Guard Flag
         Map<String, String> roles = Map.of(
                 "SYSTEM_ADMIN", "Full system platform administrator",
                 "TENANT_ADMIN", "Organization workspace administrator",
@@ -120,9 +128,11 @@ public class DataSeeder implements CommandLineRunner {
         Map<String, String> roleIdMap = new HashMap<>();
         for (Map.Entry<String, String> entry : roles.entrySet()) {
             String roleId = UUID.randomUUID().toString();
+            boolean isSystem = List.of("SYSTEM_ADMIN", "TENANT_ADMIN", "EMPLOYEE", "HR_MANAGER").contains(entry.getKey());
             jdbcTemplate.update(
-                    "INSERT INTO role (id, name, description) VALUES (?, ?, ?) ON CONFLICT DO NOTHING",
-                    roleId, entry.getKey(), entry.getValue()
+                    "INSERT INTO role (id, name, description, is_system_role, status) VALUES (?, ?, ?, ?, 'ACTIVE') " +
+                    "ON CONFLICT (id) DO UPDATE SET is_system_role = EXCLUDED.is_system_role",
+                    roleId, entry.getKey(), entry.getValue(), isSystem
             );
             List<String> foundRole = jdbcTemplate.queryForList(
                     "SELECT id FROM role WHERE name = ?", String.class, entry.getKey());
@@ -131,12 +141,12 @@ public class DataSeeder implements CommandLineRunner {
             }
         }
 
-        // Bind Permissions to Roles
+        // Bind Permissions to Roles with Access Scopes
         for (String roleName : roleIdMap.keySet()) {
             String rId = roleIdMap.get(roleName);
             for (String pId : permIdMap.values()) {
                 jdbcTemplate.update(
-                        "INSERT INTO role_permission (role_id, permission_id) VALUES (?, ?) ON CONFLICT DO NOTHING",
+                        "INSERT INTO role_permission (role_id, permission_id, access_scope) VALUES (?, ?, 'COMPANY') ON CONFLICT DO NOTHING",
                         rId, pId
                 );
             }
