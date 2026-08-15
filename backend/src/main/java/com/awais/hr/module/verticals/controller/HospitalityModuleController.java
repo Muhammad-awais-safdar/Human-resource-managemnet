@@ -1,63 +1,92 @@
 package com.awais.hr.module.verticals.controller;
 
+import com.awais.hr.config.HasPermission;
+import com.awais.hr.context.TenantContextHolder;
+import com.awais.hr.engine.commission.CommissionEngine;
+import com.awais.hr.engine.piecerate.PieceRateEngine;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.bind.annotation.*;
-
+import javax.sql.DataSource;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.*;
 
 @RestController
-@RequestMapping({"/api/v1/verticals/hospitality", "/verticals/hospitality"})
+@RequestMapping("/api/v1/hospitality")
 public class HospitalityModuleController {
 
-    private final List<Map<String, Object>> tipPools = new ArrayList<>(List.of(
-            Map.of(
-                    "id", "TIP-901",
-                    "outlet", "Main Dining Room & Terrace Bar",
-                    "shiftType", "DINNER_SHIFT",
-                    "shiftDate", LocalDate.now().toString(),
-                    "totalGratuityCollected", 2450.00,
-                    "waitstaffSharePct", 70.0,
-                    "kitchenSharePct", 20.0,
-                    "busserSharePct", 10.0,
-                    "staffCount", 14,
-                    "perStaffAvgPayout", 175.00
-            )
-    ));
+    private final DataSource dataSource;
+    private final CommissionEngine commissionEngine;
+    private final PieceRateEngine pieceRateEngine;
+
+    public HospitalityModuleController(DataSource dataSource, CommissionEngine commissionEngine, PieceRateEngine pieceRateEngine) {
+        this.dataSource = dataSource;
+        this.commissionEngine = commissionEngine;
+        this.pieceRateEngine = pieceRateEngine;
+    }
 
     @GetMapping("/metrics")
-    public ResponseEntity<Map<String, Object>> getHospitalityMetrics() {
+    @HasPermission("corehr:employee:read")
+    public ResponseEntity<?> getHospitalityMetrics() {
+        String tenantId = TenantContextHolder.getCurrentTenant();
+        if (tenantId == null) return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(Map.of("success", false, "message", "No active tenant context."));
+
+        JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+        List<Map<String, Object>> tipStats = jdbcTemplate.queryForList(
+                "SELECT COALESCE(SUM(total_pay), 0) as total_gratuity, COUNT(*) as entries FROM piece_rate_entry WHERE production_unit = 'TIP_POOL_SHARE'"
+        );
+        double totalGratuity = tipStats.isEmpty() ? 0 : ((Number) tipStats.get(0).getOrDefault("total_gratuity", 0)).doubleValue();
+
         return ResponseEntity.ok(Map.of(
-                "todayTotalGratuityPool", 2450.00,
-                "activeOutletsCount", 4,
-                "foodSafetyPermitValidityPct", 100.0,
-                "shiftCoveragePct", 96.5,
-                "activeHospitalityStaff", 38
+                "success", true,
+                "totalGratuityDistributed", totalGratuity,
+                "tipPoolEntries", tipStats.isEmpty() ? 0 : tipStats.get(0).getOrDefault("entries", 0)
         ));
     }
 
     @GetMapping("/tip-pools")
-    public ResponseEntity<List<Map<String, Object>>> getTipPools() {
-        return ResponseEntity.ok(tipPools);
+    @HasPermission("corehr:employee:read")
+    public ResponseEntity<?> getTipPools() {
+        String tenantId = TenantContextHolder.getCurrentTenant();
+        if (tenantId == null) return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(Map.of("success", false, "message", "No active tenant context."));
+
+        JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+        List<Map<String, Object>> pools = jdbcTemplate.queryForList(
+                "SELECT id, employee_id, production_unit, quantity, unit_rate, quality_factor, total_pay, work_date " +
+                "FROM piece_rate_entry WHERE production_unit = 'TIP_POOL_SHARE' ORDER BY work_date DESC LIMIT 50"
+        );
+        return ResponseEntity.ok(Map.of("success", true, "tipPools", pools));
     }
 
     @PostMapping("/tip-pools")
-    public ResponseEntity<Map<String, Object>> logTipPool(@RequestBody Map<String, Object> payload) {
-        String tipId = "TIP-" + (900 + tipPools.size() + 1);
-        double totalGratuity = payload.get("totalGratuityCollected") != null ? Double.parseDouble(payload.get("totalGratuityCollected").toString()) : 1000.0;
-        int count = payload.get("staffCount") != null ? Integer.parseInt(payload.get("staffCount").toString()) : 10;
-        double avg = totalGratuity / (count > 0 ? count : 1);
+    @HasPermission("payroll:process")
+    public ResponseEntity<?> recordTipDistribution(@RequestBody Map<String, Object> payload) {
+        String tenantId = TenantContextHolder.getCurrentTenant();
+        if (tenantId == null) return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(Map.of("success", false, "message", "No active tenant context."));
 
-        Map<String, Object> entry = new HashMap<>(payload);
-        entry.put("id", tipId);
-        entry.put("shiftDate", LocalDate.now().toString());
-        entry.put("perStaffAvgPayout", avg);
-        tipPools.add(0, entry);
+        String employeeId = (String) payload.getOrDefault("employeeId", "EMP-HOSP-01");
+        BigDecimal totalGratuity = new BigDecimal(payload.getOrDefault("totalGratuityCollected", "0").toString());
+        int staffCount = Integer.parseInt(payload.getOrDefault("staffCount", "1").toString());
+
+        BigDecimal perStaffShare = staffCount > 0
+                ? totalGratuity.divide(BigDecimal.valueOf(staffCount), 2, java.math.RoundingMode.HALF_UP)
+                : BigDecimal.ZERO;
+
+        String recordId = pieceRateEngine.recordPieceRateOutput(
+                employeeId, "TIP_POOL_SHARE", staffCount, perStaffShare, BigDecimal.ONE, LocalDate.now()
+        );
 
         return ResponseEntity.ok(Map.of(
                 "success", true,
-                "message", "Shift tip pool gratuity distribution calculated and saved",
-                "entry", entry
+                "recordId", recordId,
+                "totalGratuityDistributed", totalGratuity,
+                "staffCount", staffCount,
+                "perStaffShare", perStaffShare
         ));
     }
 }

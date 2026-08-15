@@ -7,6 +7,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.bind.annotation.*;
 import javax.sql.DataSource;
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.*;
 
 @RestController
@@ -35,7 +36,7 @@ public class BFSIServicesController {
         xml.append("  <CstmrCdtTrfInitn>\n");
         xml.append("    <GrpHdr>\n");
         xml.append("      <MsgId>ISO20022-").append(batchId.substring(0, 8)).append("</MsgId>\n");
-        xml.append("      <CreDtTm>2026-08-15T20:00:00Z</CreDtTm>\n");
+        xml.append("      <CreDtTm>").append(Instant.now().toString()).append("</CreDtTm>\n");
         xml.append("      <NbOfTxs>1</NbOfTxs>\n");
         xml.append("      <CtrlSum>").append(totalAmount).append("</CtrlSum>\n");
         xml.append("      <InitgPty><Nm>Awais HR SaaS Platform</Nm></InitgPty>\n");

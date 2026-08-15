@@ -107,3 +107,23 @@ CREATE TABLE IF NOT EXISTS machinery_maintenance_task (
     status VARCHAR(20) DEFAULT 'SCHEDULED',
     completed_at TIMESTAMP
 );
+
+-- 9. POS Commission Ledger (Retail Module — persistent, not in-memory)
+CREATE TABLE IF NOT EXISTS pos_commission (
+    id VARCHAR(50) PRIMARY KEY,
+    employee_id VARCHAR(50) NOT NULL,
+    sales_amount DECIMAL(15, 2) NOT NULL,
+    commission_rate DECIMAL(5, 2) NOT NULL,
+    commission_amount DECIMAL(15, 2) NOT NULL,
+    log_date DATE NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT unique_pos_entry UNIQUE (employee_id, log_date, sales_amount)
+);
+
+-- Performance indexes for engine tables
+CREATE INDEX IF NOT EXISTS idx_piece_rate_employee ON piece_rate_entry (employee_id);
+CREATE INDEX IF NOT EXISTS idx_piece_rate_unit ON piece_rate_entry (production_unit);
+CREATE INDEX IF NOT EXISTS idx_allowance_employee ON allowance_ledger (employee_id);
+CREATE INDEX IF NOT EXISTS idx_certification_employee ON certification_registry (employee_id);
+CREATE INDEX IF NOT EXISTS idx_maker_checker_status ON maker_checker_request (status);
+CREATE INDEX IF NOT EXISTS idx_roster_shift_dept ON roster_shift_market (department, shift_status);
