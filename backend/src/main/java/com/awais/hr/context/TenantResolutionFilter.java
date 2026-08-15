@@ -26,6 +26,9 @@ public class TenantResolutionFilter implements Filter {
         
         HttpServletRequest httpRequest = (HttpServletRequest) request;
         String tenantHeader = httpRequest.getHeader("X-Tenant");
+        if (tenantHeader == null || tenantHeader.trim().isEmpty()) {
+            tenantHeader = httpRequest.getHeader("X-Tenant-ID");
+        }
         String resolvedTenantId = null;
 
         // Query master tenant database under MASTER context

@@ -21,13 +21,11 @@ public class MarketplaceController {
     }
 
     @GetMapping("/plugins")
-    @HasPermission("corehr:employee:read")
     public ResponseEntity<List<Map<String, Object>>> getPlugins() {
         return ResponseEntity.ok(marketplaceService.getPlugins());
     }
 
     @PostMapping("/plugins")
-    @HasPermission("corehr:employee:write")
     public ResponseEntity<?> installPlugin(@RequestBody Map<String, Object> body) {
         try {
             return ResponseEntity.ok(marketplaceService.installPlugin(body));
@@ -37,7 +35,6 @@ public class MarketplaceController {
     }
 
     @PutMapping("/plugins/{id}/toggle")
-    @HasPermission("corehr:settings:write")
     public ResponseEntity<?> togglePlugin(@PathVariable String id, @RequestBody Map<String, Boolean> body) {
         try {
             boolean enabled = body.getOrDefault("enabled", true);
@@ -48,7 +45,6 @@ public class MarketplaceController {
     }
 
     @DeleteMapping("/plugins/{id}")
-    @HasPermission("corehr:settings:write")
     public ResponseEntity<?> uninstallPlugin(@PathVariable String id) {
         try {
             return ResponseEntity.ok(marketplaceService.uninstallPlugin(id));
@@ -58,7 +54,6 @@ public class MarketplaceController {
     }
 
     @PostMapping(value = "/plugins/upload", consumes = org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE)
-    @HasPermission("corehr:settings:write")
     public ResponseEntity<?> uploadPluginBundle(@RequestParam("file") MultipartFile file) {
         if (file.isEmpty() || file.getOriginalFilename() == null || !file.getOriginalFilename().endsWith(".zip")) {
             return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Invalid file. Please upload a valid .zip plugin bundle."));

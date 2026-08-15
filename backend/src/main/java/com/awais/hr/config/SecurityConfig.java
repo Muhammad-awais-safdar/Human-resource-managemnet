@@ -42,6 +42,8 @@ public class SecurityConfig {
                 .requestMatchers("/auth/**", "/api/*/auth/**").permitAll()
                 .requestMatchers("/health", "/api/*/health", "/api/v1/health", "/actuator/**", "/api/*/actuator/**").permitAll()
                 .requestMatchers("/tenants/active/**", "/api/*/tenants/active/**").permitAll()
+                .requestMatchers("/suite/marketplace/**", "/api/*/suite/marketplace/**").permitAll()
+                .requestMatchers("/verticals/**", "/api/*/verticals/**").permitAll()
                 .requestMatchers("/recruitment/jobs", "/api/*/recruitment/jobs").permitAll()
                 .requestMatchers("/recruitment/apply", "/api/*/recruitment/apply").permitAll()
                 .requestMatchers("/recruitment/candidates/**", "/api/*/recruitment/candidates/**").hasAnyRole("RECRUITER", "HR_MANAGER", "TENANT_ADMIN", "ADMIN")

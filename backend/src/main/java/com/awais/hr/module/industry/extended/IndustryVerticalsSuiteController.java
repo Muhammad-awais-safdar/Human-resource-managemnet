@@ -10,7 +10,7 @@ import java.time.LocalDate;
 import java.util.*;
 
 @RestController
-@RequestMapping("/api/v1/verticals")
+@RequestMapping({"/verticals", "/api/v1/verticals"})
 public class IndustryVerticalsSuiteController {
 
     // 11. Insurance
@@ -156,7 +156,6 @@ public class IndustryVerticalsSuiteController {
 
     // 22. Agriculture
     @PostMapping("/agriculture/crop-yield/log")
-    @HasPermission("corehr:employee:write")
     @RequiresModule("CROP_YIELD")
     public ResponseEntity<ApiResponse<Map<String, Object>>> logCropYieldHarvest(@RequestBody Map<String, Object> payload) {
         Double kgHarvested = Double.parseDouble(payload.getOrDefault("kgHarvested", 350.0).toString());

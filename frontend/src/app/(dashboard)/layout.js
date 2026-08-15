@@ -90,6 +90,49 @@ export default function DashboardLayout({ children }) {
     };
   }, [mounted]);
 
+  const [installedPlugins, setInstalledPlugins] = useState(null);
+
+  const fetchInstalledPlugins = () => {
+    apiClient.get('/suite/marketplace/plugins')
+      .then((res) => {
+        const list = Array.isArray(res) ? res : (res && res.data ? res.data : []);
+        const map = {};
+        list.forEach((p) => {
+          const isInst = p.is_installed !== undefined ? Boolean(p.is_installed) : (p.isInstalled !== undefined ? Boolean(p.isInstalled) : false);
+          if (p.module_key) map[p.module_key.toUpperCase()] = isInst;
+          if (p.moduleKey) map[p.moduleKey.toUpperCase()] = isInst;
+          if (p.plugin_name) map[p.plugin_name.toUpperCase()] = isInst;
+          if (p.pluginName) map[p.pluginName.toUpperCase()] = isInst;
+        });
+        setInstalledPlugins(map);
+      })
+      .catch(() => {});
+  };
+
+  useEffect(() => {
+    fetchInstalledPlugins();
+    const handlePluginChange = () => fetchInstalledPlugins();
+    if (typeof window !== 'undefined') {
+      window.addEventListener('plugin-status-changed', handlePluginChange);
+    }
+    return () => {
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('plugin-status-changed', handlePluginChange);
+      }
+    };
+  }, [pathname]);
+
+  const isPluginEnabled = (key) => {
+    if (!installedPlugins) return true;
+    const uKey = key.toUpperCase();
+    if (installedPlugins[uKey] !== undefined) {
+      return installedPlugins[uKey];
+    }
+    const foundKey = Object.keys(installedPlugins).find(k => k.includes(uKey) || uKey.includes(k));
+    if (foundKey !== undefined) return installedPlugins[foundKey];
+    return true;
+  };
+
   useEffect(() => {
     apiClient.get('/tenants/active')
       .then((res) => {
@@ -367,10 +410,17 @@ export default function DashboardLayout({ children }) {
             <Link href="/ai-copilot" className={`nav-link flex items-center gap-2 px-3 py-2 text-xs rounded-lg ${isActive('/ai-copilot') ? 'bg-indigo-500/15 text-indigo-400 font-semibold' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface-l2)]'}`}>
               🤖 AI HR Copilot
             </Link>
-            {(userRole === 'SYSTEM_ADMIN' || userRole === 'TENANT_ADMIN') && (
-              <Link href="/marketplace" className={`nav-link flex items-center gap-2 px-3 py-2 text-xs rounded-lg ${isActive('/marketplace') ? 'bg-indigo-500/15 text-indigo-400 font-semibold' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface-l2)]'}`}>
-                🛍️ Integration Apps
-              </Link>
+            {(userRole === 'SYSTEM_ADMIN' || userRole === 'TENANT_ADMIN' || userRole === 'HR_MANAGER') && (
+              <>
+                <Link href="/plugins" className={`nav-link flex items-center gap-2 px-3 py-2 text-xs rounded-lg ${isActive('/plugins') || isActive('/marketplace') ? 'bg-indigo-500/15 text-indigo-400 font-semibold' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface-l2)]'}`}>
+                  🔌 Plugin Marketplace & Store
+                </Link>
+                {isPluginEnabled('CROP_YIELD') && (
+                  <Link href="/agritech" className={`nav-link flex items-center gap-2 px-3 py-2 text-xs rounded-lg ${isActive('/agritech') ? 'bg-emerald-500/15 text-emerald-400 font-semibold' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface-l2)]'}`}>
+                    🌾 Agritech Crop Yield
+                  </Link>
+                )}
+              </>
             )}
           </nav>
 
