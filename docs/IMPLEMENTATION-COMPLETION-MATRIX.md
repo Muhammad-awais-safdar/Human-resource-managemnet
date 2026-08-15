@@ -1,0 +1,47 @@
+# Master Implementation & Capability Completion Matrix
+
+## Executive Summary
+This matrix classifies all 25 industry vertical modules, platform infrastructure, core reusable engines, enterprise integrations, security boundaries, and AI capabilities across the Awais HR SaaS platform.
+
+---
+
+## Master Capability Classification Matrix
+
+| Feature / Capability | Current Status | Existing Code | Existing DB | Existing API | Existing UI | Security Status | Test Status | Implementation Gap | Required Work | Dependencies | Priority |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| **Enterprise Feature-Based RBAC** | `IMPLEMENTED` | `PermissionAspect.java`, `RoleController.java` | `role`, `permission`, `role_permission` | `GET/POST/PUT/DELETE /roles` | `/roles/page.js` | Enforced | Passed | None | Maintained on `main` | None | P0 |
+| **Dynamic Tenant Industry Pack Provisioning** | `IMPLEMENTED` | `TenantService.java`, `TenantRegisterWizard.jsx` | `tenant`, `tenant_module_override` | `POST /tenants/register` | `/superadmin/page.js` | Enforced | Passed | None | Maintained on `main` | RBAC | P0 |
+| **Reusable Certification Engine** | `IMPLEMENTED` | `CertificationEngine.java` | `certification_registry` | Service API | Module UIs | Enforced | Passed | None | Universal credential engine | RBAC | P1 |
+| **Reusable Commission Engine** | `IMPLEMENTED` | `CommissionEngine.java` | `commission_rule` | Service API | Module UIs | Enforced | Passed | None | Universal sales incentive engine | RBAC | P1 |
+| **Reusable Roster & Shift Engine** | `IMPLEMENTED` | `RosterEngine.java` | `roster_shift_market` | Service API | Module UIs | Enforced | Passed | None | Universal shift market engine | RBAC | P1 |
+| **Reusable Allowance & Per-Diem Engine** | `IMPLEMENTED` | `AllowanceEngine.java` | `allowance_ledger` | Service API | Module UIs | Enforced | Passed | None | Universal mileage engine | RBAC | P1 |
+| **Reusable Piece-Rate Engine** | `IMPLEMENTED` | `PieceRateEngine.java` | `piece_rate_entry` | Service API | Module UIs | Enforced | Passed | None | Universal output pay engine | RBAC | P1 |
+| **Reusable Webhook & Integration Gateway** | `IMPLEMENTED` | `IntegrationGateway.java` | `integration_webhook_event` | Service API | Module UIs | Enforced | Passed | None | Idempotency & signature validation | RBAC | P1 |
+| **IT Services: Git/Jira Webhook Timesheet Ingestion** | `IMPLEMENTED` | `ItServicesModuleController.java` | `dev_worklog` | `GET/POST /api/v1/it-services/worklogs` | `/it-services/page.js` | Enforced | Passed | None | Integrated `IntegrationGateway` | Gateway | P1 |
+| **IT Services: Equity & Stock Vesting Tracker** | `IMPLEMENTED` | `ItServicesModuleController.java` | `equity_grant` | `GET/POST /api/v1/it-services/equity` | `/it-services/page.js` | Enforced | Passed | None | Finalized portal calculations | None | P2 |
+| **Manufacturing: Piece-Rate Production Payroll** | `IMPLEMENTED` | `ManufacturingModuleController.java` | `assembly_output` | `GET/POST /api/v1/manufacturing/output` | `/manufacturing/page.js` | Enforced | Passed | None | Connected `PieceRateEngine` | None | P1 |
+| **Manufacturing: Real-Time Biometric Gateway** | `IMPLEMENTED` | `BiometricSocketListenerService.java` | `biometric_punch` | TCP Listener 8099 | Dashboard log | Enforced | Passed | None | Hardened socket gateway | None | P1 |
+| **Manufacturing: Plant Machinery Maintenance Matrix** | `IMPLEMENTED` | `MachineryMaintenanceController.java` | `machinery_maintenance_task` | `GET/POST /api/v1/manufacturing/machinery` | `/manufacturing/page.js` | Enforced | Passed | None | Preventive maintenance matrix | RBAC | P2 |
+| **Retail: POS Sales Commission Sync** | `IMPLEMENTED` | `RetailModuleController.java` | `pos_commission` | `GET/POST /api/v1/retail/commissions` | `/retail/page.js` | Enforced | Passed | None | Connected `CommissionEngine` | Gateway | P1 |
+| **Retail: Shift Bidding Marketplace** | `IMPLEMENTED` | `RetailModuleController.java` | `shift_bid` | `GET/POST /api/v1/retail/shift-bids` | `/retail/page.js` | Enforced | Passed | None | Connected `RosterEngine` | None | P2 |
+| **Healthcare: Nurse Shift Swap Marketplace** | `IMPLEMENTED` | `HealthcareModuleController.java` | `shift_swap` | `GET/POST /api/v1/healthcare/roster` | `/healthcare/page.js` | Enforced | Passed | None | Connected `RosterEngine` | None | P1 |
+| **Healthcare: State License Registry Lookup** | `IMPLEMENTED` | `HealthcareModuleController.java` | `license_verification` | `GET/POST /api/v1/healthcare/verify-license` | `/healthcare/page.js` | Enforced | Passed | None | Connected `CertificationEngine` | Gateway | P1 |
+| **Healthcare: GxP Lab Qualification Matrix** | `IMPLEMENTED` | `HealthcareModuleController.java` | `gxp_qualification` | `GET/POST /api/v1/healthcare/credentials` | `/healthcare/page.js` | Enforced | Passed | None | Connected `CertificationEngine` | None | P2 |
+| **BFSI: ISO 20022 Direct Disbursement XML Gateway** | `IMPLEMENTED` | `BFSIServicesController.java` | Payment XML | `POST /api/v1/bfsi/disbursement/iso20022-xml` | `/bfsi/page.js` | Enforced | Passed | None | Schema-aware XML generator | Gateway | P1 |
+| **BFSI: Maker-Checker Dual-Authorization** | `IMPLEMENTED` | `BFSIServicesController.java` | `maker_checker_request` | `POST /api/v1/bfsi/maker-checker/request` | `/bfsi/page.js` | Enforced | Passed | None | Maker != Checker enforced | RBAC | P1 |
+| **BFSI: Mandatory 10-Day Block Leave Validator** | `IMPLEMENTED` | `BFSIServicesController.java` | Policy Rule | `POST /api/v1/bfsi/block-leave/validate` | `/bfsi/page.js` | Enforced | Passed | None | Consecutive leave validator | Leave | P2 |
+| **Hospitality: Tip Split & Distribution Pool** | `IMPLEMENTED` | `HospitalityModuleController.java` | `tip_pool` | `GET/POST /api/v1/hospitality/tips` | `/hospitality/page.js` | Enforced | Passed | None | Connected `CommissionEngine` | None | P2 |
+| **Hospitality: Housekeeping Room Cleaning Credit** | `IMPLEMENTED` | `HospitalityModuleController.java` | `room_credit` | `GET/POST /api/v1/hospitality/housekeeping` | `/hospitality/page.js` | Enforced | Passed | None | Connected `PieceRateEngine` | None | P2 |
+| **Construction: Weather Delay Auto-Attendance Pause** | `IMPLEMENTED` | `ConstructionModuleController.java` | Weather Trigger | `GET /api/v1/construction/weather-check` | `/construction/page.js` | Enforced | Passed | None | OpenWeatherMap API trigger | Gateway | P2 |
+| **Construction: Subcontractor Gate Pass Badge & QR** | `IMPLEMENTED` | `ConstructionModuleController.java` | Gate Pass Token | `POST /api/v1/construction/gate-pass/generate` | `/construction/page.js` | Enforced | Passed | None | Signed QR token generator | Security | P2 |
+| **Logistics: Driver DOT/EU Driving Hours Validator** | `IMPLEMENTED` | `LogisticsModuleController.java` | Driving Rules | `GET /api/v1/logistics/driving-hours/validate` | `/logistics/page.js` | Enforced | Passed | None | Jurisdiction policy engine | Roster | P1 |
+| **Logistics: Fleet Telematics Ingestion (Samsara/Geotab)** | `IMPLEMENTED` | `LogisticsModuleController.java` | Telematics Log | `POST /api/v1/logistics/telematics/sync` | `/logistics/page.js` | Enforced | Passed | None | Samsara/Geotab adapter | Gateway | P2 |
+| **Logistics: Per-KM Allowance Engine** | `IMPLEMENTED` | `LogisticsModuleController.java` | `allowance_ledger` | `POST /api/v1/logistics/allowance/calculate` | `/logistics/page.js` | Enforced | Passed | None | Connected `AllowanceEngine` | Payroll | P2 |
+| **Education: Faculty Lecture Credit Overload Payroll** | `IMPLEMENTED` | `EducationModuleController.java` | Lecture Credit | `POST /api/v1/education/lecture-credit/calculate` | Module UI | Enforced | Passed | None | Lecture credit multiplier | Payroll | P2 |
+| **Education: Tenure Track Milestone Review Workflow** | `IMPLEMENTED` | `EducationModuleController.java` | Tenure Pipeline | `GET /api/v1/education/tenure/reviews` | Module UI | Enforced | Passed | None | Multi-stage tenure pipeline | RBAC | P2 |
+| **Consulting: Partner Profit Share & Equity Dividend** | `IMPLEMENTED` | `ConsultingModuleController.java` | Profit Tier | `POST /api/v1/consulting/profit-share/calculate` | Module UI | Enforced | Passed | None | Tiered profit pool allocator | Payroll | P2 |
+| **Consulting: Billable Utilization Rate & Bench Analytics** | `IMPLEMENTED` | `ConsultingModuleController.java` | Utilization Metric | `GET /api/v1/consulting/utilization/analytics` | Module UI | Enforced | Passed | None | Utilization calculation engine | Timesheet | P2 |
+| **AI Workforce Copilot: Resume Screener & Attrition Risk** | `IMPLEMENTED` | `AiCopilotController.java` | `ai_scoring` | `POST /api/v1/ai-copilot/screen` | `/ai-copilot/page.js` | Enforced | Passed | None | Explainable scoring & RBAC guard | RBAC | P1 |
+| **Super Admin Cross-Tenant Macro Analytics** | `IMPLEMENTED` | `TenantAnalyticsController.java` | `tenant_metrics` | `GET /api/v1/superadmin/analytics` | `/superadmin/analytics/page.js` | Enforced | Passed | None | Macro ARR/MRR analytics | DB | P1 |
+| **Field-Level AES-256-GCM Encryption** | `IMPLEMENTED` | `FieldLevelEncryptionService.java` | Database columns | Internal utility | None | Encryption active | Passed | None | AES-256-GCM encryption | Security | P0 |
+| **Native Mobile App (Expo/React Native)** | `IMPLEMENTED` | `/mobile/` directory | Mobile API endpoints | Mobile JWT flow | Mobile screens | Enforced | Passed | None | React Native Expo package | Security | P2 |
