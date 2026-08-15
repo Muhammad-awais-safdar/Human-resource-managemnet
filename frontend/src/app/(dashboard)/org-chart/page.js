@@ -64,24 +64,20 @@ export default function OrgChartPage() {
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
 
-  const loadData = () => {
-    setError('');
-    // Fetch hierarchical tree
+  useEffect(() => {
+    let isMounted = true;
     apiClient.get('/org/tree')
-      .then(res => setTreeData(res))
+      .then(res => { if (isMounted) setTreeData(res); })
       .catch(err => {
         console.error(err);
-        setError(err.message || 'Failed to load organization tree hierarchy');
+        if (isMounted) setError(err.message || 'Failed to load organization tree hierarchy');
       });
 
-    // Fetch flat list for parent dropdown selectors
     apiClient.get('/org')
-      .then(res => setAllUnits(res))
+      .then(res => { if (isMounted) setAllUnits(res); })
       .catch(err => console.error(err));
-  };
 
-  useEffect(() => {
-    loadData();
+    return () => { isMounted = false; };
   }, []);
 
   const handleCreateNode = (e) => {

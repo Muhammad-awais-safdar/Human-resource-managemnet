@@ -8,23 +8,26 @@ export default function HospitalityPage() {
   const [tipPools, setTipPools] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchData = async () => {
-    try {
-      const [mRes, tRes] = await Promise.all([
-        apiClient.get('/verticals/hospitality/metrics').catch(() => ({})),
-        apiClient.get('/verticals/hospitality/tip-pools').catch(() => ([])),
-      ]);
-      setMetrics(mRes);
-      setTipPools(Array.isArray(tRes) ? tRes : []);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
-    fetchData();
+    let isMounted = true;
+    const load = async () => {
+      try {
+        const [mRes, tRes] = await Promise.all([
+          apiClient.get('/verticals/hospitality/metrics').catch(() => ({})),
+          apiClient.get('/verticals/hospitality/tip-pools').catch(() => ([])),
+        ]);
+        if (isMounted) {
+          setMetrics(mRes);
+          setTipPools(Array.isArray(tRes) ? tRes : []);
+        }
+      } catch (err) {
+        console.error(err);
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    };
+    load();
+    return () => { isMounted = false; };
   }, []);
 
   return (

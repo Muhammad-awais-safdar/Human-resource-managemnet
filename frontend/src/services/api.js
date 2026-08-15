@@ -152,4 +152,5 @@ const apiClient = {
   delete: (url, options) => customFetch(url, { method: 'DELETE', ...options }),
 };
 
+export { apiClient };
 export default apiClient;

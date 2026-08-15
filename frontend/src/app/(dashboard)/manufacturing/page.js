@@ -8,23 +8,26 @@ export default function ManufacturingPage() {
   const [wages, setWages] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchData = async () => {
-    try {
-      const [mRes, wRes] = await Promise.all([
-        apiClient.get('/verticals/manufacturing/metrics').catch(() => ({})),
-        apiClient.get('/verticals/manufacturing/piece-rate-wages').catch(() => ([])),
-      ]);
-      setMetrics(mRes);
-      setWages(Array.isArray(wRes) ? wRes : []);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
-    fetchData();
+    let isMounted = true;
+    const load = async () => {
+      try {
+        const [mRes, wRes] = await Promise.all([
+          apiClient.get('/verticals/manufacturing/metrics').catch(() => ({})),
+          apiClient.get('/verticals/manufacturing/piece-rate-wages').catch(() => ([])),
+        ]);
+        if (isMounted) {
+          setMetrics(mRes);
+          setWages(Array.isArray(wRes) ? wRes : []);
+        }
+      } catch (err) {
+        console.error(err);
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    };
+    load();
+    return () => { isMounted = false; };
   }, []);
 
   return (

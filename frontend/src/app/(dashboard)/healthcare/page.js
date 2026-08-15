@@ -9,25 +9,28 @@ export default function HealthcarePage() {
   const [licenses, setLicenses] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchData = async () => {
-    try {
-      const [mRes, rRes, lRes] = await Promise.all([
-        apiClient.get('/verticals/healthcare/metrics').catch(() => ({})),
-        apiClient.get('/verticals/healthcare/shift-rosters').catch(() => ([])),
-        apiClient.get('/verticals/healthcare/credentials').catch(() => ([])),
-      ]);
-      setMetrics(mRes);
-      setRosters(Array.isArray(rRes) ? rRes : []);
-      setLicenses(Array.isArray(lRes) ? lRes : []);
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
-    fetchData();
+    let isMounted = true;
+    const load = async () => {
+      try {
+        const [mRes, rRes, lRes] = await Promise.all([
+          apiClient.get('/verticals/healthcare/metrics').catch(() => ({})),
+          apiClient.get('/verticals/healthcare/shift-rosters').catch(() => ([])),
+          apiClient.get('/verticals/healthcare/credentials').catch(() => ([])),
+        ]);
+        if (isMounted) {
+          setMetrics(mRes);
+          setRosters(Array.isArray(rRes) ? rRes : []);
+          setLicenses(Array.isArray(lRes) ? lRes : []);
+        }
+      } catch (e) {
+        console.error(e);
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    };
+    load();
+    return () => { isMounted = false; };
   }, []);
 
   return (
