@@ -6,12 +6,8 @@
 
 ---
 
-## 🎯 1. Platform Infrastructure & Extension Sandboxing
+## 🎯 1. Platform Infrastructure & Dynamic Provisioning
 
-- [x] **Secure Isolated Execution Container for Uploaded Custom Plugins**
-  - [x] Implement Java Security Manager / GraalVM Context sandbox for executing arbitrary user-uploaded `.zip` plugin bundles in `/marketplace` (`PluginSandboxEngine.java`)
-  - [x] Add dynamic classloading isolation & plugin lifecycle state machine (Install, Enable, Disable, Uninstall) in `MarketplaceController.java` (`POST /suite/marketplace/plugins/upload`)
-  - [x] Implement resource usage limits (CPU time, Memory, IO operations) for custom plugins
 - [x] **Dynamic Tenant Industry Pack Provisioning Enhancements**
   - [x] Add Industry Capability Pack selector dropdown during tenant signup in Super Admin portal & onboarding wizard (`TenantRegisterWizard.jsx`)
   - [x] Build dynamic Flyway database schema migration runner for industry-specific tables during tenant onboarding
