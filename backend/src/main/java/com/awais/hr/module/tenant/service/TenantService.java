@@ -306,10 +306,10 @@ public class TenantService {
         String roleId = UUID.randomUUID().toString();
         String employeeId = UUID.randomUUID().toString();
         
-        jdbcTemplate.update("INSERT INTO permission (id, name, description) VALUES (?, ?, ?) ON CONFLICT DO NOTHING", p1, "corehr:employee:read", "Read access to employee profiles");
-        jdbcTemplate.update("INSERT INTO permission (id, name, description) VALUES (?, ?, ?) ON CONFLICT DO NOTHING", p2, "corehr:employee:write", "Write access to employee profiles");
-        jdbcTemplate.update("INSERT INTO permission (id, name, description) VALUES (?, ?, ?) ON CONFLICT DO NOTHING", p3, "corehr:org:write", "Manage organization structure and tree nodes");
-        jdbcTemplate.update("INSERT INTO permission (id, name, description) VALUES (?, ?, ?) ON CONFLICT DO NOTHING", p4, "corehr:settings:write", "Modify white-label tenant branding configurations");
+        jdbcTemplate.update("INSERT INTO permission (id, name, description, module_key, feature_key, action_key, ui_label, is_sensitive) VALUES (?, ?, ?, 'CORE_HR', 'EMPLOYEES', 'READ', 'View Employee Directory & Profiles', false) ON CONFLICT DO NOTHING", p1, "corehr:employee:read", "Read access to employee profiles");
+        jdbcTemplate.update("INSERT INTO permission (id, name, description, module_key, feature_key, action_key, ui_label, is_sensitive) VALUES (?, ?, ?, 'CORE_HR', 'EMPLOYEES', 'WRITE', 'Create & Edit Employee Records', false) ON CONFLICT DO NOTHING", p2, "corehr:employee:write", "Write access to employee profiles");
+        jdbcTemplate.update("INSERT INTO permission (id, name, description, module_key, feature_key, action_key, ui_label, is_sensitive) VALUES (?, ?, ?, 'CORE_HR', 'ORG_STRUCTURE', 'WRITE', 'Manage Org Chart & Departments', false) ON CONFLICT DO NOTHING", p3, "corehr:org:write", "Manage organization structure and tree nodes");
+        jdbcTemplate.update("INSERT INTO permission (id, name, description, module_key, feature_key, action_key, ui_label, is_sensitive) VALUES (?, ?, ?, 'CORE_HR', 'SETTINGS', 'WRITE', 'Configure Tenant Branding & Settings', false) ON CONFLICT DO NOTHING", p4, "corehr:settings:write", "Modify white-label tenant branding configurations");
         
         p1 = fetchPermissionId(jdbcTemplate, "corehr:employee:read", p1);
         p2 = fetchPermissionId(jdbcTemplate, "corehr:employee:write", p2);
@@ -317,19 +317,19 @@ public class TenantService {
         p4 = fetchPermissionId(jdbcTemplate, "corehr:settings:write", p4);
         
         String tenantAdminRoleId = UUID.randomUUID().toString();
-        jdbcTemplate.update("INSERT INTO role (id, name, description) VALUES (?, 'TENANT_ADMIN', 'Tenant organization workspace administrator') ON CONFLICT DO NOTHING", tenantAdminRoleId);
+        jdbcTemplate.update("INSERT INTO role (id, name, description, is_system_role, status) VALUES (?, 'TENANT_ADMIN', 'Tenant organization workspace administrator', true, 'ACTIVE') ON CONFLICT DO NOTHING", tenantAdminRoleId);
         List<String> existingRoles = jdbcTemplate.queryForList("SELECT id FROM role WHERE name = 'TENANT_ADMIN'", String.class);
         if (!existingRoles.isEmpty()) tenantAdminRoleId = existingRoles.get(0);
         
         // Seed default auxiliary roles into tenant schema for employee onboarding
-        jdbcTemplate.update("INSERT INTO role (id, name, description) VALUES (?, 'HR_MANAGER', 'Human resource department manager') ON CONFLICT DO NOTHING", UUID.randomUUID().toString());
-        jdbcTemplate.update("INSERT INTO role (id, name, description) VALUES (?, 'EMPLOYEE', 'Standard employee self-service user') ON CONFLICT DO NOTHING", UUID.randomUUID().toString());
-        jdbcTemplate.update("INSERT INTO role (id, name, description) VALUES (?, 'RECRUITER', 'Talent acquisition recruiter') ON CONFLICT DO NOTHING", UUID.randomUUID().toString());
+        jdbcTemplate.update("INSERT INTO role (id, name, description, is_system_role, status) VALUES (?, 'HR_MANAGER', 'Human resource department manager', true, 'ACTIVE') ON CONFLICT DO NOTHING", UUID.randomUUID().toString());
+        jdbcTemplate.update("INSERT INTO role (id, name, description, is_system_role, status) VALUES (?, 'EMPLOYEE', 'Standard employee self-service user', true, 'ACTIVE') ON CONFLICT DO NOTHING", UUID.randomUUID().toString());
+        jdbcTemplate.update("INSERT INTO role (id, name, description, is_system_role, status) VALUES (?, 'RECRUITER', 'Talent acquisition recruiter', false, 'ACTIVE') ON CONFLICT DO NOTHING", UUID.randomUUID().toString());
         
-        jdbcTemplate.update("INSERT INTO role_permission (role_id, permission_id) VALUES (?, ?) ON CONFLICT DO NOTHING", tenantAdminRoleId, p1);
-        jdbcTemplate.update("INSERT INTO role_permission (role_id, permission_id) VALUES (?, ?) ON CONFLICT DO NOTHING", tenantAdminRoleId, p2);
-        jdbcTemplate.update("INSERT INTO role_permission (role_id, permission_id) VALUES (?, ?) ON CONFLICT DO NOTHING", tenantAdminRoleId, p3);
-        jdbcTemplate.update("INSERT INTO role_permission (role_id, permission_id) VALUES (?, ?) ON CONFLICT DO NOTHING", tenantAdminRoleId, p4);
+        jdbcTemplate.update("INSERT INTO role_permission (role_id, permission_id, access_scope) VALUES (?, ?, 'COMPANY') ON CONFLICT DO NOTHING", tenantAdminRoleId, p1);
+        jdbcTemplate.update("INSERT INTO role_permission (role_id, permission_id, access_scope) VALUES (?, ?, 'COMPANY') ON CONFLICT DO NOTHING", tenantAdminRoleId, p2);
+        jdbcTemplate.update("INSERT INTO role_permission (role_id, permission_id, access_scope) VALUES (?, ?, 'COMPANY') ON CONFLICT DO NOTHING", tenantAdminRoleId, p3);
+        jdbcTemplate.update("INSERT INTO role_permission (role_id, permission_id, access_scope) VALUES (?, ?, 'COMPANY') ON CONFLICT DO NOTHING", tenantAdminRoleId, p4);
 
         // Seed default Leave Policies (Vacation Types)
         jdbcTemplate.update("INSERT INTO leave_policy (id, name, allowance, description) VALUES (?, 'Annual Vacation', 20, 'Standard annual paid vacation allocation') ON CONFLICT DO NOTHING", UUID.randomUUID().toString());

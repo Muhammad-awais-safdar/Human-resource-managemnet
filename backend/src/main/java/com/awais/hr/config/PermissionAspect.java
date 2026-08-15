@@ -78,13 +78,14 @@ public class PermissionAspect {
             }
         }
 
-        // Query the database to check if the user has the required permission mapping
+        // Query the database to check if the user has the required permission mapping and active role
         JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
         String sql = "SELECT COUNT(*) FROM employee e " +
                      "JOIN employee_role er ON e.id = er.employee_id " +
-                     "JOIN role_permission rp ON er.role_id = rp.role_id " +
+                     "JOIN role r ON er.role_id = r.id " +
+                     "JOIN role_permission rp ON r.id = rp.role_id " +
                      "JOIN permission p ON rp.permission_id = p.id " +
-                     "WHERE e.email = ? AND p.name = ? AND e.status = 'ACTIVE'";
+                     "WHERE e.email = ? AND p.name = ? AND e.status = 'ACTIVE' AND COALESCE(r.status, 'ACTIVE') = 'ACTIVE'";
 
         Integer count = jdbcTemplate.queryForObject(sql, Integer.class, email, requiredPermission);
 
