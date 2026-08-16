@@ -30,10 +30,19 @@ public class TenantResolutionFilter implements Filter {
         String resolvedTenantId = null;
 
         if (tenantHeader != null && !tenantHeader.trim().isEmpty()) {
-            // Find tenant database mapping by subdomain header
-            Optional<Tenant> tenantOpt = tenantRepository.findBySubdomain(tenantHeader.trim());
-            if (tenantOpt.isPresent()) {
-                resolvedTenantId = tenantOpt.get().getId();
+            String headerVal = tenantHeader.trim();
+            if ("MASTER".equalsIgnoreCase(headerVal) || "SYSTEM_MASTER".equalsIgnoreCase(headerVal)) {
+                resolvedTenantId = "MASTER";
+            } else {
+                Optional<Tenant> tenantOpt = tenantRepository.findBySubdomain(headerVal);
+                if (tenantOpt.isEmpty()) {
+                    tenantOpt = tenantRepository.findById(headerVal);
+                }
+                if (tenantOpt.isPresent()) {
+                    resolvedTenantId = tenantOpt.get().getId();
+                } else {
+                    resolvedTenantId = headerVal;
+                }
             }
         } else {
             // Fallback: Resolve from Host header (e.g. acme.localhost:8080 or custom-domain.com)
