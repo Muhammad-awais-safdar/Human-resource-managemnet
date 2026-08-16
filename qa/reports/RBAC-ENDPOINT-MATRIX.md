@@ -1,6 +1,6 @@
 # Awais HR SaaS — RBAC Endpoint Access Control Matrix
 
-**Total Discovered Endpoints**: 433
+**Total Discovered Endpoints**: 434
 
 | Controller | Method | Endpoint | Permission | SYSTEM_ADMIN | TENANT_ADMIN | HR_MANAGER | LINE_MANAGER | FINANCE_ADMIN | RECRUITER | AUDITOR | EMPLOYEE |
 |:---|:---|:---|:---|:---|:---|:---|:---|:---|:---|:---|:---|
@@ -426,6 +426,7 @@
 | AuthController | POST | `/auth/login` | `AUTHENTICATED` | ALLOW | ALLOW | ALLOW | ALLOW | ALLOW | ALLOW | ALLOW | ALLOW |
 | AuthController | POST | `/auth/mfa/verify` | `AUTHENTICATED` | ALLOW | ALLOW | ALLOW | ALLOW | ALLOW | ALLOW | ALLOW | ALLOW |
 | AuthController | POST | `/auth/accept-invite` | `AUTHENTICATED` | ALLOW | ALLOW | ALLOW | ALLOW | ALLOW | ALLOW | ALLOW | ALLOW |
+| AuthController | GET | `/auth/me` | `AUTHENTICATED` | ALLOW | ALLOW | ALLOW | ALLOW | ALLOW | ALLOW | ALLOW | ALLOW |
 | PlatformSettingsController | ANY | `/suite/settings/suite/settings` | `AUTHENTICATED` | ALLOW | ALLOW | ALLOW | ALLOW | ALLOW | ALLOW | ALLOW | ALLOW |
 | PlatformSettingsController | GET | `/suite/settings` | `AUTHENTICATED` | ALLOW | ALLOW | ALLOW | ALLOW | ALLOW | ALLOW | ALLOW | ALLOW |
 | PlatformSettingsController | PUT | `/suite/settings` | `corehr:employee:read` | ALLOW | ALLOW | ALLOW | ALLOW | ALLOW | ALLOW | ALLOW | ALLOW |

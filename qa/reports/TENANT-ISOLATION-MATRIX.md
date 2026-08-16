@@ -1,6 +1,6 @@
 # Awais HR SaaS — Multi-Tenant Isolation Endpoint Matrix
 
-**Total Tenant-Scoped Endpoints**: 433
+**Total Tenant-Scoped Endpoints**: 434
 
 | Controller | Method | Endpoint | Tenant Isolation Mechanism | Cross-Tenant Access Standard | Status |
 |:---|:---|:---|:---|:---|:---|
@@ -426,6 +426,7 @@
 | AuthController | POST | `/auth/login` | Physical Dynamic Schema Datasource Routing (`TenantRoutingDataSource`) | HTTP 403 / 404 Empty Set | VERIFIED |
 | AuthController | POST | `/auth/mfa/verify` | Physical Dynamic Schema Datasource Routing (`TenantRoutingDataSource`) | HTTP 403 / 404 Empty Set | VERIFIED |
 | AuthController | POST | `/auth/accept-invite` | Physical Dynamic Schema Datasource Routing (`TenantRoutingDataSource`) | HTTP 403 / 404 Empty Set | VERIFIED |
+| AuthController | GET | `/auth/me` | Physical Dynamic Schema Datasource Routing (`TenantRoutingDataSource`) | HTTP 403 / 404 Empty Set | VERIFIED |
 | PlatformSettingsController | ANY | `/suite/settings/suite/settings` | Physical Dynamic Schema Datasource Routing (`TenantRoutingDataSource`) | HTTP 403 / 404 Empty Set | VERIFIED |
 | PlatformSettingsController | GET | `/suite/settings` | Physical Dynamic Schema Datasource Routing (`TenantRoutingDataSource`) | HTTP 403 / 404 Empty Set | VERIFIED |
 | PlatformSettingsController | PUT | `/suite/settings` | Physical Dynamic Schema Datasource Routing (`TenantRoutingDataSource`) | HTTP 403 / 404 Empty Set | VERIFIED |
