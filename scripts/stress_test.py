@@ -145,7 +145,7 @@ def send_request(endpoint, method="GET", data=None, token=None):
     req = urllib.request.Request(url, data=payload, headers=req_headers, method=method)
     start = time.time()
     try:
-        with urllib.request.urlopen(req) as resp:
+        with urllib.request.urlopen(req, timeout=5) as resp:
             elapsed = (time.time() - start) * 1000
             return resp.status, elapsed, endpoint
     except urllib.error.HTTPError as e:
@@ -154,6 +154,7 @@ def send_request(endpoint, method="GET", data=None, token=None):
     except Exception:
         elapsed = (time.time() - start) * 1000
         return 500, elapsed, endpoint
+
 
 def execute_random_scenario():
     user = random.choice(TEST_USERS)
