@@ -16,9 +16,11 @@
     <logger name="com.awais.hr" level="INFO" />
     <logger name="org.springframework.web" level="INFO" />
     <logger name="org.springframework.security" level="WARN" />
-    <logger name="org.hibernate" level="WARN" />
-    <logger name="org.hibernate.SQL" level="WARN" />
-    <logger name="org.hibernate.type.descriptor.sql" level="WARN" />
+    <logger name="org.hibernate" level="OFF" />
+    <logger name="org.hibernate.SQL" level="OFF" />
+    <logger name="org.hibernate.type.descriptor.sql" level="OFF" />
+    <logger name="org.hibernate.stat" level="OFF" />
+
     <logger name="org.springframework.jdbc" level="WARN" />
     <logger name="org.flywaydb" level="INFO" />
 
