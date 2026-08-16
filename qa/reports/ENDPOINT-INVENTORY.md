@@ -1,6 +1,6 @@
 # Awais HR Platform — Automated API Endpoint Inventory
 
-**Total Discovered Endpoints**: 433
+**Total Discovered Endpoints**: 434
 
 | Controller | Method | Endpoint | Permission | Sensitive | Financial | Maker-Checker |
 |:---|:---|:---|:---|:---|:---|:---|
@@ -426,6 +426,7 @@
 | AuthController | POST | `/auth/login` | `AUTHENTICATED` | NO | NO | NO |
 | AuthController | POST | `/auth/mfa/verify` | `AUTHENTICATED` | NO | NO | NO |
 | AuthController | POST | `/auth/accept-invite` | `AUTHENTICATED` | NO | NO | NO |
+| AuthController | GET | `/auth/me` | `AUTHENTICATED` | NO | NO | NO |
 | PlatformSettingsController | ANY | `/suite/settings/suite/settings` | `AUTHENTICATED` | NO | NO | NO |
 | PlatformSettingsController | GET | `/suite/settings` | `AUTHENTICATED` | NO | NO | NO |
 | PlatformSettingsController | PUT | `/suite/settings` | `corehr:employee:read` | NO | NO | NO |

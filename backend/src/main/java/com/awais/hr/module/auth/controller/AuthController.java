@@ -501,4 +501,78 @@ public class AuthController {
                     .body(Map.of("success", false, "message", "Failed to accept invite: " + e.getMessage()));
         }
     }
+
+    @GetMapping("/me")
+    public ResponseEntity<?> getCurrentUser(HttpServletRequest request) {
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("success", false, "message", "Missing or invalid authorization token header."));
+        }
+
+        String token = authHeader.substring(7);
+        if (!jwtUtils.validateToken(token)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("success", false, "message", "Expired or invalid authorization token."));
+        }
+
+        String email = jwtUtils.getEmailFromToken(token);
+        String tenantId = jwtUtils.getTenantIdFromToken(token);
+        String roles = jwtUtils.getRolesFromToken(token);
+
+        if ("MASTER".equalsIgnoreCase(tenantId)) {
+            Optional<PlatformUser> pUserOpt = findPlatformUserByEmailMaster(email);
+            if (pUserOpt.isPresent()) {
+                PlatformUser pUser = pUserOpt.get();
+                return ResponseEntity.ok(Map.of(
+                        "success", true,
+                        "tenantId", "MASTER",
+                        "subdomain", "platform",
+                        "user", Map.of(
+                                "id", pUser.getId(),
+                                "firstName", pUser.getFirstName(),
+                                "lastName", pUser.getLastName(),
+                                "email", pUser.getEmail(),
+                                "roles", roles != null ? roles : "SYSTEM_ADMIN",
+                                "role", roles != null ? roles.split(",")[0] : "SYSTEM_ADMIN"
+                        )
+                ));
+            }
+        }
+
+        // Subdomain / Tenant user
+        if (tenantId != null && !tenantId.isBlank()) {
+            DataSource ds = tenantService.getTenantDataSource(tenantId);
+            if (ds != null) {
+                JdbcTemplate tJdbc = new JdbcTemplate(ds);
+                try {
+                    Map<String, Object> emp = tJdbc.queryForMap(
+                            "SELECT id, first_name, last_name, email, employee_code FROM employee WHERE LOWER(email) = ? AND status = 'ACTIVE'",
+                            email.toLowerCase()
+                    );
+                    Optional<Tenant> tenantOpt = findTenantByIdMaster(tenantId);
+                    String subdomain = tenantOpt.map(Tenant::getSubdomain).orElse(tenantId);
+
+                    return ResponseEntity.ok(Map.of(
+                            "success", true,
+                            "tenantId", tenantId,
+                            "subdomain", subdomain,
+                            "user", Map.of(
+                                    "id", emp.get("id"),
+                                    "firstName", emp.get("first_name"),
+                                    "lastName", emp.get("last_name"),
+                                    "email", emp.get("email"),
+                                    "code", emp.get("employee_code"),
+                                    "roles", roles != null ? roles : "EMPLOYEE",
+                                    "role", roles != null ? roles.split(",")[0] : "EMPLOYEE"
+                            )
+                    ));
+                } catch (Exception ignored) {}
+            }
+        }
+
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(Map.of("success", false, "message", "User profile not found."));
+    }
 }
+

@@ -4642,6 +4642,17 @@
     "file": "backend/src/main/java/com/awais/hr/module/auth/controller/AuthController.java"
   },
   {
+    "controller": "AuthController",
+    "method": "GET",
+    "endpoint": "/auth/me",
+    "permission": "AUTHENTICATED",
+    "tenantScoped": true,
+    "sensitive": false,
+    "financial": false,
+    "makerChecker": false,
+    "file": "backend/src/main/java/com/awais/hr/module/auth/controller/AuthController.java"
+  },
+  {
     "controller": "PlatformSettingsController",
     "method": "ANY",
     "endpoint": "/suite/settings/suite/settings",
