@@ -91,6 +91,7 @@ export default function DashboardLayout({ children }) {
   }, [mounted]);
 
   const [activeModules, setActiveModules] = useState([]);
+  const [currentIndustry, setCurrentIndustry] = useState('GENERAL');
 
   useEffect(() => {
     apiClient.get('/tenants/active')
@@ -118,9 +119,25 @@ export default function DashboardLayout({ children }) {
         if (res && res.activeModules) {
           setActiveModules(res.activeModules);
         }
+        if (res && res.industryType) {
+          setCurrentIndustry(res.industryType);
+        }
       })
       .catch(() => {});
   }, [pathname]);
+
+  const handleIndustryChange = (newIndustry) => {
+    setCurrentIndustry(newIndustry);
+    apiClient.put('/tenants/current/industry', { industryType: newIndustry })
+      .then((res) => {
+        if (res && res.activeModules) {
+          setActiveModules(res.activeModules);
+        }
+      })
+      .catch((err) => {
+        console.error("Failed to switch tenant industry type", err);
+      });
+  };
 
   const hasModule = (modKey) => {
     if (!activeModules || activeModules.length === 0) return true; // fallback to show if loading
@@ -172,6 +189,29 @@ export default function DashboardLayout({ children }) {
         </div>
 
         <div className="flex items-center gap-3">
+          {/* Industry Vertical Switcher for Testing / On-the-fly Module Provisioning */}
+          <div className="hidden lg:flex items-center gap-1.5 bg-[var(--bg-surface-l2)] border border-[var(--border-subtle)] hover:border-indigo-500/40 rounded-lg px-2.5 py-1 transition-all">
+            <span className="font-bold text-[10px] uppercase tracking-wider text-indigo-400">Industry:</span>
+            <select
+              value={currentIndustry}
+              onChange={(e) => handleIndustryChange(e.target.value)}
+              className="bg-transparent border-none text-xs font-medium text-[var(--text-primary)] cursor-pointer focus:outline-none pr-1"
+            >
+              <option value="GENERAL" className="bg-slate-900 text-slate-100">🏢 General Enterprise</option>
+              <option value="HEALTHCARE" className="bg-slate-900 text-slate-100">🏥 Healthcare & Clinical</option>
+              <option value="IT_SERVICES" className="bg-slate-900 text-slate-100">💻 IT & Tech Services</option>
+              <option value="MANUFACTURING" className="bg-slate-900 text-slate-100">🏭 Manufacturing & Factory</option>
+              <option value="HOSPITALITY" className="bg-slate-900 text-slate-100">🏨 Hospitality & Restaurant</option>
+              <option value="AGRICULTURE" className="bg-slate-900 text-slate-100">🌾 Agritech & Agriculture</option>
+              <option value="RETAIL" className="bg-slate-900 text-slate-100">🛒 Retail & E-Commerce</option>
+              <option value="EDUCATION" className="bg-slate-900 text-slate-100">🎓 Education & Academics</option>
+              <option value="CONSTRUCTION" className="bg-slate-900 text-slate-100">🏗️ Construction & Safety</option>
+              <option value="LOGISTICS" className="bg-slate-900 text-slate-100">🚚 Logistics & Fleet</option>
+              <option value="FINANCIAL_SERVICES" className="bg-slate-900 text-slate-100">🏦 BFSI & Financial Services</option>
+              <option value="ALL_ENABLED" className="bg-slate-900 text-slate-100">⚡ All Modules Enabled (Test Mode)</option>
+            </select>
+          </div>
+
           {/* Notification Bell */}
           <button className="relative p-2 rounded-lg text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface-l2)] transition-colors cursor-pointer">
             <Bell className="w-4 h-4" />

@@ -1,0 +1,69 @@
+name: Enterprise Multi-Tenant QA Automation Suite
+
+on:
+  push:
+    branches: [ main, phase5-audit ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  qa-automation:
+    name: Run Enterprise QA & Security Matrix
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: awais_hr_db
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgrespassword
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Setup Java 21 JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Setup Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install QA Python Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pytest requests httpx pytest-html pytest-cov pytest-playwright faker python-dotenv
+          playwright install chromium
+
+      - name: Discover Endpoints & Generate QA Matrix
+        run: |
+          python qa/scripts/discover_endpoints.py
+          python qa/scripts/generate_matrix.py
+
+      - name: Run Backend Unit & Integration Tests
+        run: |
+          mvn clean test -f backend/pom.xml
+
+      - name: Execute Python QA Automation Suite
+        run: |
+          pytest qa/tests -v --html=qa/reports/report.html --cov=qa
+
+      - name: Upload QA Reports & Artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: qa-automation-reports
+          path: qa/reports/
