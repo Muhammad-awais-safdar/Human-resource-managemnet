@@ -14,12 +14,20 @@ html, body {
   background: var(--bg-primary);
   color: var(--text-primary);
   font-family: var(--font-sans);
+  font-size: 16px;
   margin: 0;
   padding: 0;
+  -webkit-font-smoothing: antialiased;
 }
 
 *, *::before, *::after {
   box-sizing: border-box;
+}
+
+/* WCAG 2.2 AA Keyboard Focus Indicators */
+:focus-visible {
+  outline: 2px solid var(--primary) !important;
+  outline-offset: 2px !important;
 }
 
 input, select, textarea, button {
@@ -28,11 +36,46 @@ input, select, textarea, button {
 }
 
 select {
-  background-color: #1e293b !important;
-  color: #f1f5f9 !important;
+  background-color: var(--bg-surface-muted) !important;
+  color: var(--text-primary) !important;
 }
 
 select option {
-  background-color: #1e293b !important;
-  color: #f1f5f9 !important;
+  background-color: var(--bg-surface-muted) !important;
+  color: var(--text-primary) !important;
+}
+
+/* Accessible Screen Reader Only Utility */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* Utility Animations for Tooltips, Modal & Product Tour */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulseGlow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.4); }
+  50% { box-shadow: 0 0 0 8px rgba(99, 102, 241, 0.1); }
+}
+
+.animate-fade-in {
+  animation: fadeIn var(--motion-fast) ease-out forwards;
+}
+
+.tour-target-highlight {
+  position: relative;
+  z-index: 10001 !important;
+  animation: pulseGlow 2s infinite !important;
+  border-radius: var(--radius-md);
 }

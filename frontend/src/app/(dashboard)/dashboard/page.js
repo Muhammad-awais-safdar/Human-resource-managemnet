@@ -3,6 +3,12 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import apiClient from '../../../services/api';
+import { StatCard } from '@/components/primitives/Card';
+import { Button } from '@/components/primitives/Button';
+import { Badge } from '@/components/primitives/Badge';
+import { SetupChecklistWidget } from '@/components/onboarding/SetupChecklistWidget';
+import { OnboardingWizard } from '@/components/onboarding/OnboardingWizard';
+import { useProductTour } from '@/context/ProductTourContext';
 
 export default function DashboardPage() {
   const [metrics, setMetrics] = useState({
@@ -17,6 +23,9 @@ export default function DashboardPage() {
   const [workspaceName, setWorkspaceName] = useState('Workspace');
   const [userRole, setUserRole] = useState('TENANT_ADMIN');
   const [userName, setUserName] = useState('');
+  const [isOnboardingOpen, setIsOnboardingOpen] = useState(false);
+
+  const { startTour } = useProductTour();
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -57,172 +66,135 @@ export default function DashboardPage() {
         }
       })
       .catch((err) => console.error(err));
-  }, []);
 
-  // 1. SYSTEM ADMIN (SaaS Product Owner) Dashboard View
-  if (userRole === 'SYSTEM_ADMIN') {
-    return (
-      <div>
-        <header className="page-header" style={{ borderLeft: '4px solid #facc15', paddingLeft: '16px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{ fontSize: '0.8rem', background: 'rgba(234, 179, 8, 0.2)', color: '#facc15', padding: '2px 8px', borderRadius: '4px', fontWeight: '700' }}>👑 SAAS PRODUCT OWNER</span>
-          </div>
-          <h1 className="page-title" style={{ marginTop: '8px' }}>Platform Control Dashboard</h1>
-          <p className="page-subtitle">Multi-tenant SaaS platform administration, enterprise tenant provisioning & global system infrastructure.</p>
-        </header>
+    // Auto-trigger welcome tour on first visit
+    setTimeout(() => {
+      startTour('welcome-overview');
+    }, 1200);
+  }, [startTour]);
 
-        <div className="dashboard-grid">
-          <div className="stats-card" style={{ borderTop: '3px solid #facc15' }}>
-            <div className="stats-title">Active Platform Tenants</div>
-            <div className="stats-value" style={{ color: '#facc15' }}>{metrics.activeTenants} Enterprise</div>
-          </div>
-          <div className="stats-card" style={{ borderTop: '3px solid #10b981' }}>
-            <div className="stats-title">Global DB Connection Pools</div>
-            <div className="stats-value" style={{ color: '#10b981' }}>PostgreSQL Hikari</div>
-          </div>
-          <div className="stats-card" style={{ borderTop: '3px solid #6366f1' }}>
-            <div className="stats-title">Platform Infrastructure Status</div>
-            <div className="stats-value" style={{ color: '#6366f1' }}>100% Operational</div>
-          </div>
-          <div className="stats-card" style={{ borderTop: '3px solid #a855f7' }}>
-            <div className="stats-title">Security & Audit Ledger</div>
-            <div className="stats-value" style={{ color: '#a855f7' }}>Zero Breaches</div>
-          </div>
-        </div>
-
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '20px', marginTop: '24px' }}>
-          <div className="form-card" style={{ maxWidth: '100%' }}>
-            <h3>👑 SaaS Product Owner Actions</h3>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '16px' }}>
-              Manage global multi-tenant settings, provision new enterprise clients, and audit platform connection routing.
-            </p>
-            <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-              <Link href="/tenants" className="btn btn-primary" style={{ textDecoration: 'none', background: 'linear-gradient(135deg, #eab308, #ca8a04)' }}>
-                🏢 Provision New Enterprise Tenant
-              </Link>
-              <Link href="/superadmin/analytics" className="btn btn-secondary" style={{ textDecoration: 'none' }}>
-                📈 View SaaS Tenant Analytics
-              </Link>
-              <Link href="/audit" className="btn btn-secondary" style={{ textDecoration: 'none' }}>
-                📋 System Audit Ledger
-              </Link>
-            </div>
-          </div>
-
-          <div className="form-card" style={{ maxWidth: '100%' }}>
-            <h3>⚡ Dynamic Routing Engine Status</h3>
-            <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: '1.7' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid var(--border-light)' }}>
-                <span>Dynamic DataSource Router:</span> <strong style={{ color: '#10b981' }}>Active (HikariCP)</strong>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid var(--border-light)' }}>
-                <span>Redis Multi-Tenant Cache:</span> <strong style={{ color: '#6366f1' }}>Connected</strong>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0' }}>
-                <span>Flyway Schema Version:</span> <strong>Auto-Migrated (V1-V71)</strong>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // 2. TENANT ADMIN Dashboard View
-  if (userRole === 'TENANT_ADMIN' || userRole === 'HR_MANAGER') {
-    return (
-      <div>
-        <header className="page-header" style={{ borderLeft: '4px solid #6366f1', paddingLeft: '16px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{ fontSize: '0.8rem', background: 'rgba(99, 102, 241, 0.2)', color: '#818cf8', padding: '2px 8px', borderRadius: '4px', fontWeight: '700' }}>🏢 TENANT ADMINISTRATOR</span>
-          </div>
-          <h1 className="page-title" style={{ marginTop: '8px' }}>{workspaceName} Administration</h1>
-          <p className="page-subtitle">Manage organization structure, workforce lifecycle, payroll calculations, and corporate branding.</p>
-        </header>
-
-        <div className="dashboard-grid">
-          <div className="stats-card">
-            <div className="stats-title">Legal Entities</div>
-            <div className="stats-value">{metrics.legalEntities}</div>
-          </div>
-          <div className="stats-card">
-            <div className="stats-title">Cost Centers</div>
-            <div className="stats-value">{metrics.costCenters}</div>
-          </div>
-          <div className="stats-card">
-            <div className="stats-title">Departments</div>
-            <div className="stats-value">{metrics.departments}</div>
-          </div>
-          <div className="stats-card">
-            <div className="stats-title">Teams</div>
-            <div className="stats-value">{metrics.teams}</div>
-          </div>
-        </div>
-
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '20px', marginTop: '24px' }}>
-          <div className="form-card" style={{ maxWidth: '100%' }}>
-            <h3>🏢 Company Administration Links</h3>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '16px' }}>
-              Quick access controls for managing your company workforce structure and white-labeling configurations.
-            </p>
-            <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-              <Link href="/org-chart" className="btn btn-primary" style={{ textDecoration: 'none' }}>
-                🏢 Manage Org Chart
-              </Link>
-              <Link href="/payroll" className="btn btn-secondary" style={{ textDecoration: 'none' }}>
-                💰 Run Payroll Engine
-              </Link>
-              <Link href="/settings" className="btn btn-secondary" style={{ textDecoration: 'none' }}>
-                🎨 Workspace Branding
-              </Link>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // 3. EMPLOYEE Self-Service Dashboard View
   return (
-    <div>
-      <header className="page-header" style={{ borderLeft: '4px solid #10b981', paddingLeft: '16px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <span style={{ fontSize: '0.8rem', background: 'rgba(16, 185, 129, 0.2)', color: '#34d399', padding: '2px 8px', borderRadius: '4px', fontWeight: '700' }}>👤 EMPLOYEE ESS PORTAL</span>
-        </div>
-        <h1 className="page-title" style={{ marginTop: '8px' }}>Welcome back, {userName || 'Employee'}</h1>
-        <p className="page-subtitle">Your personal employee self-service hub at {workspaceName}.</p>
-      </header>
+    <div className="space-y-6">
+      <OnboardingWizard isOpen={isOnboardingOpen} onClose={() => setIsOnboardingOpen(false)} />
 
-      <div className="dashboard-grid">
-        <div className="stats-card" style={{ borderTop: '3px solid #10b981' }}>
-          <div className="stats-title">Vacation Allowance</div>
-          <div className="stats-value" style={{ color: '#10b981' }}>20 Days Available</div>
+      {/* 1. WELCOME BANNER */}
+      <div className="p-6 bg-gradient-to-r from-slate-900 via-indigo-950/40 to-slate-900 border border-slate-800 rounded-2xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-xl">
+        <div>
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-xs font-extrabold uppercase tracking-wider text-indigo-400">
+              {userRole === 'SYSTEM_ADMIN' ? '👑 Platform Super Admin' : '🏢 ' + workspaceName}
+            </span>
+            <Badge variant="primary" size="sm">Live Session</Badge>
+          </div>
+          <h1 className="text-2xl font-black text-white tracking-tight">
+            Welcome back, {userName || 'Enterprise Administrator'}
+          </h1>
+          <p className="text-xs text-slate-300 mt-1 max-w-xl">
+            Here is your live operational overview across workforce, organization hierarchy, payroll, and compliance.
+          </p>
         </div>
-        <div className="stats-card" style={{ borderTop: '3px solid #6366f1' }}>
-          <div className="stats-title">Shift Schedule</div>
-          <div className="stats-value" style={{ color: '#6366f1' }}>Morning (09:00 - 17:00)</div>
-        </div>
-        <div className="stats-card" style={{ borderTop: '3px solid #a855f7' }}>
-          <div className="stats-title">Pending Approvals</div>
-          <div className="stats-value" style={{ color: '#a855f7' }}>0 Requests</div>
-        </div>
-        <div className="stats-card" style={{ borderTop: '3px solid #facc15' }}>
-          <div className="stats-title">Performance Rating</div>
-          <div className="stats-value" style={{ color: '#facc15' }}>94% Top Tier</div>
+
+        <div className="flex items-center gap-3 shrink-0">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => startTour('welcome-overview', true)}
+          >
+            🚀 Guided Tour
+          </Button>
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={() => setIsOnboardingOpen(true)}
+          >
+            ✨ Workspace Wizard
+          </Button>
         </div>
       </div>
 
-      <div className="form-card" style={{ maxWidth: '100%', marginTop: '24px' }}>
-        <h3>👤 Employee Quick Actions</h3>
-        <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginTop: '12px' }}>
-          <Link href="/ess" className="btn btn-primary" style={{ textDecoration: 'none' }}>
-            👤 View My ESS Profile
+      {/* 2. SETUP CHECKLIST WIDGET */}
+      <SetupChecklistWidget onOpenWizard={() => setIsOnboardingOpen(true)} />
+
+      {/* 3. ACTION REQUIRED BAR */}
+      <div className="p-4 bg-amber-950/20 border border-amber-500/30 rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <div className="p-2 rounded-lg bg-amber-500/20 text-amber-400">
+            ⚠️
+          </div>
+          <div>
+            <h4 className="text-xs font-bold text-amber-300">Action Required Overview</h4>
+            <p className="text-[11px] text-slate-300">
+              2 pending leave approvals, 1 expense claim review, and 3 upcoming employee certification renewals.
+            </p>
+          </div>
+        </div>
+
+        <Link href="/approvals">
+          <Button variant="warning" size="sm">
+            Review Approvals
+          </Button>
+        </Link>
+      </div>
+
+      {/* 4. EXECUTIVE KPI CARDS */}
+      <div data-tour="dashboard-kpis" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatCard
+          title="Legal Entities"
+          value={metrics.legalEntities}
+          subtitle="Registered corporate units"
+          status="primary"
+          trend="Active"
+          trendDirection="up"
+        />
+        <StatCard
+          title="Cost Centers"
+          value={metrics.costCenters}
+          subtitle="Financial allocation centers"
+          status="success"
+          trend="Operational"
+          trendDirection="up"
+        />
+        <StatCard
+          title="Departments"
+          value={metrics.departments}
+          subtitle="Functional divisions"
+          status="warning"
+          trend="Configured"
+          trendDirection="up"
+        />
+        <StatCard
+          title="Active Teams"
+          value={metrics.teams}
+          subtitle="Operational workgroups"
+          status="danger"
+          trend="Managed"
+          trendDirection="up"
+        />
+      </div>
+
+      {/* 5. QUICK ACTIONS PANEL */}
+      <div data-tour="quick-actions" className="p-6 bg-slate-900/90 border border-slate-800 rounded-xl">
+        <h3 className="text-sm font-bold text-white mb-3">⚡ Quick Actions & Workflows</h3>
+        <div className="flex flex-wrap gap-3">
+          <Link href="/employees">
+            <Button variant="primary" size="sm">
+              👥 Employee Directory
+            </Button>
           </Link>
-          <Link href="/leaves" className="btn btn-secondary" style={{ textDecoration: 'none' }}>
-            🏖️ Request Vacation Leave
+          <Link href="/payroll">
+            <Button variant="secondary" size="sm">
+              💰 Calculate Payroll
+            </Button>
           </Link>
-          <Link href="/learning" className="btn btn-secondary" style={{ textDecoration: 'none' }}>
-            🎓 LMS Learning Courses
+          <Link href="/org-chart">
+            <Button variant="outline" size="sm">
+              🏢 View Org Chart
+            </Button>
+          </Link>
+          <Link href="/roles">
+            <Button variant="outline" size="sm">
+              🔐 Configure RBAC
+            </Button>
           </Link>
         </div>
       </div>
