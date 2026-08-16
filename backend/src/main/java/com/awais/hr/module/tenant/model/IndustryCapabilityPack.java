@@ -62,6 +62,15 @@ public class IndustryCapabilityPack {
 
         // 11. GENERAL
         INDUSTRY_MODULE_MAP.put("GENERAL", coreModules);
+
+        // 12. ALL MODULES (Super Testing Mode)
+        Set<String> allMods = new HashSet<>();
+        for (List<String> mods : INDUSTRY_MODULE_MAP.values()) {
+            allMods.addAll(mods);
+        }
+        List<String> allList = new ArrayList<>(allMods);
+        INDUSTRY_MODULE_MAP.put("ALL", allList);
+        INDUSTRY_MODULE_MAP.put("ALL_ENABLED", allList);
     }
 
     public static List<String> getEnabledModules(String industryType) {

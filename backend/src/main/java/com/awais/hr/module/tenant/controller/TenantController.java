@@ -60,14 +60,19 @@ public class TenantController {
         }
         
         List<String> activeModules = new ArrayList<>();
+        String currentIndustry = "GENERAL";
+
         if (tenantId != null && !tenantId.isBlank()) {
             Optional<Tenant> tenantOpt = tenantRepository.findById(tenantId);
             if (tenantOpt.isEmpty()) {
                 tenantOpt = tenantRepository.findBySubdomain(tenantId.toLowerCase().trim());
             }
             if (tenantOpt.isPresent()) {
-                String industry = tenantOpt.get().getIndustryType();
-                activeModules = com.awais.hr.module.tenant.model.IndustryCapabilityPack.getEnabledModules(industry);
+                currentIndustry = tenantOpt.get().getIndustryType();
+                if (currentIndustry == null || currentIndustry.isBlank()) {
+                    currentIndustry = "GENERAL";
+                }
+                activeModules = com.awais.hr.module.tenant.model.IndustryCapabilityPack.getEnabledModules(currentIndustry);
             }
         }
 
@@ -77,7 +82,65 @@ public class TenantController {
 
         return ResponseEntity.ok(Map.of(
                 "tenantId", tenantId != null ? tenantId : "DEFAULT",
+                "industryType", currentIndustry,
                 "activeModules", activeModules
+        ));
+    }
+
+    @GetMapping("/industry-types")
+    public ResponseEntity<List<Map<String, String>>> getIndustryTypes() {
+        List<Map<String, String>> types = List.of(
+            Map.of("code", "GENERAL", "label", "🏢 General Enterprise"),
+            Map.of("code", "HEALTHCARE", "label", "🏥 Healthcare & Clinical"),
+            Map.of("code", "IT_SERVICES", "label", "💻 IT & Tech Services"),
+            Map.of("code", "MANUFACTURING", "label", "🏭 Manufacturing & Factory"),
+            Map.of("code", "HOSPITALITY", "label", "🏨 Hospitality & Restaurant"),
+            Map.of("code", "AGRICULTURE", "label", "🌾 Agritech & Agriculture"),
+            Map.of("code", "RETAIL", "label", "🛒 Retail & E-Commerce"),
+            Map.of("code", "EDUCATION", "label", "🎓 Education & Academics"),
+            Map.of("code", "CONSTRUCTION", "label", "🏗️ Construction & Safety"),
+            Map.of("code", "LOGISTICS", "label", "🚚 Logistics & Fleet"),
+            Map.of("code", "FINANCIAL_SERVICES", "label", "🏦 BFSI & Financial Services"),
+            Map.of("code", "ALL_ENABLED", "label", "⚡ All Industry Features Enabled (Test Mode)")
+        );
+        return ResponseEntity.ok(types);
+    }
+
+    @PutMapping("/current/industry")
+    public ResponseEntity<Map<String, Object>> updateTenantIndustry(
+            @RequestBody Map<String, String> body,
+            HttpServletRequest request) {
+        String newIndustry = body.get("industryType");
+        if (newIndustry == null || newIndustry.isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "message", "industryType is required"));
+        }
+
+        String tenantId = com.awais.hr.context.TenantContextHolder.getCurrentTenant();
+        if (tenantId == null || tenantId.isBlank()) {
+            tenantId = request.getHeader("X-Tenant");
+        }
+
+        String targetIndustry = newIndustry.toUpperCase().trim();
+
+        if (tenantId != null && !tenantId.isBlank()) {
+            Optional<Tenant> tenantOpt = tenantRepository.findById(tenantId);
+            if (tenantOpt.isEmpty()) {
+                tenantOpt = tenantRepository.findBySubdomain(tenantId.toLowerCase().trim());
+            }
+            if (tenantOpt.isPresent()) {
+                Tenant tenant = tenantOpt.get();
+                tenant.setIndustryType(targetIndustry);
+                tenantRepository.save(tenant);
+            }
+        }
+
+        List<String> enabledModules = com.awais.hr.module.tenant.model.IndustryCapabilityPack.getEnabledModules(targetIndustry);
+
+        return ResponseEntity.ok(Map.of(
+            "success", true,
+            "message", "Tenant industry type updated successfully to " + targetIndustry,
+            "industryType", targetIndustry,
+            "activeModules", enabledModules
         ));
     }
 
