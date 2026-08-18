@@ -5,6 +5,14 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 BACKEND_DIR="$DIR/backend"
 FRONTEND_DIR="$DIR/frontend"
 
+# Load environment variables from .env if present
+if [ -f "$DIR/.env" ]; then
+    echo "Loading environment variables from .env..."
+    set -a
+    source "$DIR/.env"
+    set +a
+fi
+
 # Execution commands
 BACKEND_CMD="mvn spring-boot:run"
 FRONTEND_CMD="npm run dev"
@@ -54,13 +62,13 @@ start_observability_platform() {
 start_observability_platform
 
 # Clean ports first
-kill_port 8080
-kill_port 3000
+kill_port "${BACKEND_PORT:-8080}"
+kill_port "${FRONTEND_PORT:-3000}"
 kill_port 5173
 echo "Ports cleared. Launching development environment..."
 echo "--------------------------------------------------------"
-echo "💻 Frontend Web App:          http://localhost:3000"
-echo "⚙️ Backend API Engine:        http://localhost:8080"
+echo "💻 Frontend Web App:          http://localhost:${FRONTEND_PORT:-3000}"
+echo "⚙️ Backend API Engine:        http://localhost:${BACKEND_PORT:-8080}"
 echo "--------------------------------------------------------"
 
 # Detect desktop environment terminal emulators
