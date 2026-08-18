@@ -1,12 +1,13 @@
 apiVersion: 1
 
 providers:
-  - name: 'Awais HR Enterprise SaaS Dashboards'
+  - name: 'HRM Dashboards'
     orgId: 1
-    folder: 'Awais HR Observability'
+    folder: 'HRM — Production'
+    folderUid: 'hrm-folder'
     type: file
     disableDeletion: false
-    updateIntervalSeconds: 10
+    updateIntervalSeconds: 30
     allowUiUpdates: true
     options:
       path: /var/lib/grafana/dashboards

@@ -1,0 +1,125 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "graphTooltip": 1,
+  "id": null,
+  "title": "HRM \u2014 Infrastructure",
+  "uid": "hrm-infrastructure",
+  "tags": ["hrm", "infrastructure", "docker", "containers"],
+  "timezone": "browser",
+  "schemaVersion": 38,
+  "version": 1,
+  "refresh": "30s",
+  "time": { "from": "now-1h", "to": "now" },
+  "links": [{ "title": "Overview", "url": "/d/hrm-overview", "type": "link" }],
+
+  "panels": [
+    {
+      "id": 1, "type": "row", "title": "HOST METRICS",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 }, "collapsed": false
+    },
+    {
+      "id": 2, "title": "CPU Usage %",
+      "type": "stat", "gridPos": { "h": 4, "w": 4, "x": 0, "y": 1 },
+      "targets": [{ "expr": "100 - (avg(rate(node_cpu_seconds_total{mode=\"idle\"}[5m])) * 100)", "legendFormat": "" }],
+      "options": { "colorMode": "background", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "fieldConfig": { "defaults": { "unit": "percent", "decimals": 1, "thresholds": { "mode": "absolute", "steps": [{"color":"green","value":null},{"color":"yellow","value":70},{"color":"red","value":88}] } } }
+    },
+    {
+      "id": 3, "title": "Memory Usage %",
+      "type": "stat", "gridPos": { "h": 4, "w": 4, "x": 4, "y": 1 },
+      "targets": [{ "expr": "((node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / node_memory_MemTotal_bytes) * 100", "legendFormat": "" }],
+      "options": { "colorMode": "background", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "fieldConfig": { "defaults": { "unit": "percent", "decimals": 1, "thresholds": { "mode": "absolute", "steps": [{"color":"green","value":null},{"color":"yellow","value":75},{"color":"red","value":90}] } } }
+    },
+    {
+      "id": 4, "title": "Available Memory",
+      "type": "stat", "gridPos": { "h": 4, "w": 4, "x": 8, "y": 1 },
+      "targets": [{ "expr": "node_memory_MemAvailable_bytes", "legendFormat": "" }],
+      "options": { "colorMode": "background", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "fieldConfig": { "defaults": { "unit": "bytes", "thresholds": { "mode": "absolute", "steps": [{"color":"red","value":null},{"color":"yellow","value":1073741824},{"color":"green","value":4294967296}] } } }
+    },
+    {
+      "id": 5, "title": "Disk Usage %",
+      "type": "stat", "gridPos": { "h": 4, "w": 4, "x": 12, "y": 1 },
+      "targets": [{ "expr": "((node_filesystem_size_bytes{mountpoint=\"/\",fstype!=\"tmpfs\"} - node_filesystem_free_bytes{mountpoint=\"/\",fstype!=\"tmpfs\"}) / node_filesystem_size_bytes{mountpoint=\"/\",fstype!=\"tmpfs\"}) * 100", "legendFormat": "" }],
+      "options": { "colorMode": "background", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "fieldConfig": { "defaults": { "unit": "percent", "decimals": 1, "thresholds": { "mode": "absolute", "steps": [{"color":"green","value":null},{"color":"yellow","value":75},{"color":"red","value":90}] } } }
+    },
+    {
+      "id": 6, "title": "Network In",
+      "type": "stat", "gridPos": { "h": 4, "w": 4, "x": 16, "y": 1 },
+      "targets": [{ "expr": "sum(rate(node_network_receive_bytes_total{device!=\"lo\"}[5m]))", "legendFormat": "" }],
+      "options": { "colorMode": "background", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "fieldConfig": { "defaults": { "unit": "Bps", "thresholds": { "mode": "absolute", "steps": [{"color":"blue","value":null}] } } }
+    },
+    {
+      "id": 7, "title": "Network Out",
+      "type": "stat", "gridPos": { "h": 4, "w": 4, "x": 20, "y": 1 },
+      "targets": [{ "expr": "sum(rate(node_network_transmit_bytes_total{device!=\"lo\"}[5m]))", "legendFormat": "" }],
+      "options": { "colorMode": "background", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "fieldConfig": { "defaults": { "unit": "Bps", "thresholds": { "mode": "absolute", "steps": [{"color":"blue","value":null}] } } }
+    },
+
+    {
+      "id": 10, "type": "row", "title": "HOST TIME-SERIES",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 5 }, "collapsed": false
+    },
+    {
+      "id": 11, "title": "CPU Usage History",
+      "type": "timeseries", "gridPos": { "h": 8, "w": 8, "x": 0, "y": 6 },
+      "targets": [{ "expr": "100 - (avg by (instance) (rate(node_cpu_seconds_total{mode=\"idle\"}[5m])) * 100)", "legendFormat": "CPU %" }],
+      "fieldConfig": { "defaults": { "unit": "percent", "min": 0, "max": 100, "custom": { "drawStyle": "line", "lineInterpolation": "smooth", "fillOpacity": 15 } } }
+    },
+    {
+      "id": 12, "title": "Memory Usage History",
+      "type": "timeseries", "gridPos": { "h": 8, "w": 8, "x": 8, "y": 6 },
+      "targets": [
+        { "expr": "node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes", "legendFormat": "Used" },
+        { "expr": "node_memory_MemTotal_bytes", "legendFormat": "Total" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "bytes", "custom": { "drawStyle": "line", "lineInterpolation": "smooth", "fillOpacity": 10 } } }
+    },
+    {
+      "id": 13, "title": "Network Throughput",
+      "type": "timeseries", "gridPos": { "h": 8, "w": 8, "x": 16, "y": 6 },
+      "targets": [
+        { "expr": "sum(rate(node_network_receive_bytes_total{device!=\"lo\"}[5m]))",  "legendFormat": "In" },
+        { "expr": "sum(rate(node_network_transmit_bytes_total{device!=\"lo\"}[5m]))", "legendFormat": "Out" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "Bps", "custom": { "drawStyle": "line", "lineInterpolation": "smooth", "fillOpacity": 10 } } }
+    },
+
+    {
+      "id": 20, "type": "row", "title": "CONTAINER METRICS (cAdvisor)",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 14 }, "collapsed": false
+    },
+    {
+      "id": 21, "title": "Container CPU % (awais-hr-*)",
+      "type": "timeseries", "gridPos": { "h": 9, "w": 12, "x": 0, "y": 15 },
+      "targets": [{ "expr": "rate(container_cpu_usage_seconds_total{name=~\"awais-hr-.*\",cpu=\"total\"}[5m]) * 100", "legendFormat": "{{ name }}" }],
+      "fieldConfig": { "defaults": { "unit": "percent", "custom": { "drawStyle": "line", "lineInterpolation": "smooth", "fillOpacity": 8 } } }
+    },
+    {
+      "id": 22, "title": "Container Memory Usage (awais-hr-*)",
+      "type": "timeseries", "gridPos": { "h": 9, "w": 12, "x": 12, "y": 15 },
+      "targets": [{ "expr": "container_memory_rss{name=~\"awais-hr-.*\"}", "legendFormat": "{{ name }}" }],
+      "fieldConfig": { "defaults": { "unit": "bytes", "custom": { "drawStyle": "line", "lineInterpolation": "smooth", "fillOpacity": 8 } } }
+    },
+    {
+      "id": 23, "title": "Container Status (Up/Down)",
+      "type": "table", "gridPos": { "h": 8, "w": 24, "x": 0, "y": 24 },
+      "targets": [{ "expr": "up{job=~\"awais-hr-.*|cadvisor|node-exporter|postgres-exporter|redis-exporter|loki|tempo|alertmanager\"}", "legendFormat": "", "format": "table", "instant": true }],
+      "fieldConfig": {
+        "defaults": { "unit": "short" },
+        "overrides": [
+          { "matcher": {"id":"byName","options":"Value"}, "properties": [
+            {"id":"displayName","value":"Status"},
+            {"id":"mappings","value":[{"type":"value","options":{"0":{"text":"DOWN","color":"red"},"1":{"text":"UP","color":"green"}}}]},
+            {"id":"custom.width","value":100}
+          ]}
+        ]
+      }
+    }
+  ]
+}

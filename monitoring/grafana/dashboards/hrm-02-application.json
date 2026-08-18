@@ -1,0 +1,155 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "graphTooltip": 1,
+  "id": null,
+  "title": "HRM \u2014 Application",
+  "uid": "hrm-application",
+  "tags": ["hrm", "jvm", "spring", "application"],
+  "timezone": "browser",
+  "schemaVersion": 38,
+  "version": 1,
+  "refresh": "30s",
+  "time": { "from": "now-1h", "to": "now" },
+  "links": [{ "title": "Overview", "url": "/d/hrm-overview", "type": "link" }],
+
+  "panels": [
+    {
+      "id": 1, "type": "row", "title": "JVM STATUS",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 }, "collapsed": false
+    },
+    {
+      "id": 2, "title": "JVM Heap %",
+      "type": "stat", "gridPos": { "h": 4, "w": 4, "x": 0, "y": 1 },
+      "targets": [{ "expr": "(sum(jvm_memory_used_bytes{area=\"heap\"}) / sum(jvm_memory_max_bytes{area=\"heap\"})) * 100", "legendFormat": "" }],
+      "options": { "colorMode": "background", "graphMode": "area", "textMode": "auto", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "fieldConfig": { "defaults": { "unit": "percent", "decimals": 1, "thresholds": { "mode": "absolute", "steps": [{"color":"green","value":null},{"color":"yellow","value":70},{"color":"red","value":88}] } } }
+    },
+    {
+      "id": 3, "title": "JVM Non-Heap (Metaspace)",
+      "type": "stat", "gridPos": { "h": 4, "w": 4, "x": 4, "y": 1 },
+      "targets": [{ "expr": "sum(jvm_memory_used_bytes{area=\"nonheap\"})", "legendFormat": "" }],
+      "options": { "colorMode": "background", "graphMode": "area", "textMode": "auto", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "fieldConfig": { "defaults": { "unit": "bytes", "thresholds": { "mode": "absolute", "steps": [{"color":"blue","value":null}] } } }
+    },
+    {
+      "id": 4, "title": "Live Threads",
+      "type": "stat", "gridPos": { "h": 4, "w": 4, "x": 8, "y": 1 },
+      "targets": [{ "expr": "jvm_threads_live_threads", "legendFormat": "" }],
+      "options": { "colorMode": "background", "graphMode": "area", "textMode": "auto", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "fieldConfig": { "defaults": { "unit": "short", "thresholds": { "mode": "absolute", "steps": [{"color":"green","value":null},{"color":"yellow","value":200},{"color":"red","value":500}] } } }
+    },
+    {
+      "id": 5, "title": "HikariCP Active Connections",
+      "type": "stat", "gridPos": { "h": 4, "w": 4, "x": 12, "y": 1 },
+      "targets": [{ "expr": "hikaricp_connections_active", "legendFormat": "" }],
+      "options": { "colorMode": "background", "graphMode": "area", "textMode": "auto", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "fieldConfig": { "defaults": { "unit": "short", "thresholds": { "mode": "absolute", "steps": [{"color":"green","value":null},{"color":"yellow","value":15},{"color":"red","value":19}] } } }
+    },
+    {
+      "id": 6, "title": "Uptime",
+      "type": "stat", "gridPos": { "h": 4, "w": 4, "x": 16, "y": 1 },
+      "targets": [{ "expr": "process_uptime_seconds{application=\"awais-hr-backend\"}", "legendFormat": "" }],
+      "options": { "colorMode": "background", "graphMode": "none", "textMode": "auto", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "fieldConfig": { "defaults": { "unit": "s", "thresholds": { "mode": "absolute", "steps": [{"color":"blue","value":null}] } } }
+    },
+    {
+      "id": 7, "title": "GC Pause Rate",
+      "type": "stat", "gridPos": { "h": 4, "w": 4, "x": 20, "y": 1 },
+      "targets": [{ "expr": "rate(jvm_gc_pause_seconds_sum[5m]) * 1000", "legendFormat": "" }],
+      "options": { "colorMode": "background", "graphMode": "area", "textMode": "auto", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "fieldConfig": { "defaults": { "unit": "ms", "decimals": 1, "thresholds": { "mode": "absolute", "steps": [{"color":"green","value":null},{"color":"yellow","value":100},{"color":"red","value":300}] } } }
+    },
+
+    {
+      "id": 10, "type": "row", "title": "JVM MEMORY",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 5 }, "collapsed": false
+    },
+    {
+      "id": 11, "title": "JVM Heap — Used vs Max",
+      "type": "timeseries", "gridPos": { "h": 8, "w": 12, "x": 0, "y": 6 },
+      "targets": [
+        { "expr": "sum(jvm_memory_used_bytes{area=\"heap\"})", "legendFormat": "Heap Used" },
+        { "expr": "sum(jvm_memory_committed_bytes{area=\"heap\"})", "legendFormat": "Heap Committed" },
+        { "expr": "sum(jvm_memory_max_bytes{area=\"heap\"})", "legendFormat": "Heap Max" }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "bytes", "custom": { "drawStyle": "line", "lineInterpolation": "smooth", "fillOpacity": 12, "lineWidth": 2 } },
+        "overrides": [
+          { "matcher": {"id":"byName","options":"Heap Max"}, "properties": [{"id":"custom.lineStyle","value":{"fill":"dash","dash":[8,4]}},{"id":"color","value":{"fixedColor":"red","mode":"fixed"}}] }
+        ]
+      }
+    },
+    {
+      "id": 12, "title": "Non-Heap (Metaspace)",
+      "type": "timeseries", "gridPos": { "h": 8, "w": 12, "x": 12, "y": 6 },
+      "targets": [
+        { "expr": "sum(jvm_memory_used_bytes{area=\"nonheap\"})", "legendFormat": "Non-Heap Used" },
+        { "expr": "sum(jvm_memory_committed_bytes{area=\"nonheap\"})", "legendFormat": "Non-Heap Committed" }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "bytes", "custom": { "drawStyle": "line", "lineInterpolation": "smooth", "fillOpacity": 10 } }
+      }
+    },
+
+    {
+      "id": 20, "type": "row", "title": "GARBAGE COLLECTION & THREADS",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 14 }, "collapsed": false
+    },
+    {
+      "id": 21, "title": "GC Pause Time",
+      "type": "timeseries", "gridPos": { "h": 8, "w": 12, "x": 0, "y": 15 },
+      "targets": [
+        { "expr": "rate(jvm_gc_pause_seconds_sum[5m]) * 1000", "legendFormat": "GC Pause ms/s" }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "ms", "custom": { "drawStyle": "bars", "lineInterpolation": "smooth", "fillOpacity": 60 },
+          "thresholds": { "mode": "absolute", "steps": [{"color":"green","value":null},{"color":"yellow","value":100},{"color":"red","value":300}] }
+        }
+      }
+    },
+    {
+      "id": 22, "title": "JVM Threads",
+      "type": "timeseries", "gridPos": { "h": 8, "w": 12, "x": 12, "y": 15 },
+      "targets": [
+        { "expr": "jvm_threads_live_threads",   "legendFormat": "Live" },
+        { "expr": "jvm_threads_daemon_threads", "legendFormat": "Daemon" },
+        { "expr": "jvm_threads_peak_threads",   "legendFormat": "Peak" }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "short", "custom": { "drawStyle": "line", "lineInterpolation": "smooth", "fillOpacity": 8 } }
+      }
+    },
+
+    {
+      "id": 30, "type": "row", "title": "HTTP & DATABASE",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 23 }, "collapsed": false
+    },
+    {
+      "id": 31, "title": "HTTP Requests by Status",
+      "type": "timeseries", "gridPos": { "h": 8, "w": 12, "x": 0, "y": 24 },
+      "targets": [
+        { "expr": "sum(rate(http_server_requests_seconds_count[5m])) by (status)", "legendFormat": "HTTP {{ status }}" }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "reqps", "custom": { "drawStyle": "line", "lineInterpolation": "smooth", "fillOpacity": 10 } }
+      }
+    },
+    {
+      "id": 32, "title": "HikariCP Connection Pool",
+      "type": "timeseries", "gridPos": { "h": 8, "w": 12, "x": 12, "y": 24 },
+      "targets": [
+        { "expr": "hikaricp_connections_active",  "legendFormat": "Active" },
+        { "expr": "hikaricp_connections_idle",    "legendFormat": "Idle" },
+        { "expr": "hikaricp_connections_pending", "legendFormat": "Pending" },
+        { "expr": "hikaricp_connections_max",     "legendFormat": "Pool Max" }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "short", "custom": { "drawStyle": "line", "lineInterpolation": "smooth", "fillOpacity": 8 } },
+        "overrides": [
+          { "matcher": {"id":"byName","options":"Pool Max"}, "properties": [{"id":"custom.lineStyle","value":{"fill":"dash","dash":[8,4]}},{"id":"color","value":{"fixedColor":"red","mode":"fixed"}}] }
+        ]
+      }
+    }
+  ]
+}

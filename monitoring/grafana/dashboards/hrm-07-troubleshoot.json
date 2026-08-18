@@ -1,0 +1,170 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "graphTooltip": 1,
+  "id": null,
+  "title": "HRM \u2014 Troubleshooting",
+  "uid": "hrm-troubleshoot",
+  "tags": ["hrm", "troubleshoot", "debug"],
+  "timezone": "browser",
+  "schemaVersion": 38,
+  "version": 1,
+  "refresh": "15s",
+  "time": { "from": "now-30m", "to": "now" },
+  "description": "Start here when something is broken. This dashboard answers: What broke? When did it break? Where is the problem?",
+
+  "links": [
+    { "title": "Overview", "url": "/d/hrm-overview", "type": "link" },
+    { "title": "Logs",     "url": "/d/hrm-logs",     "type": "link" },
+    { "title": "API",      "url": "/d/hrm-api",      "type": "link" }
+  ],
+
+  "panels": [
+    {
+      "id": 1, "type": "row", "title": "\ud83d\udd34 CURRENT STATUS \u2014 Is something down?",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 }, "collapsed": false
+    },
+    {
+      "id": 2, "title": "Backend",
+      "type": "stat", "gridPos": { "h": 4, "w": 4, "x": 0, "y": 1 },
+      "targets": [{ "expr": "up{job=\"awais-hr-backend\"}", "legendFormat": "Backend" }],
+      "options": { "colorMode": "background", "graphMode": "none", "textMode": "name", "reduceOptions": { "calcs": ["last"] } },
+      "fieldConfig": { "defaults": { "mappings": [{"type":"value","options":{"0":{"text":"DOWN","color":"red"},"1":{"text":"UP","color":"green"}}}], "thresholds": { "mode": "absolute", "steps": [{"color":"red","value":null},{"color":"green","value":1}] } } }
+    },
+    {
+      "id": 3, "title": "Database",
+      "type": "stat", "gridPos": { "h": 4, "w": 4, "x": 4, "y": 1 },
+      "targets": [{ "expr": "pg_up", "legendFormat": "Database" }],
+      "options": { "colorMode": "background", "graphMode": "none", "textMode": "name", "reduceOptions": { "calcs": ["last"] } },
+      "fieldConfig": { "defaults": { "mappings": [{"type":"value","options":{"0":{"text":"DOWN","color":"red"},"1":{"text":"UP","color":"green"}}}], "thresholds": { "mode": "absolute", "steps": [{"color":"red","value":null},{"color":"green","value":1}] } } }
+    },
+    {
+      "id": 4, "title": "Redis",
+      "type": "stat", "gridPos": { "h": 4, "w": 4, "x": 8, "y": 1 },
+      "targets": [{ "expr": "redis_up", "legendFormat": "Redis" }],
+      "options": { "colorMode": "background", "graphMode": "none", "textMode": "name", "reduceOptions": { "calcs": ["last"] } },
+      "fieldConfig": { "defaults": { "mappings": [{"type":"value","options":{"0":{"text":"DOWN","color":"red"},"1":{"text":"UP","color":"green"}}}], "thresholds": { "mode": "absolute", "steps": [{"color":"red","value":null},{"color":"green","value":1}] } } }
+    },
+    {
+      "id": 5, "title": "5xx Error Rate",
+      "type": "stat", "gridPos": { "h": 4, "w": 4, "x": 12, "y": 1 },
+      "targets": [{ "expr": "(sum(rate(http_server_requests_seconds_count{status=~\"5..\"}[5m])) / sum(rate(http_server_requests_seconds_count[5m]))) * 100", "legendFormat": "" }],
+      "options": { "colorMode": "background", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "fieldConfig": { "defaults": { "unit": "percent", "decimals": 2, "thresholds": { "mode": "absolute", "steps": [{"color":"green","value":null},{"color":"yellow","value":1},{"color":"red","value":5}] } } }
+    },
+    {
+      "id": 6, "title": "P95 Latency",
+      "type": "stat", "gridPos": { "h": 4, "w": 4, "x": 16, "y": 1 },
+      "targets": [{ "expr": "histogram_quantile(0.95, sum(rate(http_server_requests_seconds_bucket[5m])) by (le))", "legendFormat": "" }],
+      "options": { "colorMode": "background", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "fieldConfig": { "defaults": { "unit": "s", "decimals": 3, "thresholds": { "mode": "absolute", "steps": [{"color":"green","value":null},{"color":"yellow","value":0.5},{"color":"red","value":2}] } } }
+    },
+    {
+      "id": 7, "title": "JVM Heap %",
+      "type": "stat", "gridPos": { "h": 4, "w": 4, "x": 20, "y": 1 },
+      "targets": [{ "expr": "(sum(jvm_memory_used_bytes{area=\"heap\"}) / sum(jvm_memory_max_bytes{area=\"heap\"})) * 100", "legendFormat": "" }],
+      "options": { "colorMode": "background", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "fieldConfig": { "defaults": { "unit": "percent", "decimals": 1, "thresholds": { "mode": "absolute", "steps": [{"color":"green","value":null},{"color":"yellow","value":70},{"color":"red","value":88}] } } }
+    },
+
+    {
+      "id": 10, "type": "row", "title": "\u23f0 ERROR TIMELINE \u2014 When did it start?",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 5 }, "collapsed": false
+    },
+    {
+      "id": 11, "title": "5xx Error Rate Over Time",
+      "type": "timeseries", "gridPos": { "h": 8, "w": 12, "x": 0, "y": 6 },
+      "targets": [
+        { "expr": "sum(rate(http_server_requests_seconds_count{status=~\"5..\"}[2m]))", "legendFormat": "5xx/s" },
+        { "expr": "sum(rate(http_server_requests_seconds_count{status=~\"4..\"}[2m]))", "legendFormat": "4xx/s" }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "reqps", "custom": { "drawStyle": "bars", "fillOpacity": 70 } },
+        "overrides": [
+          { "matcher": {"id":"byName","options":"5xx/s"}, "properties": [{"id":"color","value":{"fixedColor":"red","mode":"fixed"}}] },
+          { "matcher": {"id":"byName","options":"4xx/s"}, "properties": [{"id":"color","value":{"fixedColor":"orange","mode":"fixed"}}] }
+        ]
+      }
+    },
+    {
+      "id": 12, "title": "API P95 Latency Spike",
+      "type": "timeseries", "gridPos": { "h": 8, "w": 12, "x": 12, "y": 6 },
+      "targets": [
+        { "expr": "histogram_quantile(0.95, sum(rate(http_server_requests_seconds_bucket[2m])) by (le))", "legendFormat": "P95" },
+        { "expr": "histogram_quantile(0.99, sum(rate(http_server_requests_seconds_bucket[2m])) by (le))", "legendFormat": "P99" }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "s", "custom": { "drawStyle": "line", "lineInterpolation": "smooth", "fillOpacity": 15 } },
+        "overrides": [
+          { "matcher": {"id":"byName","options":"P99"}, "properties": [{"id":"color","value":{"fixedColor":"red","mode":"fixed"}}] }
+        ]
+      }
+    },
+
+    {
+      "id": 20, "type": "row", "title": "\ud83d\udccd WHERE \u2014 Which endpoints are failing?",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 14 }, "collapsed": false
+    },
+    {
+      "id": 21, "title": "Top Failing Endpoints (5xx)",
+      "type": "table", "gridPos": { "h": 9, "w": 12, "x": 0, "y": 15 },
+      "targets": [{ "expr": "topk(10, sum by (uri, method, status) (rate(http_server_requests_seconds_count{status=~\"5..\"}[5m])))", "legendFormat": "", "format": "table", "instant": true }],
+      "options": { "sortBy": [{"displayName": "Value", "desc": true}] },
+      "fieldConfig": { "defaults": { "unit": "reqps" } }
+    },
+    {
+      "id": 22, "title": "Slowest Endpoints (P95 Latency)",
+      "type": "table", "gridPos": { "h": 9, "w": 12, "x": 12, "y": 15 },
+      "targets": [{ "expr": "topk(10, histogram_quantile(0.95, sum by (uri, le) (rate(http_server_requests_seconds_bucket[5m]))))", "legendFormat": "", "format": "table", "instant": true }],
+      "options": { "sortBy": [{"displayName": "Value", "desc": true}] },
+      "fieldConfig": { "defaults": { "unit": "s" } }
+    },
+
+    {
+      "id": 30, "type": "row", "title": "\ud83d\udcdc LOGS \u2014 What does the log say?",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 24 }, "collapsed": false
+    },
+    {
+      "id": 31, "title": "Recent ERROR Logs (Last 30m)",
+      "type": "logs", "gridPos": { "h": 12, "w": 24, "x": 0, "y": 25 },
+      "datasource": { "type": "loki", "uid": "loki-ds" },
+      "targets": [{ "expr": "{container=\"awais-hr-backend\", level=\"ERROR\"} | line_format \"{{.message}}\"", "legendFormat": "" }],
+      "options": {
+        "showTime": true, "showLabels": false, "showCommonLabels": true,
+        "wrapLogMessage": true, "prettifyLogMessage": false,
+        "enableLogDetails": true, "sortOrder": "Descending"
+      }
+    },
+
+    {
+      "id": 40, "type": "row", "title": "\u2699\ufe0f RESOURCES \u2014 Is the server struggling?",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 37 }, "collapsed": false
+    },
+    {
+      "id": 41, "title": "JVM Heap — Last 30m",
+      "type": "timeseries", "gridPos": { "h": 7, "w": 8, "x": 0, "y": 38 },
+      "targets": [
+        { "expr": "(sum(jvm_memory_used_bytes{area=\"heap\"}) / sum(jvm_memory_max_bytes{area=\"heap\"})) * 100", "legendFormat": "Heap %" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "percent", "min": 0, "max": 100, "custom": { "drawStyle": "line", "lineInterpolation": "smooth", "fillOpacity": 15 }, "thresholds": { "mode": "absolute", "steps": [{"color":"green","value":null},{"color":"yellow","value":70},{"color":"red","value":88}] } } }
+    },
+    {
+      "id": 42, "title": "HikariCP Connections — Last 30m",
+      "type": "timeseries", "gridPos": { "h": 7, "w": 8, "x": 8, "y": 38 },
+      "targets": [
+        { "expr": "hikaricp_connections_active",  "legendFormat": "Active" },
+        { "expr": "hikaricp_connections_pending", "legendFormat": "Pending" },
+        { "expr": "hikaricp_connections_max",     "legendFormat": "Max" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "short", "custom": { "drawStyle": "line", "lineInterpolation": "smooth", "fillOpacity": 8 } } }
+    },
+    {
+      "id": 43, "title": "Host CPU — Last 30m",
+      "type": "timeseries", "gridPos": { "h": 7, "w": 8, "x": 16, "y": 38 },
+      "targets": [
+        { "expr": "100 - (avg(rate(node_cpu_seconds_total{mode=\"idle\"}[2m])) * 100)", "legendFormat": "CPU %" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "percent", "min": 0, "max": 100, "custom": { "drawStyle": "line", "lineInterpolation": "smooth", "fillOpacity": 15 } } }
+    }
+  ]
+}

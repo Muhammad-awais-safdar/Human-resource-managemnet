@@ -1,32 +1,81 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration scan="true" scanPeriod="30 seconds">
     <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
-    
-    <!-- Clean, Simple Human-Readable Console Appender -->
+
+    <!-- ================================================================
+         CONSOLE APPENDER — Human-readable for developers
+         Format: 2026-08-18 22:51:23 INFO  [hrm-api] GET /api/... → 200 | 124ms
+         ================================================================ -->
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
-            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} %clr(%-5level) %clr([tenant:%X{tenantId:-system}]){cyan} %clr(%logger{30}){blue} - %msg%n%wEx</pattern>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} %clr(%-5level){faint} %clr([tenant:%X{tenantId:-system}]){cyan} %clr(%logger{30}){blue} - %msg%n%wEx</pattern>
         </encoder>
     </appender>
 
-    <!-- Custom Observability Ring Buffer Appender for In-App Dashboard stream -->
+    <!-- ================================================================
+         JSON FILE APPENDER — Structured logs for Promtail → Loki
+         Writes to /tmp/app-logs/app.log inside the container.
+         Promtail picks this up via volume mount or docker socket.
+         ================================================================ -->
+    <appender name="JSON_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>/tmp/app-logs/app.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>/tmp/app-logs/app.%d{yyyy-MM-dd}.log</fileNamePattern>
+            <maxHistory>7</maxHistory>
+            <totalSizeCap>500MB</totalSizeCap>
+        </rollingPolicy>
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+            <includeMdcKeyName>tenantId</includeMdcKeyName>
+            <includeMdcKeyName>requestId</includeMdcKeyName>
+            <includeMdcKeyName>traceId</includeMdcKeyName>
+            <includeMdcKeyName>spanId</includeMdcKeyName>
+            <includeMdcKeyName>userId</includeMdcKeyName>
+            <customFields>{"service":"hr-engine","environment":"${APP_ENVIRONMENT:-production}"}</customFields>
+            <fieldNames>
+                <timestamp>timestamp</timestamp>
+                <message>message</message>
+                <logger>logger</logger>
+                <thread>thread</thread>
+                <level>level</level>
+                <levelValue>[ignore]</levelValue>
+            </fieldNames>
+        </encoder>
+    </appender>
+
+    <!-- Async wrapper for JSON file appender — prevents blocking on I/O -->
+    <appender name="ASYNC_JSON" class="ch.qos.logback.classic.AsyncAppender">
+        <appender-ref ref="JSON_FILE"/>
+        <queueSize>512</queueSize>
+        <discardingThreshold>0</discardingThreshold>
+        <includeCallerData>false</includeCallerData>
+    </appender>
+
+    <!-- ================================================================
+         OBSERVABILITY APPENDER — In-App Dashboard Ring Buffer
+         ================================================================ -->
     <appender name="OBSERVABILITY" class="com.awais.hr.module.observability.util.ObservabilityLogbackAppender" />
 
-    <!-- Logger configurations: Silence SQL queries & verbose internal traces -->
-    <logger name="com.awais.hr" level="INFO" />
-    <logger name="org.springframework.web" level="INFO" />
-    <logger name="org.springframework.security" level="WARN" />
-    <logger name="org.hibernate" level="OFF" />
-    <logger name="org.hibernate.SQL" level="OFF" />
-    <logger name="org.hibernate.type.descriptor.sql" level="OFF" />
-    <logger name="org.hibernate.stat" level="OFF" />
+    <!-- ================================================================
+         LOGGER LEVELS — Silence noisy frameworks
+         ================================================================ -->
+    <logger name="com.awais.hr"                          level="INFO"  />
+    <logger name="org.springframework.web"               level="INFO"  />
+    <logger name="org.springframework.security"          level="WARN"  />
+    <logger name="org.hibernate"                         level="OFF"   />
+    <logger name="org.hibernate.SQL"                     level="OFF"   />
+    <logger name="org.hibernate.type.descriptor.sql"     level="OFF"   />
+    <logger name="org.hibernate.stat"                    level="OFF"   />
+    <logger name="org.springframework.jdbc"              level="WARN"  />
+    <logger name="org.flywaydb"                          level="INFO"  />
+    <logger name="com.zaxxer.hikari"                     level="WARN"  />
+    <logger name="io.micrometer"                         level="WARN"  />
 
-    <logger name="org.springframework.jdbc" level="WARN" />
-    <logger name="org.flywaydb" level="INFO" />
-
-    <!-- Root Logger: Clean Console only (No JSON/Grafana console blobs) -->
+    <!-- ================================================================
+         ROOT LOGGER
+         ================================================================ -->
     <root level="INFO">
-        <appender-ref ref="CONSOLE" />
-        <appender-ref ref="OBSERVABILITY" />
+        <appender-ref ref="CONSOLE"      />
+        <appender-ref ref="ASYNC_JSON"   />
+        <appender-ref ref="OBSERVABILITY"/>
     </root>
 </configuration>

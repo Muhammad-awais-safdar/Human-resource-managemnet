@@ -1,45 +1,36 @@
 global:
   resolve_timeout: 5m
-  smtp_smarthost: 'smtp.gmail.com:587'
-  smtp_from: 'alerts@awais-hr.com'
-  smtp_auth_username: 'alerts@awais-hr.com'
-  smtp_auth_password: 'secret_password'
 
 route:
-  group_by: ['alertname', 'cluster', 'service']
+  group_by: ['alertname', 'severity']
   group_wait: 30s
   group_interval: 5m
   repeat_interval: 4h
-  receiver: 'default-webhook'
+  receiver: 'backend-webhook'
   routes:
     - match:
         severity: critical
-      receiver: 'critical-notifications'
-      continue: true
+      receiver: 'backend-webhook'
+      continue: false
     - match:
         severity: warning
-      receiver: 'warning-notifications'
+      receiver: 'backend-webhook'
 
+# ── Receivers ────────────────────────────────────────────────────────
+# Route alerts to the backend internal webhook.
+# For production, replace or add Slack/PagerDuty/email receivers via env vars.
 receivers:
-  - name: 'default-webhook'
+  - name: 'backend-webhook'
     webhook_configs:
       - url: 'http://backend:8080/api/v1/observability/alerts/webhook'
         send_resolved: true
+        max_alerts: 10
 
-  - name: 'critical-notifications'
-    webhook_configs:
-      - url: 'http://backend:8080/api/v1/observability/alerts/webhook'
-        send_resolved: true
-    email_configs:
-      - to: 'sre-oncall@awais-hr.com'
-        send_resolved: true
-    slack_configs:
-      - api_url: 'http://backend:8080/api/v1/observability/alerts/slack'
-        channel: '#ops-critical-alerts'
-        send_resolved: true
-
-  - name: 'warning-notifications'
-    slack_configs:
-      - api_url: 'http://backend:8080/api/v1/observability/alerts/slack'
-        channel: '#ops-warnings'
-        send_resolved: true
+# ── Inhibition ───────────────────────────────────────────────────────
+# Suppress warnings when a critical alert for the same service is firing
+inhibit_rules:
+  - source_match:
+      severity: 'critical'
+    target_match:
+      severity: 'warning'
+    equal: ['alertname']

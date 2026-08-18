@@ -1,0 +1,183 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "graphTooltip": 1,
+  "id": null,
+  "title": "HRM \u2014 API Performance",
+  "uid": "hrm-api",
+  "tags": ["hrm", "api", "performance", "latency"],
+  "timezone": "browser",
+  "schemaVersion": 38,
+  "version": 1,
+  "refresh": "15s",
+  "time": { "from": "now-1h", "to": "now" },
+  "links": [{ "title": "Overview", "url": "/d/hrm-overview", "type": "link" }],
+
+  "templating": {
+    "list": [
+      {
+        "name": "method",
+        "label": "Method",
+        "type": "custom",
+        "current": { "text": "All", "value": "" },
+        "options": [
+          {"text":"All","value":""},{"text":"GET","value":"GET"},{"text":"POST","value":"POST"},
+          {"text":"PUT","value":"PUT"},{"text":"DELETE","value":"DELETE"},{"text":"PATCH","value":"PATCH"}
+        ],
+        "query": "GET,POST,PUT,DELETE,PATCH",
+        "includeAll": true,
+        "allValue": ""
+      },
+      {
+        "name": "status",
+        "label": "Status",
+        "type": "custom",
+        "current": { "text": "All", "value": ".*" },
+        "options": [
+          {"text":"All","value":".*"},{"text":"2xx","value":"2.."},{"text":"4xx","value":"4.."},{"text":"5xx","value":"5.."}
+        ],
+        "query": ".*,2..,4..,5..",
+        "includeAll": false
+      }
+    ]
+  },
+
+  "panels": [
+    {
+      "id": 1, "type": "row", "title": "SUMMARY",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 }, "collapsed": false
+    },
+    {
+      "id": 2, "title": "Total Req/sec",
+      "type": "stat", "gridPos": { "h": 4, "w": 4, "x": 0, "y": 1 },
+      "targets": [{ "expr": "sum(rate(http_server_requests_seconds_count[5m]))", "legendFormat": "" }],
+      "options": { "colorMode": "background", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "fieldConfig": { "defaults": { "unit": "reqps", "decimals": 2, "thresholds": { "mode": "absolute", "steps": [{"color":"blue","value":null}] } } }
+    },
+    {
+      "id": 3, "title": "5xx Error Rate",
+      "type": "stat", "gridPos": { "h": 4, "w": 4, "x": 4, "y": 1 },
+      "targets": [{ "expr": "(sum(rate(http_server_requests_seconds_count{status=~\"5..\"}[5m])) / sum(rate(http_server_requests_seconds_count[5m]))) * 100", "legendFormat": "" }],
+      "options": { "colorMode": "background", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "fieldConfig": { "defaults": { "unit": "percent", "decimals": 2, "thresholds": { "mode": "absolute", "steps": [{"color":"green","value":null},{"color":"yellow","value":1},{"color":"red","value":5}] } } }
+    },
+    {
+      "id": 4, "title": "P50 Latency",
+      "type": "stat", "gridPos": { "h": 4, "w": 4, "x": 8, "y": 1 },
+      "targets": [{ "expr": "histogram_quantile(0.50, sum(rate(http_server_requests_seconds_bucket[5m])) by (le))", "legendFormat": "" }],
+      "options": { "colorMode": "background", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "fieldConfig": { "defaults": { "unit": "s", "decimals": 3, "thresholds": { "mode": "absolute", "steps": [{"color":"green","value":null},{"color":"yellow","value":0.2},{"color":"red","value":0.5}] } } }
+    },
+    {
+      "id": 5, "title": "P95 Latency",
+      "type": "stat", "gridPos": { "h": 4, "w": 4, "x": 12, "y": 1 },
+      "targets": [{ "expr": "histogram_quantile(0.95, sum(rate(http_server_requests_seconds_bucket[5m])) by (le))", "legendFormat": "" }],
+      "options": { "colorMode": "background", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "fieldConfig": { "defaults": { "unit": "s", "decimals": 3, "thresholds": { "mode": "absolute", "steps": [{"color":"green","value":null},{"color":"yellow","value":0.5},{"color":"red","value":2}] } } }
+    },
+    {
+      "id": 6, "title": "P99 Latency",
+      "type": "stat", "gridPos": { "h": 4, "w": 4, "x": 16, "y": 1 },
+      "targets": [{ "expr": "histogram_quantile(0.99, sum(rate(http_server_requests_seconds_bucket[5m])) by (le))", "legendFormat": "" }],
+      "options": { "colorMode": "background", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "fieldConfig": { "defaults": { "unit": "s", "decimals": 3, "thresholds": { "mode": "absolute", "steps": [{"color":"green","value":null},{"color":"yellow","value":1},{"color":"red","value":5}] } } }
+    },
+    {
+      "id": 7, "title": "4xx Rate",
+      "type": "stat", "gridPos": { "h": 4, "w": 4, "x": 20, "y": 1 },
+      "targets": [{ "expr": "sum(rate(http_server_requests_seconds_count{status=~\"4..\"}[5m]))", "legendFormat": "" }],
+      "options": { "colorMode": "background", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "fieldConfig": { "defaults": { "unit": "reqps", "decimals": 2, "thresholds": { "mode": "absolute", "steps": [{"color":"green","value":null},{"color":"yellow","value":1},{"color":"red","value":10}] } } }
+    },
+
+    {
+      "id": 10, "type": "row", "title": "REQUEST THROUGHPUT",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 5 }, "collapsed": false
+    },
+    {
+      "id": 11, "title": "Requests/sec by Status Code",
+      "type": "timeseries", "gridPos": { "h": 9, "w": 12, "x": 0, "y": 6 },
+      "targets": [
+        { "expr": "sum(rate(http_server_requests_seconds_count{status=~\"2..\"}[5m]))", "legendFormat": "2xx" },
+        { "expr": "sum(rate(http_server_requests_seconds_count{status=~\"4..\"}[5m]))", "legendFormat": "4xx" },
+        { "expr": "sum(rate(http_server_requests_seconds_count{status=~\"5..\"}[5m]))", "legendFormat": "5xx" }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "reqps", "custom": { "drawStyle": "line", "lineInterpolation": "smooth", "fillOpacity": 12, "lineWidth": 2 } },
+        "overrides": [
+          { "matcher": {"id":"byName","options":"2xx"}, "properties": [{"id":"color","value":{"fixedColor":"green","mode":"fixed"}}] },
+          { "matcher": {"id":"byName","options":"4xx"}, "properties": [{"id":"color","value":{"fixedColor":"yellow","mode":"fixed"}}] },
+          { "matcher": {"id":"byName","options":"5xx"}, "properties": [{"id":"color","value":{"fixedColor":"red","mode":"fixed"}}] }
+        ]
+      }
+    },
+    {
+      "id": 12, "title": "Latency Percentiles",
+      "type": "timeseries", "gridPos": { "h": 9, "w": 12, "x": 12, "y": 6 },
+      "targets": [
+        { "expr": "histogram_quantile(0.50, sum(rate(http_server_requests_seconds_bucket[5m])) by (le))", "legendFormat": "P50" },
+        { "expr": "histogram_quantile(0.95, sum(rate(http_server_requests_seconds_bucket[5m])) by (le))", "legendFormat": "P95" },
+        { "expr": "histogram_quantile(0.99, sum(rate(http_server_requests_seconds_bucket[5m])) by (le))", "legendFormat": "P99" }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "s", "custom": { "drawStyle": "line", "lineInterpolation": "smooth", "fillOpacity": 8, "lineWidth": 2 } },
+        "overrides": [
+          { "matcher": {"id":"byName","options":"P95"}, "properties": [{"id":"color","value":{"fixedColor":"yellow","mode":"fixed"}}] },
+          { "matcher": {"id":"byName","options":"P99"}, "properties": [{"id":"color","value":{"fixedColor":"red","mode":"fixed"}}] }
+        ]
+      }
+    },
+
+    {
+      "id": 20, "type": "row", "title": "TOP ENDPOINTS",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 15 }, "collapsed": false
+    },
+    {
+      "id": 21, "title": "Top 10 Endpoints by Volume",
+      "type": "table", "gridPos": { "h": 10, "w": 12, "x": 0, "y": 16 },
+      "targets": [
+        { "expr": "topk(10, sum by (uri, method) (rate(http_server_requests_seconds_count[5m])))", "legendFormat": "", "format": "table", "instant": true }
+      ],
+      "options": { "sortBy": [{"displayName": "Value", "desc": true}] },
+      "fieldConfig": { "defaults": { "unit": "reqps" } }
+    },
+    {
+      "id": 22, "title": "Top 10 Slowest Endpoints (P95)",
+      "type": "table", "gridPos": { "h": 10, "w": 12, "x": 12, "y": 16 },
+      "targets": [
+        {
+          "expr": "topk(10, histogram_quantile(0.95, sum by (uri, le) (rate(http_server_requests_seconds_bucket[5m]))))",
+          "legendFormat": "", "format": "table", "instant": true
+        }
+      ],
+      "options": { "sortBy": [{"displayName": "Value", "desc": true}] },
+      "fieldConfig": { "defaults": { "unit": "s" } }
+    },
+
+    {
+      "id": 30, "type": "row", "title": "ERRORS",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 26 }, "collapsed": false
+    },
+    {
+      "id": 31, "title": "5xx Error Rate % Over Time",
+      "type": "timeseries", "gridPos": { "h": 8, "w": 12, "x": 0, "y": 27 },
+      "targets": [
+        { "expr": "(sum(rate(http_server_requests_seconds_count{status=~\"5..\"}[5m])) / sum(rate(http_server_requests_seconds_count[5m]))) * 100", "legendFormat": "5xx Error %" }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "percent", "min": 0, "custom": { "drawStyle": "line", "lineInterpolation": "smooth", "fillOpacity": 15 },
+          "thresholds": { "mode": "absolute", "steps": [{"color":"green","value":null},{"color":"yellow","value":1},{"color":"red","value":5}] }
+        }
+      }
+    },
+    {
+      "id": 32, "title": "Top Failing Endpoints",
+      "type": "table", "gridPos": { "h": 8, "w": 12, "x": 12, "y": 27 },
+      "targets": [
+        { "expr": "topk(10, sum by (uri, status) (rate(http_server_requests_seconds_count{status=~\"5..\"}[5m])))", "legendFormat": "", "format": "table", "instant": true }
+      ],
+      "options": { "sortBy": [{"displayName": "Value", "desc": true}] },
+      "fieldConfig": { "defaults": { "unit": "reqps" } }
+    }
+  ]
+}
