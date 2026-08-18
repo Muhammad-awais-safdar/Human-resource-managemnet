@@ -1,50 +1,16 @@
-# Stage 1: Install dependencies
-FROM node:20-alpine AS deps
-RUN apk add --no-cache libc6-compat
+FROM node:20-alpine AS build
 WORKDIR /app
-
-# Copy package files
-COPY package.json package-lock.json ./
+COPY package*.json ./
 RUN npm ci
-
-# Stage 2: Build the application
-FROM node:20-alpine AS builder
-WORKDIR /app
-COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-
-# Next.js collects completely anonymous telemetry data about general usage.
-# Learn more here: https://nextjs.org/telemetry
-# Disable telemetry during the build.
-ENV NEXT_TELEMETRY_DISABLED=1
-# Set backend API URL for Docker network
-ARG BACKEND_API_URL=http://backend:8080
-ENV BACKEND_API_URL=${BACKEND_API_URL}
-
 RUN npm run build
 
-# Stage 3: Runner stage
-FROM node:20-alpine AS runner
+FROM node:20-alpine
 WORKDIR /app
-
 ENV NODE_ENV=production
-ENV NEXT_TELEMETRY_DISABLED=1
-
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nextjs
-
-# Copy build artifacts and configuration
-COPY --from=builder /app/public ./public
-COPY --from=builder --chown=nextjs:nodejs /app/.next ./.next
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/package.json ./package.json
-COPY --from=builder /app/next.config.mjs ./next.config.mjs
-
-USER nextjs
-
-ARG PORT=3000
-ENV PORT=${PORT}
-EXPOSE ${PORT}
-ENV HOSTNAME="0.0.0.0"
-
+COPY --from=build /app/package*.json ./
+COPY --from=build /app/node_modules ./node_modules
+COPY --from=build /app/.next ./.next
+COPY --from=build /app/public ./public
+EXPOSE 3000
 CMD ["npm", "run", "start"]
