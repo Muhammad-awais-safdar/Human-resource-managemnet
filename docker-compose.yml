@@ -5,13 +5,15 @@ services:
     image: postgres:16-alpine
     container_name: awais-hr-db
     environment:
-      POSTGRES_DB: awais_hr_master
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: root
+      POSTGRES_DB: ${POSTGRES_DB:-awais_hr_master}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-root}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -25,20 +27,23 @@ services:
       dockerfile: Dockerfile
     container_name: awais-hr-backend
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/awais_hr_master
-      - SPRING_DATASOURCE_USERNAME=postgres
-      - SPRING_DATASOURCE_PASSWORD=root
-      - OBSERVABILITY_DATASOURCE_URL=jdbc:postgresql://postgres:5432/awais_hr_observability
-      - OBSERVABILITY_DATASOURCE_USERNAME=postgres
-      - OBSERVABILITY_DATASOURCE_PASSWORD=root
-      - TENANT_DATASOURCE_URL_PREFIX=jdbc:postgresql://postgres:5432/
-      - TENANT_DATASOURCE_USERNAME=postgres
-      - TENANT_DATASOURCE_PASSWORD=root
-      - SPRING_DATA_REDIS_HOST=redis
-      - SPRING_DATA_REDIS_PORT=6379
-      - OTEL_EXPORTER_OTLP_ENDPOINT=http://tempo:4318/v1/traces
+      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-dev}
+      - SPRING_DATASOURCE_URL=${SPRING_DATASOURCE_URL:-jdbc:postgresql://postgres:5432/awais_hr_master}
+      - SPRING_DATASOURCE_USERNAME=${POSTGRES_USER:-postgres}
+      - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD:-root}
+      - OBSERVABILITY_DATASOURCE_URL=${OBSERVABILITY_DATASOURCE_URL:-jdbc:postgresql://postgres:5432/awais_hr_observability}
+      - OBSERVABILITY_DATASOURCE_USERNAME=${POSTGRES_USER:-postgres}
+      - OBSERVABILITY_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD:-root}
+      - TENANT_DATASOURCE_URL_PREFIX=${TENANT_DATASOURCE_URL_PREFIX:-jdbc:postgresql://postgres:5432/}
+      - TENANT_DATASOURCE_USERNAME=${POSTGRES_USER:-postgres}
+      - TENANT_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD:-root}
+      - SPRING_DATA_REDIS_HOST=${REDIS_HOST:-redis}
+      - SPRING_DATA_REDIS_PORT=${REDIS_PORT:-6379}
+      - OTEL_EXPORTER_OTLP_ENDPOINT=${OTEL_EXPORTER_OTLP_ENDPOINT:-http://tempo:4318/v1/traces}
+      - JWT_SECRET=${JWT_SECRET:-c2VjdXJlX2p3dF9zZWNyZXRfa2V5X2Zvcl9hd2Fpc19oci9lbnRlcnByaXNlX3NhYXNfcGxhdGZvcm0=}
+      - JWT_EXPIRATION_MS=${JWT_EXPIRATION_MS:-86400000}
     ports:
-      - "8080:8080"
+      - "${BACKEND_PORT:-8080}:8080"
     depends_on:
       postgres:
         condition: service_healthy
@@ -56,6 +61,8 @@ services:
   redis:
     image: redis:7-alpine
     container_name: awais-hr-redis
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
@@ -69,12 +76,17 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        BACKEND_API_URL: ${BACKEND_DOCKER_API_URL:-http://backend:8080}
     container_name: awais-hr-frontend
     environment:
-      - BACKEND_API_URL=http://backend:8080
-      - NEXT_PUBLIC_API_VERSION=v1
+      - NODE_ENV=${NODE_ENV:-development}
+      - BACKEND_API_URL=${BACKEND_DOCKER_API_URL:-http://backend:8080}
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:8080}
+      - NEXT_PUBLIC_API_VERSION=${NEXT_PUBLIC_API_VERSION:-v1}
+      - NEXT_TELEMETRY_DISABLED=${NEXT_TELEMETRY_DISABLED:-1}
     ports:
-      - "3000:3000"
+      - "${FRONTEND_PORT:-3000}:3000"
     depends_on:
       - backend
     restart: unless-stopped
@@ -99,7 +111,7 @@ services:
       - '--web.console.templates=/usr/share/prometheus/consoles'
       - '--web.enable-lifecycle'
     ports:
-      - "9090:9090"
+      - "${PROMETHEUS_PORT:-9090}:9090"
     healthcheck:
       test: ["CMD", "wget", "--spider", "-q", "http://localhost:9090/-/healthy"]
       interval: 10s
@@ -113,8 +125,8 @@ services:
     image: grafana/grafana:10.4.0
     container_name: awais-hr-grafana
     environment:
-      - GF_SECURITY_ADMIN_USER=admin
-      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_ADMIN_USER:-admin}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-admin}
       - GF_USERS_ALLOW_SIGN_UP=false
       - GF_NEWS_NEWS_FEED_ENABLED=false
       - GF_ANALYTICS_REPORTING_ENABLED=false
@@ -126,7 +138,7 @@ services:
       - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
       - grafana_data:/var/lib/grafana
     ports:
-      - "3001:3000"
+      - "${GRAFANA_PORT:-3001}:${GRAFANA_INTERNAL_PORT:-3000}"
     depends_on:
       - prometheus
       - loki
@@ -163,7 +175,7 @@ services:
       - loki_data:/tmp/loki
     command: -config.file=/etc/loki/loki-config.yml
     ports:
-      - "3100:3100"
+      - "${LOKI_PORT:-3100}:3100"
     healthcheck:
       test: ["CMD", "wget", "--spider", "-q", "http://localhost:3100/ready"]
       interval: 10s
@@ -181,9 +193,9 @@ services:
       - tempo_data:/tmp/tempo
     command: -config.file=/etc/tempo/tempo-config.yml
     ports:
-      - "3200:3200"
-      - "4317:4317"
-      - "4318:4318"
+      - "${TEMPO_PORT:-3200}:3200"
+      - "${TEMPO_OTLP_GRPC_PORT:-4317}:4317"
+      - "${TEMPO_OTLP_HTTP_PORT:-4318}:4318"
     healthcheck:
       test: ["CMD", "wget", "--spider", "-q", "http://localhost:3200/ready"]
       interval: 10s
@@ -203,7 +215,7 @@ services:
       - '--config.file=/etc/alertmanager/alertmanager.yml'
       - '--storage.path=/alertmanager'
     ports:
-      - "9093:9093"
+      - "${ALERTMANAGER_PORT:-9093}:9093"
     healthcheck:
       test: ["CMD", "wget", "--spider", "-q", "http://localhost:9093/-/healthy"]
       interval: 10s
@@ -225,7 +237,7 @@ services:
       - '--path.sysfs=/host/sys'
       - '--path.rootfs=/rootfs'
     ports:
-      - "9100:9100"
+      - "${NODE_EXPORTER_PORT:-9100}:9100"
     restart: unless-stopped
     networks:
       - awais-hr-network
@@ -234,9 +246,9 @@ services:
     image: prometheuscommunity/postgres-exporter:v0.15.0
     container_name: awais-hr-postgres-exporter
     environment:
-      DATA_SOURCE_NAME: "postgresql://postgres:root@postgres:5432/awais_hr_master?sslmode=disable"
+      DATA_SOURCE_NAME: "postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-root}@postgres:${POSTGRES_PORT:-5432}/${POSTGRES_DB:-awais_hr_master}?sslmode=disable"
     ports:
-      - "9187:9187"
+      - "${POSTGRES_EXPORTER_PORT:-9187}:9187"
     depends_on:
       postgres:
         condition: service_healthy
@@ -248,9 +260,9 @@ services:
     image: oliver006/redis_exporter:v1.58.0
     container_name: awais-hr-redis-exporter
     environment:
-      REDIS_ADDR: "redis://redis:6379"
+      REDIS_ADDR: "redis://${REDIS_HOST:-redis}:${REDIS_PORT:-6379}"
     ports:
-      - "9121:9121"
+      - "${REDIS_EXPORTER_PORT:-9121}:9121"
     depends_on:
       redis:
         condition: service_healthy
@@ -268,7 +280,7 @@ services:
       - /var/lib/docker/:/var/lib/docker:ro
       - /dev/disk/:/dev/disk:ro
     ports:
-      - "8081:8080"
+      - "${CADVISOR_PORT:-8081}:8080"
     restart: unless-stopped
     networks:
       - awais-hr-network

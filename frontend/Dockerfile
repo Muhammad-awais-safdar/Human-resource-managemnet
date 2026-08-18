@@ -42,9 +42,9 @@ COPY --from=builder /app/next.config.mjs ./next.config.mjs
 
 USER nextjs
 
-EXPOSE 3000
-
-ENV PORT=3000
+ARG PORT=3000
+ENV PORT=${PORT}
+EXPOSE ${PORT}
 ENV HOSTNAME="0.0.0.0"
 
 CMD ["npm", "run", "start"]
