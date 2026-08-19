@@ -1,0 +1,192 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "graphTooltip": 1,
+  "id": null,
+  "title": "HRM \u2014 Home",
+  "uid": "hrm-home",
+  "tags": ["hrm", "home", "navigation"],
+  "description": "HRM Observability Platform \u2014 Main navigation hub",
+  "timezone": "browser",
+  "schemaVersion": 38,
+  "version": 1,
+  "refresh": "30s",
+  "time": { "from": "now-1h", "to": "now" },
+
+  "panels": [
+    {
+      "id": 1,
+      "type": "text",
+      "title": "",
+      "gridPos": { "h": 4, "w": 24, "x": 0, "y": 0 },
+      "options": {
+        "mode": "markdown",
+        "content": "# \ud83d\udfe2 HRM Observability Platform\n\nAll systems operational. Select a dashboard below or use the **sidebar** \u2192 *HRM \u2014 Production* folder.\n\n---"
+      }
+    },
+
+    {
+      "id": 2,
+      "title": "Backend",
+      "type": "stat",
+      "gridPos": { "h": 3, "w": 3, "x": 0, "y": 4 },
+      "targets": [{ "expr": "up{job=\"awais-hr-backend\"}", "legendFormat": "Backend" }],
+      "options": { "colorMode": "background", "graphMode": "none", "textMode": "name", "reduceOptions": { "calcs": ["last"] } },
+      "fieldConfig": { "defaults": { "mappings": [{ "type": "value", "options": { "0": { "text": "DOWN", "color": "red" }, "1": { "text": "UP", "color": "green" } } }], "thresholds": { "mode": "absolute", "steps": [{ "color": "red", "value": null }, { "color": "green", "value": 1 }] } } }
+    },
+    {
+      "id": 3,
+      "title": "Database",
+      "type": "stat",
+      "gridPos": { "h": 3, "w": 3, "x": 3, "y": 4 },
+      "targets": [{ "expr": "pg_up", "legendFormat": "Database" }],
+      "options": { "colorMode": "background", "graphMode": "none", "textMode": "name", "reduceOptions": { "calcs": ["last"] } },
+      "fieldConfig": { "defaults": { "mappings": [{ "type": "value", "options": { "0": { "text": "DOWN", "color": "red" }, "1": { "text": "UP", "color": "green" } } }], "thresholds": { "mode": "absolute", "steps": [{ "color": "red", "value": null }, { "color": "green", "value": 1 }] } } }
+    },
+    {
+      "id": 4,
+      "title": "Redis",
+      "type": "stat",
+      "gridPos": { "h": 3, "w": 3, "x": 6, "y": 4 },
+      "targets": [{ "expr": "redis_up", "legendFormat": "Redis" }],
+      "options": { "colorMode": "background", "graphMode": "none", "textMode": "name", "reduceOptions": { "calcs": ["last"] } },
+      "fieldConfig": { "defaults": { "mappings": [{ "type": "value", "options": { "0": { "text": "DOWN", "color": "red" }, "1": { "text": "UP", "color": "green" } } }], "thresholds": { "mode": "absolute", "steps": [{ "color": "red", "value": null }, { "color": "green", "value": 1 }] } } }
+    },
+    {
+      "id": 5,
+      "title": "5xx Error Rate",
+      "type": "stat",
+      "gridPos": { "h": 3, "w": 3, "x": 9, "y": 4 },
+      "targets": [{ "expr": "(sum(rate(http_server_requests_seconds_count{status=~\"5..\"}[5m])) / sum(rate(http_server_requests_seconds_count[5m]))) * 100", "legendFormat": "" }],
+      "options": { "colorMode": "background", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "fieldConfig": { "defaults": { "unit": "percent", "decimals": 2, "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 1 }, { "color": "red", "value": 5 }] } } }
+    },
+    {
+      "id": 6,
+      "title": "P95 Latency",
+      "type": "stat",
+      "gridPos": { "h": 3, "w": 3, "x": 12, "y": 4 },
+      "targets": [{ "expr": "histogram_quantile(0.95, sum(rate(http_server_requests_seconds_bucket[5m])) by (le))", "legendFormat": "" }],
+      "options": { "colorMode": "background", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "fieldConfig": { "defaults": { "unit": "s", "decimals": 3, "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 0.5 }, { "color": "red", "value": 2 }] } } }
+    },
+    {
+      "id": 7,
+      "title": "JVM Heap %",
+      "type": "stat",
+      "gridPos": { "h": 3, "w": 3, "x": 15, "y": 4 },
+      "targets": [{ "expr": "(sum(jvm_memory_used_bytes{area=\"heap\"}) / sum(jvm_memory_max_bytes{area=\"heap\"})) * 100", "legendFormat": "" }],
+      "options": { "colorMode": "background", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "fieldConfig": { "defaults": { "unit": "percent", "decimals": 1, "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 70 }, { "color": "red", "value": 88 }] } } }
+    },
+    {
+      "id": 8,
+      "title": "App Errors (5m)",
+      "type": "stat",
+      "gridPos": { "h": 3, "w": 3, "x": 18, "y": 4 },
+      "datasource": { "type": "loki", "uid": "loki-ds" },
+      "targets": [{ "expr": "sum(count_over_time({container=\"awais-hr-backend\", level=\"ERROR\"} !~ `(?i)(actuator|/health|/ping)` [5m]))", "legendFormat": "" }],
+      "options": { "colorMode": "background", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "fieldConfig": { "defaults": { "unit": "short", "decimals": 0, "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 1 }, { "color": "red", "value": 5 }] } } }
+    },
+    {
+      "id": 9,
+      "title": "Host CPU %",
+      "type": "stat",
+      "gridPos": { "h": 3, "w": 3, "x": 21, "y": 4 },
+      "targets": [{ "expr": "100 - (avg(rate(node_cpu_seconds_total{mode=\"idle\"}[5m])) * 100)", "legendFormat": "" }],
+      "options": { "colorMode": "background", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "fieldConfig": { "defaults": { "unit": "percent", "decimals": 1, "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 70 }, { "color": "red", "value": 88 }] } } }
+    },
+
+    {
+      "id": 10,
+      "type": "text",
+      "title": "",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 7 },
+      "options": { "mode": "markdown", "content": "### \ud83d\udcca DASHBOARDS" }
+    },
+
+    {
+      "id": 11,
+      "type": "text",
+      "title": "\ud83d\udcca Production Overview",
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 8 },
+      "options": {
+        "mode": "markdown",
+        "content": "**Single pane of glass.**\n\nService health, API performance, error rate, infrastructure.\n\n[\u2192 Open Overview](/d/hrm-overview)"
+      }
+    },
+    {
+      "id": 12,
+      "type": "text",
+      "title": "\ud83d\udfe2 Live Logs",
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 8 },
+      "options": {
+        "mode": "markdown",
+        "content": "**Real-time application log stream.**\n\nApplication events only. No infrastructure noise.\n\n[\u2192 Open Live Logs](/d/hrm-live-logs)"
+      }
+    },
+    {
+      "id": 13,
+      "type": "text",
+      "title": "\ud83d\udd34 Error Center",
+      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 8 },
+      "options": {
+        "mode": "markdown",
+        "content": "**Errors, exceptions, 5xx, 401/403.**\n\nTop failing endpoints and security events.\n\n[\u2192 Open Error Center](/d/hrm-error-center)"
+      }
+    },
+    {
+      "id": 14,
+      "type": "text",
+      "title": "\ud83d\udd27 Troubleshooting",
+      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 8 },
+      "options": {
+        "mode": "markdown",
+        "content": "**Something is broken. Start here.**\n\nCurrent errors, slow endpoints, recent failures.\n\n[\u2192 Open Troubleshooting](/d/hrm-troubleshoot)"
+      }
+    },
+
+    {
+      "id": 20,
+      "type": "text",
+      "title": "\u2699\ufe0f Application",
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 12 },
+      "options": {
+        "mode": "markdown",
+        "content": "**JVM, GC, threads, HikariCP.**\n\nSpring Boot internals and database pool.\n\n[\u2192 Open Application](/d/hrm-application)"
+      }
+    },
+    {
+      "id": 21,
+      "type": "text",
+      "title": "\ud83d\udcf6 API Performance",
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 12 },
+      "options": {
+        "mode": "markdown",
+        "content": "**Requests/sec, P50/P95/P99 latency.**\n\nTop endpoints, slow endpoints, error rates.\n\n[\u2192 Open API](/d/hrm-api)"
+      }
+    },
+    {
+      "id": 22,
+      "type": "text",
+      "title": "\ud83d\udda5 Infrastructure",
+      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 12 },
+      "options": {
+        "mode": "markdown",
+        "content": "**Host CPU, RAM, disk, network.**\n\nContainer metrics via cAdvisor.\n\n[\u2192 Open Infrastructure](/d/hrm-infrastructure)"
+      }
+    },
+    {
+      "id": 23,
+      "type": "text",
+      "title": "\ud83d\uddc4 Database & Redis",
+      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 12 },
+      "options": {
+        "mode": "markdown",
+        "content": "**PostgreSQL connections, transactions.**\n\nRedis memory, hit rate, evictions.\n\n[\u2192 Open DB & Redis](/d/hrm-datastore)"
+      }
+    }
+  ]
+}
