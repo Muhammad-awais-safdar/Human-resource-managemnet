@@ -28,33 +28,39 @@ scrape_configs:
         regex: '/(.+)'
         target_label: 'container'
 
-      # map our known container names to a clean service label
+      # map known container names to a clean service label
       - source_labels: ['container']
         regex: 'awais-hr-(backend|frontend|db|redis|prometheus|grafana|loki|tempo|alertmanager|cadvisor|node-exporter|promtail|postgres-exporter|redis-exporter)'
         target_label: 'service'
         replacement: '${1}'
 
-      # static labels
+      # static environment label
       - target_label: 'environment'
         replacement: 'production'
 
     pipeline_stages:
-      # ── backend JSON structured logs ──────────────────────────────────
+      # ── BACKEND: parse structured JSON log lines ─────────────────────
       - match:
           selector: '{container="awais-hr-backend"}'
           stages:
-            # Try to parse JSON first (for structured log lines)
             - json:
                 expressions:
-                  level: 'level'
-                  logger: 'logger'
-                  traceId: 'traceId'
-                  requestId: 'requestId'
-                  message: 'message'
+                  level:    'level'
+                  logger:   'logger'
+                  traceId:  'traceId'
+                  message:  'message'
+                  endpoint: 'requestUri'
             - labels:
                 level:
+            # ── LAYER 3: Drop infrastructure/health/metrics lines at Promtail ──
+            # These should already be absent because ApiLoggingFilter.shouldNotFilter()
+            # prevents them from reaching the logger. This is the final safety net.
+            - drop:
+                expression: '.*(actuator/health|actuator/prometheus|/health|/ping|/ready|/liveness|/readiness)\s.*'
+            - drop:
+                expression: '.*\[API (REQUEST|RESPONSE)\].*actuator.*'
 
-      # ── plain text log level extraction (fallback for non-JSON lines) ─
+      # ── PLAIN TEXT: extract log level for non-backend containers ─────
       - match:
           selector: '{container=~"awais-hr-.*"}'
           stages:
@@ -63,12 +69,21 @@ scrape_configs:
             - labels:
                 level:
 
-      # ── Drop noisy DEBUG/TRACE in production ─────────────────────────
+      # ── DROP: DEBUG and TRACE — never needed in production Loki ─────
       - match:
           selector: '{level=~"DEBUG|TRACE"}'
           action: drop
 
-  # ── Fallback: all container log files on disk ────────────────────────
+      # ── DROP: monitoring-system internal logs from non-app containers ─
+      # Prometheus, Grafana, Loki, Tempo, cAdvisor logs are infrastructure.
+      # They are ingested in their own stream but excluded from app log queries.
+      - match:
+          selector: '{container=~"awais-hr-(prometheus|grafana|loki|tempo|alertmanager|cadvisor|promtail|node-exporter|postgres-exporter|redis-exporter)"}'
+          stages:
+            - labels:
+                log_type: 'infrastructure'
+
+  # ── Fallback: container log files on disk ───────────────────────────
   - job_name: container-logs-file
     static_configs:
       - targets:
@@ -82,13 +97,14 @@ scrape_configs:
       - json:
           expressions:
             stream: stream
-            attrs: attrs
             log: log
       - labels:
           stream:
-      # extract log level from the nested log string
       - regex:
           source: log
           expression: '.*\s+(?P<level>TRACE|DEBUG|INFO|WARN|ERROR)\s+.*'
       - labels:
           level:
+      # Drop actuator/health from file-based log stream too
+      - drop:
+          expression: '.*(actuator/health|actuator/prometheus|/ping|/ready|/liveness)\s.*'

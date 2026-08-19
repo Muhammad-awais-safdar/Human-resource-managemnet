@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
+import java.util.Set;
 import java.util.UUID;
 
 @Component
@@ -22,9 +23,38 @@ public class ApiLoggingFilter extends OncePerRequestFilter {
     private final LogStreamManager logStreamManager;
     private final ObjectProvider<ObservabilityService> observabilityServiceProvider;
 
+    /**
+     * URI prefixes that are SILENTLY skipped — they must NOT pollute application logs.
+     * These are infrastructure/monitoring endpoints, not application events.
+     */
+    private static final Set<String> SILENT_URI_PREFIXES = Set.of(
+        "/api/v1/actuator",   // Spring Boot Actuator (health, prometheus, metrics, etc.)
+        "/actuator",           // fallback without context path
+        "/api/v1/health",      // custom HealthCheckController
+        "/health",             // generic health probe
+        "/ping",               // liveness probes
+        "/ready",              // readiness probes
+        "/liveness",           // k8s/docker liveness
+        "/readiness"           // k8s/docker readiness
+    );
+
     public ApiLoggingFilter(LogStreamManager logStreamManager, ObjectProvider<ObservabilityService> observabilityServiceProvider) {
         this.logStreamManager = logStreamManager;
         this.observabilityServiceProvider = observabilityServiceProvider;
+    }
+
+    /**
+     * Silently pass-through requests that are infrastructure probes.
+     * These will never appear in application logs or the Grafana Live Logs stream.
+     */
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        String uri = request.getRequestURI();
+        if (uri == null) return false;
+        for (String prefix : SILENT_URI_PREFIXES) {
+            if (uri.startsWith(prefix)) return true;
+        }
+        return false;
     }
 
     @Override

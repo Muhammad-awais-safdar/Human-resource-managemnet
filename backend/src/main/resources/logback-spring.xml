@@ -69,6 +69,9 @@
     <logger name="org.flywaydb"                          level="INFO"  />
     <logger name="com.zaxxer.hikari"                     level="WARN"  />
     <logger name="io.micrometer"                         level="WARN"  />
+    <!-- Belt-and-suspenders: silence actuator endpoint mappers (no requests logged) -->
+    <logger name="org.springframework.boot.actuate"      level="WARN"  />
+    <logger name="org.springframework.boot.actuate.endpoint.web" level="WARN" />
 
     <!-- ================================================================
          ROOT LOGGER

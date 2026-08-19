@@ -1,0 +1,206 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "graphTooltip": 1,
+  "id": null,
+  "title": "HRM \u2014 Error Center",
+  "uid": "hrm-error-center",
+  "tags": ["hrm", "errors", "exceptions", "security"],
+  "description": "Application error analysis. 5xx failures, authentication events, exceptions, and slow requests. No infrastructure metrics.",
+  "timezone": "browser",
+  "schemaVersion": 38,
+  "version": 1,
+  "refresh": "15s",
+  "time": { "from": "now-1h", "to": "now" },
+
+  "links": [
+    { "title": "Live Logs", "url": "/d/hrm-live-logs", "type": "link", "icon": "search" },
+    { "title": "API",       "url": "/d/hrm-api",       "type": "link", "icon": "trending-up" }
+  ],
+
+  "panels": [
+    {
+      "id": 1,
+      "type": "row",
+      "title": "ERROR SUMMARY",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+      "collapsed": false
+    },
+    {
+      "id": 2,
+      "title": "5xx Rate",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 4, "x": 0, "y": 1 },
+      "targets": [{
+        "expr": "(sum(rate(http_server_requests_seconds_count{status=~\"5..\"}[5m])) / sum(rate(http_server_requests_seconds_count[5m]))) * 100",
+        "legendFormat": ""
+      }],
+      "options": { "colorMode": "background", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "fieldConfig": { "defaults": { "unit": "percent", "decimals": 2, "thresholds": { "mode": "absolute", "steps": [
+        { "color": "green", "value": null }, { "color": "yellow", "value": 1 }, { "color": "red", "value": 5 }
+      ]}}}
+    },
+    {
+      "id": 3,
+      "title": "4xx Rate",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 4, "x": 4, "y": 1 },
+      "targets": [{
+        "expr": "sum(rate(http_server_requests_seconds_count{status=~\"4..\"}[5m]))",
+        "legendFormat": ""
+      }],
+      "options": { "colorMode": "background", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "fieldConfig": { "defaults": { "unit": "reqps", "decimals": 2, "thresholds": { "mode": "absolute", "steps": [
+        { "color": "green", "value": null }, { "color": "yellow", "value": 1 }, { "color": "red", "value": 10 }
+      ]}}}
+    },
+    {
+      "id": 4,
+      "title": "401 Unauthorized",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 4, "x": 8, "y": 1 },
+      "targets": [{
+        "expr": "sum(rate(http_server_requests_seconds_count{status=\"401\"}[5m]))",
+        "legendFormat": ""
+      }],
+      "options": { "colorMode": "background", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "fieldConfig": { "defaults": { "unit": "reqps", "decimals": 2, "thresholds": { "mode": "absolute", "steps": [
+        { "color": "green", "value": null }, { "color": "yellow", "value": 1 }, { "color": "red", "value": 5 }
+      ]}}}
+    },
+    {
+      "id": 5,
+      "title": "403 Forbidden",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 4, "x": 12, "y": 1 },
+      "targets": [{
+        "expr": "sum(rate(http_server_requests_seconds_count{status=\"403\"}[5m]))",
+        "legendFormat": ""
+      }],
+      "options": { "colorMode": "background", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "fieldConfig": { "defaults": { "unit": "reqps", "decimals": 2, "thresholds": { "mode": "absolute", "steps": [
+        { "color": "green", "value": null }, { "color": "yellow", "value": 0.5 }, { "color": "red", "value": 3 }
+      ]}}}
+    },
+    {
+      "id": 6,
+      "title": "App Errors (Loki, 5m)",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 4, "x": 16, "y": 1 },
+      "datasource": { "type": "loki", "uid": "loki-ds" },
+      "targets": [{
+        "expr": "sum(count_over_time({container=\"awais-hr-backend\", level=\"ERROR\"} !~ `(?i)(actuator|/health|/ping)` [5m]))",
+        "legendFormat": ""
+      }],
+      "options": { "colorMode": "background", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "fieldConfig": { "defaults": { "unit": "short", "decimals": 0, "thresholds": { "mode": "absolute", "steps": [
+        { "color": "green", "value": null }, { "color": "yellow", "value": 1 }, { "color": "red", "value": 5 }
+      ]}}}
+    },
+    {
+      "id": 7,
+      "title": "P99 Latency",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 4, "x": 20, "y": 1 },
+      "targets": [{
+        "expr": "histogram_quantile(0.99, sum(rate(http_server_requests_seconds_bucket[5m])) by (le))",
+        "legendFormat": ""
+      }],
+      "options": { "colorMode": "background", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "fieldConfig": { "defaults": { "unit": "s", "decimals": 3, "thresholds": { "mode": "absolute", "steps": [
+        { "color": "green", "value": null }, { "color": "yellow", "value": 1 }, { "color": "red", "value": 5 }
+      ]}}}
+    },
+
+    {
+      "id": 10,
+      "type": "row",
+      "title": "ERROR TIMELINE",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 5 },
+      "collapsed": false
+    },
+    {
+      "id": 11,
+      "title": "HTTP Error Rate Over Time",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 6 },
+      "targets": [
+        { "expr": "sum(rate(http_server_requests_seconds_count{status=~\"5..\"}[2m]))", "legendFormat": "5xx/s" },
+        { "expr": "sum(rate(http_server_requests_seconds_count{status=\"401\"}[2m]))",  "legendFormat": "401/s" },
+        { "expr": "sum(rate(http_server_requests_seconds_count{status=\"403\"}[2m]))",  "legendFormat": "403/s" }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "reqps", "custom": { "drawStyle": "bars", "fillOpacity": 70 } },
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "5xx/s" }, "properties": [{ "id": "color", "value": { "fixedColor": "red",    "mode": "fixed" } }] },
+          { "matcher": { "id": "byName", "options": "401/s" }, "properties": [{ "id": "color", "value": { "fixedColor": "orange", "mode": "fixed" } }] },
+          { "matcher": { "id": "byName", "options": "403/s" }, "properties": [{ "id": "color", "value": { "fixedColor": "#d4a000","mode": "fixed" } }] }
+        ]
+      }
+    },
+    {
+      "id": 12,
+      "title": "Top Failing Endpoints",
+      "type": "table",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 6 },
+      "targets": [{
+        "expr": "topk(10, sum by (uri, method, status) (rate(http_server_requests_seconds_count{status=~\"[45]..\"}[5m])))",
+        "legendFormat": "", "format": "table", "instant": true
+      }],
+      "options": { "sortBy": [{ "displayName": "Value", "desc": true }] },
+      "fieldConfig": { "defaults": { "unit": "reqps" } }
+    },
+
+    {
+      "id": 20,
+      "type": "row",
+      "title": "\ud83d\udd34 APPLICATION ERROR LOGS",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 14 },
+      "collapsed": false
+    },
+    {
+      "id": 21,
+      "title": "ERROR Logs \u2014 Application Only",
+      "description": "Application errors. Health checks and infrastructure noise are excluded.",
+      "type": "logs",
+      "gridPos": { "h": 12, "w": 24, "x": 0, "y": 15 },
+      "datasource": { "type": "loki", "uid": "loki-ds" },
+      "targets": [{
+        "expr": "{container=\"awais-hr-backend\", level=\"ERROR\"} !~ `(?i)(actuator/health|actuator/prometheus|/api/v1/actuator|/health\\b|/ping\\b|/ready\\b|/liveness\\b|/readiness\\b)`",
+        "legendFormat": "",
+        "queryType": "range"
+      }],
+      "options": {
+        "showTime": true, "showLabels": false, "showCommonLabels": true,
+        "wrapLogMessage": true, "prettifyLogMessage": false,
+        "enableLogDetails": true, "sortOrder": "Descending", "dedupStrategy": "none"
+      }
+    },
+
+    {
+      "id": 30,
+      "type": "row",
+      "title": "\u26a0\ufe0f WARNINGS \u2014 Authentication & Application Failures",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 27 },
+      "collapsed": false
+    },
+    {
+      "id": 31,
+      "title": "WARN Logs \u2014 Application Only",
+      "description": "Application warnings. Authentication failures, deprecated operations, slow operations.",
+      "type": "logs",
+      "gridPos": { "h": 10, "w": 24, "x": 0, "y": 28 },
+      "datasource": { "type": "loki", "uid": "loki-ds" },
+      "targets": [{
+        "expr": "{container=\"awais-hr-backend\", level=\"WARN\"} !~ `(?i)(actuator/health|actuator/prometheus|/api/v1/actuator|/health\\b|/ping\\b|/ready\\b|/liveness\\b|/readiness\\b)`",
+        "legendFormat": "",
+        "queryType": "range"
+      }],
+      "options": {
+        "showTime": true, "showLabels": false, "showCommonLabels": false,
+        "wrapLogMessage": true, "prettifyLogMessage": false,
+        "enableLogDetails": true, "sortOrder": "Descending", "dedupStrategy": "none"
+      }
+    }
+  ]
+}
