@@ -3,189 +3,221 @@
   "editable": true,
   "graphTooltip": 1,
   "id": null,
-  "title": "HRM \u2014 Home",
+  "title": "HRM — Home",
   "uid": "hrm-home",
   "tags": ["hrm", "home", "navigation"],
-  "description": "HRM Observability Platform \u2014 Main navigation hub",
+  "description": "Executive Launchpad & Navigation Hub for Awais HR Enterprise SaaS Platform",
   "timezone": "browser",
   "schemaVersion": 38,
-  "version": 1,
-  "refresh": "30s",
+  "version": 2,
+  "refresh": "10s",
   "time": { "from": "now-1h", "to": "now" },
+
+  "links": [
+    { "title": "🔴 Live Logs",       "url": "/d/hrm-live-logs",      "type": "link", "icon": "search", "targetBlank": false },
+    { "title": "⚡ Error Center",    "url": "/d/hrm-error-center",   "type": "link", "icon": "bug", "targetBlank": false },
+    { "title": "📊 Production Overview","url":"/d/hrm-overview",     "type": "link", "icon": "home", "targetBlank": false },
+    { "title": "🚀 API Performance", "url": "/d/hrm-api",            "type": "link", "icon": "trending-up", "targetBlank": false },
+    { "title": "🔥 Troubleshoot",    "url": "/d/hrm-troubleshoot",   "type": "link", "icon": "fire", "targetBlank": false }
+  ],
 
   "panels": [
     {
       "id": 1,
       "type": "text",
       "title": "",
-      "gridPos": { "h": 4, "w": 24, "x": 0, "y": 0 },
+      "gridPos": { "h": 3, "w": 24, "x": 0, "y": 0 },
       "options": {
         "mode": "markdown",
-        "content": "# \ud83d\udfe2 HRM Observability Platform\n\nAll systems operational. Select a dashboard below or use the **sidebar** \u2192 *HRM \u2014 Production* folder.\n\n---"
+        "content": "<div style=\"background: linear-gradient(90deg, #1e293b 0%, #0f172a 100%); padding: 16px 24px; border-radius: 8px; border: 1px solid #334155;\"><h2 style=\"margin:0; color:#f8fafc; font-weight:700;\">🛡️ Awais HR Enterprise — Observability Portal</h2><p style=\"margin:4px 0 0 0; color:#94a3b8; font-size:14px;\">Production telemetry, distributed tracing (Tempo), structured JSON logs (Loki), and metric monitoring (Prometheus).</p></div>"
       }
     },
 
     {
       "id": 2,
-      "title": "Backend",
+      "title": "Backend Service",
       "type": "stat",
-      "gridPos": { "h": 3, "w": 3, "x": 0, "y": 4 },
+      "gridPos": { "h": 4, "w": 3, "x": 0, "y": 3 },
       "targets": [{ "expr": "up{job=\"awais-hr-backend\"}", "legendFormat": "Backend" }],
-      "options": { "colorMode": "background", "graphMode": "none", "textMode": "name", "reduceOptions": { "calcs": ["last"] } },
-      "fieldConfig": { "defaults": { "mappings": [{ "type": "value", "options": { "0": { "text": "DOWN", "color": "red" }, "1": { "text": "UP", "color": "green" } } }], "thresholds": { "mode": "absolute", "steps": [{ "color": "red", "value": null }, { "color": "green", "value": 1 }] } } }
+      "options": { "colorMode": "value", "graphMode": "none", "textMode": "value", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "fieldConfig": {
+        "defaults": {
+          "noValue": "DOWN",
+          "mappings": [
+            { "type": "value", "options": { "0": { "text": "DOWN", "color": "red" }, "1": { "text": "UP", "color": "green" } } }
+          ],
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "red", "value": null }, { "color": "green", "value": 1 }] }
+        }
+      }
     },
     {
       "id": 3,
-      "title": "Database",
+      "title": "PostgreSQL DB",
       "type": "stat",
-      "gridPos": { "h": 3, "w": 3, "x": 3, "y": 4 },
+      "gridPos": { "h": 4, "w": 3, "x": 3, "y": 3 },
       "targets": [{ "expr": "pg_up", "legendFormat": "Database" }],
-      "options": { "colorMode": "background", "graphMode": "none", "textMode": "name", "reduceOptions": { "calcs": ["last"] } },
-      "fieldConfig": { "defaults": { "mappings": [{ "type": "value", "options": { "0": { "text": "DOWN", "color": "red" }, "1": { "text": "UP", "color": "green" } } }], "thresholds": { "mode": "absolute", "steps": [{ "color": "red", "value": null }, { "color": "green", "value": 1 }] } } }
+      "options": { "colorMode": "value", "graphMode": "none", "textMode": "value", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "fieldConfig": {
+        "defaults": {
+          "noValue": "DOWN",
+          "mappings": [
+            { "type": "value", "options": { "0": { "text": "DOWN", "color": "red" }, "1": { "text": "UP", "color": "green" } } }
+          ],
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "red", "value": null }, { "color": "green", "value": 1 }] }
+        }
+      }
     },
     {
       "id": 4,
-      "title": "Redis",
+      "title": "Redis Cache",
       "type": "stat",
-      "gridPos": { "h": 3, "w": 3, "x": 6, "y": 4 },
+      "gridPos": { "h": 4, "w": 3, "x": 6, "y": 3 },
       "targets": [{ "expr": "redis_up", "legendFormat": "Redis" }],
-      "options": { "colorMode": "background", "graphMode": "none", "textMode": "name", "reduceOptions": { "calcs": ["last"] } },
-      "fieldConfig": { "defaults": { "mappings": [{ "type": "value", "options": { "0": { "text": "DOWN", "color": "red" }, "1": { "text": "UP", "color": "green" } } }], "thresholds": { "mode": "absolute", "steps": [{ "color": "red", "value": null }, { "color": "green", "value": 1 }] } } }
+      "options": { "colorMode": "value", "graphMode": "none", "textMode": "value", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "fieldConfig": {
+        "defaults": {
+          "noValue": "DOWN",
+          "mappings": [
+            { "type": "value", "options": { "0": { "text": "DOWN", "color": "red" }, "1": { "text": "UP", "color": "green" } } }
+          ],
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "red", "value": null }, { "color": "green", "value": 1 }] }
+        }
+      }
     },
     {
       "id": 5,
       "title": "5xx Error Rate",
       "type": "stat",
-      "gridPos": { "h": 3, "w": 3, "x": 9, "y": 4 },
-      "targets": [{ "expr": "(sum(rate(http_server_requests_seconds_count{status=~\"5..\"}[5m])) / sum(rate(http_server_requests_seconds_count[5m]))) * 100", "legendFormat": "" }],
-      "options": { "colorMode": "background", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } },
-      "fieldConfig": { "defaults": { "unit": "percent", "decimals": 2, "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 1 }, { "color": "red", "value": 5 }] } } }
+      "gridPos": { "h": 4, "w": 3, "x": 9, "y": 3 },
+      "targets": [{ "expr": "((sum(rate(http_server_requests_seconds_count{status=~\"5..\"}[5m])) or vector(0)) / (sum(rate(http_server_requests_seconds_count[5m])) or vector(1))) * 100", "legendFormat": "" }],
+      "options": { "colorMode": "value", "graphMode": "area", "textMode": "value_and_name", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "fieldConfig": { "defaults": { "unit": "percent", "decimals": 2, "noValue": "0.00%", "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 1 }, { "color": "red", "value": 5 }] } } }
     },
     {
       "id": 6,
       "title": "P95 Latency",
       "type": "stat",
-      "gridPos": { "h": 3, "w": 3, "x": 12, "y": 4 },
-      "targets": [{ "expr": "histogram_quantile(0.95, sum(rate(http_server_requests_seconds_bucket[5m])) by (le))", "legendFormat": "" }],
-      "options": { "colorMode": "background", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } },
-      "fieldConfig": { "defaults": { "unit": "s", "decimals": 3, "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 0.5 }, { "color": "red", "value": 2 }] } } }
+      "gridPos": { "h": 4, "w": 3, "x": 12, "y": 3 },
+      "targets": [{ "expr": "(histogram_quantile(0.95, sum(rate(http_server_requests_seconds_bucket[5m])) by (le)) * 1000) or vector(0)", "legendFormat": "" }],
+      "options": { "colorMode": "value", "graphMode": "area", "textMode": "value_and_name", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "fieldConfig": { "defaults": { "unit": "ms", "decimals": 1, "noValue": "0.0 ms", "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 300 }, { "color": "red", "value": 1000 }] } } }
     },
     {
       "id": 7,
-      "title": "JVM Heap %",
+      "title": "JVM Heap Used",
       "type": "stat",
-      "gridPos": { "h": 3, "w": 3, "x": 15, "y": 4 },
-      "targets": [{ "expr": "(sum(jvm_memory_used_bytes{area=\"heap\"}) / sum(jvm_memory_max_bytes{area=\"heap\"})) * 100", "legendFormat": "" }],
-      "options": { "colorMode": "background", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } },
-      "fieldConfig": { "defaults": { "unit": "percent", "decimals": 1, "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 70 }, { "color": "red", "value": 88 }] } } }
+      "gridPos": { "h": 4, "w": 3, "x": 15, "y": 3 },
+      "targets": [{ "expr": "((sum(jvm_memory_used_bytes{area=\"heap\"}) / sum(jvm_memory_max_bytes{area=\"heap\"})) * 100) or vector(0)", "legendFormat": "" }],
+      "options": { "colorMode": "value", "graphMode": "area", "textMode": "value_and_name", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "fieldConfig": { "defaults": { "unit": "percent", "decimals": 1, "noValue": "0.0%", "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 70 }, { "color": "red", "value": 88 }] } } }
     },
     {
       "id": 8,
       "title": "App Errors (5m)",
       "type": "stat",
-      "gridPos": { "h": 3, "w": 3, "x": 18, "y": 4 },
+      "gridPos": { "h": 4, "w": 3, "x": 18, "y": 3 },
       "datasource": { "type": "loki", "uid": "loki-ds" },
       "targets": [{ "expr": "sum(count_over_time({container=\"awais-hr-backend\", level=\"ERROR\"} !~ `(?i)(actuator|/health|/ping)` [5m]))", "legendFormat": "" }],
-      "options": { "colorMode": "background", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } },
-      "fieldConfig": { "defaults": { "unit": "short", "decimals": 0, "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 1 }, { "color": "red", "value": 5 }] } } }
+      "options": { "colorMode": "value", "graphMode": "area", "textMode": "value_and_name", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "fieldConfig": { "defaults": { "unit": "short", "decimals": 0, "noValue": "0", "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 1 }, { "color": "red", "value": 5 }] } } }
     },
     {
       "id": 9,
-      "title": "Host CPU %",
+      "title": "Host CPU Load",
       "type": "stat",
-      "gridPos": { "h": 3, "w": 3, "x": 21, "y": 4 },
-      "targets": [{ "expr": "100 - (avg(rate(node_cpu_seconds_total{mode=\"idle\"}[5m])) * 100)", "legendFormat": "" }],
-      "options": { "colorMode": "background", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } },
-      "fieldConfig": { "defaults": { "unit": "percent", "decimals": 1, "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 70 }, { "color": "red", "value": 88 }] } } }
+      "gridPos": { "h": 4, "w": 3, "x": 21, "y": 3 },
+      "targets": [{ "expr": "(100 - (avg(rate(node_cpu_seconds_total{mode=\"idle\"}[5m])) * 100)) or vector(0)", "legendFormat": "" }],
+      "options": { "colorMode": "value", "graphMode": "area", "textMode": "value_and_name", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "fieldConfig": { "defaults": { "unit": "percent", "decimals": 1, "noValue": "0.0%", "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 70 }, { "color": "red", "value": 88 }] } } }
     },
 
     {
       "id": 10,
-      "type": "text",
-      "title": "",
+      "type": "row",
+      "title": "OBSERVABILITY PORTALS",
       "gridPos": { "h": 1, "w": 24, "x": 0, "y": 7 },
-      "options": { "mode": "markdown", "content": "### \ud83d\udcca DASHBOARDS" }
+      "collapsed": false
     },
 
     {
       "id": 11,
       "type": "text",
-      "title": "\ud83d\udcca Production Overview",
-      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 8 },
+      "title": "📊 Production Overview",
+      "gridPos": { "h": 5, "w": 6, "x": 0, "y": 8 },
       "options": {
-        "mode": "markdown",
-        "content": "**Single pane of glass.**\n\nService health, API performance, error rate, infrastructure.\n\n[\u2192 Open Overview](/d/hrm-overview)"
+        "mode": "html",
+        "content": "<div style=\"padding:12px;\"><h4 style=\"margin:0 0 8px 0; color:#38bdf8;\">Single Pane of Glass</h4><p style=\"color:#cbd5e1; font-size:13px; margin-bottom:16px;\">Comprehensive overview of service health, API latency, error rates, and host CPU/RAM utilization.</p><a href=\"/d/hrm-overview\" style=\"display:inline-block; padding:6px 14px; background:#0284c7; color:#fff; text-decoration:none; border-radius:6px; font-weight:600; font-size:13px;\">Open Overview →</a></div>"
       }
     },
     {
       "id": 12,
       "type": "text",
-      "title": "\ud83d\udfe2 Live Logs",
-      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 8 },
+      "title": "🔴 Live Logs",
+      "gridPos": { "h": 5, "w": 6, "x": 6, "y": 8 },
       "options": {
-        "mode": "markdown",
-        "content": "**Real-time application log stream.**\n\nApplication events only. No infrastructure noise.\n\n[\u2192 Open Live Logs](/d/hrm-live-logs)"
+        "mode": "html",
+        "content": "<div style=\"padding:12px;\"><h4 style=\"margin:0 0 8px 0; color:#4ade80;\">Real-Time Log Stream</h4><p style=\"color:#cbd5e1; font-size:13px; margin-bottom:16px;\">Structured JSON application logs via Loki. Filtered to exclude health probes & background scrapes.</p><a href=\"/d/hrm-live-logs\" style=\"display:inline-block; padding:6px 14px; background:#16a34a; color:#fff; text-decoration:none; border-radius:6px; font-weight:600; font-size:13px;\">Open Live Logs →</a></div>"
       }
     },
     {
       "id": 13,
       "type": "text",
-      "title": "\ud83d\udd34 Error Center",
-      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 8 },
+      "title": "⚡ Error Center",
+      "gridPos": { "h": 5, "w": 6, "x": 12, "y": 8 },
       "options": {
-        "mode": "markdown",
-        "content": "**Errors, exceptions, 5xx, 401/403.**\n\nTop failing endpoints and security events.\n\n[\u2192 Open Error Center](/d/hrm-error-center)"
+        "mode": "html",
+        "content": "<div style=\"padding:12px;\"><h4 style=\"margin:0 0 8px 0; color:#f87171;\">Error & Exception Audit</h4><p style=\"color:#cbd5e1; font-size:13px; margin-bottom:16px;\">Dedicated stream for 5xx errors, 401/403 security spikes, stack traces, and slow requests.</p><a href=\"/d/hrm-error-center\" style=\"display:inline-block; padding:6px 14px; background:#dc2626; color:#fff; text-decoration:none; border-radius:6px; font-weight:600; font-size:13px;\">Open Error Center →</a></div>"
       }
     },
     {
       "id": 14,
       "type": "text",
-      "title": "\ud83d\udd27 Troubleshooting",
-      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 8 },
+      "title": "🔥 Troubleshooting",
+      "gridPos": { "h": 5, "w": 6, "x": 18, "y": 8 },
       "options": {
-        "mode": "markdown",
-        "content": "**Something is broken. Start here.**\n\nCurrent errors, slow endpoints, recent failures.\n\n[\u2192 Open Troubleshooting](/d/hrm-troubleshoot)"
+        "mode": "html",
+        "content": "<div style=\"padding:12px;\"><h4 style=\"margin:0 0 8px 0; color:#fbbf24;\">Incident Investigation</h4><p style=\"color:#cbd5e1; font-size:13px; margin-bottom:16px;\">Correlate traces, logs, and metrics when investigating active anomalies or degraded performance.</p><a href=\"/d/hrm-troubleshoot\" style=\"display:inline-block; padding:6px 14px; background:#d97706; color:#fff; text-decoration:none; border-radius:6px; font-weight:600; font-size:13px;\">Open Troubleshooting →</a></div>"
       }
     },
 
     {
       "id": 20,
       "type": "text",
-      "title": "\u2699\ufe0f Application",
-      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 12 },
+      "title": "☕ Application Health",
+      "gridPos": { "h": 5, "w": 6, "x": 0, "y": 13 },
       "options": {
-        "mode": "markdown",
-        "content": "**JVM, GC, threads, HikariCP.**\n\nSpring Boot internals and database pool.\n\n[\u2192 Open Application](/d/hrm-application)"
+        "mode": "html",
+        "content": "<div style=\"padding:12px;\"><h4 style=\"margin:0 0 8px 0; color:#c084fc;\">JVM & Spring Boot Internals</h4><p style=\"color:#cbd5e1; font-size:13px; margin-bottom:16px;\">JVM Heap/Non-heap memory, garbage collection pauses, live thread counts, and HikariCP pool health.</p><a href=\"/d/hrm-application\" style=\"display:inline-block; padding:6px 14px; background:#9333ea; color:#fff; text-decoration:none; border-radius:6px; font-weight:600; font-size:13px;\">Open Application →</a></div>"
       }
     },
     {
       "id": 21,
       "type": "text",
-      "title": "\ud83d\udcf6 API Performance",
-      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 12 },
+      "title": "🚀 API Performance",
+      "gridPos": { "h": 5, "w": 6, "x": 6, "y": 13 },
       "options": {
-        "mode": "markdown",
-        "content": "**Requests/sec, P50/P95/P99 latency.**\n\nTop endpoints, slow endpoints, error rates.\n\n[\u2192 Open API](/d/hrm-api)"
+        "mode": "html",
+        "content": "<div style=\"padding:12px;\"><h4 style=\"margin:0 0 8px 0; color:#38bdf8;\">Endpoint Analytics</h4><p style=\"color:#cbd5e1; font-size:13px; margin-bottom:16px;\">Request volume, P50/P95/P99 latency distribution, slowest endpoints, and status code breakdown.</p><a href=\"/d/hrm-api\" style=\"display:inline-block; padding:6px 14px; background:#0284c7; color:#fff; text-decoration:none; border-radius:6px; font-weight:600; font-size:13px;\">Open API →</a></div>"
       }
     },
     {
       "id": 22,
       "type": "text",
-      "title": "\ud83d\udda5 Infrastructure",
-      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 12 },
+      "title": "🖥️ Infrastructure",
+      "gridPos": { "h": 5, "w": 6, "x": 12, "y": 13 },
       "options": {
-        "mode": "markdown",
-        "content": "**Host CPU, RAM, disk, network.**\n\nContainer metrics via cAdvisor.\n\n[\u2192 Open Infrastructure](/d/hrm-infrastructure)"
+        "mode": "html",
+        "content": "<div style=\"padding:12px;\"><h4 style=\"margin:0 0 8px 0; color:#818cf8;\">Host & Docker Telemetry</h4><p style=\"color:#cbd5e1; font-size:13px; margin-bottom:16px;\">Node Exporter & cAdvisor metrics: host CPU, RAM, disk I/O, network traffic, and container limits.</p><a href=\"/d/hrm-infrastructure\" style=\"display:inline-block; padding:6px 14px; background:#4f46e5; color:#fff; text-decoration:none; border-radius:6px; font-weight:600; font-size:13px;\">Open Infrastructure →</a></div>"
       }
     },
     {
       "id": 23,
       "type": "text",
-      "title": "\ud83d\uddc4 Database & Redis",
-      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 12 },
+      "title": "🗄️ Database & Redis",
+      "gridPos": { "h": 5, "w": 6, "x": 18, "y": 13 },
       "options": {
-        "mode": "markdown",
-        "content": "**PostgreSQL connections, transactions.**\n\nRedis memory, hit rate, evictions.\n\n[\u2192 Open DB & Redis](/d/hrm-datastore)"
+        "mode": "html",
+        "content": "<div style=\"padding:12px;\"><h4 style=\"margin:0 0 8px 0; color:#f472b6;\">PostgreSQL & Redis Metrics</h4><p style=\"color:#cbd5e1; font-size:13px; margin-bottom:16px;\">Database active connections, transaction commit rates, Redis memory usage, and cache hit ratios.</p><a href=\"/d/hrm-datastore\" style=\"display:inline-block; padding:6px 14px; background:#db2777; color:#fff; text-decoration:none; border-radius:6px; font-weight:600; font-size:13px;\">Open DB & Redis →</a></div>"
       }
     }
   ]

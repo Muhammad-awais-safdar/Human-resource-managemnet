@@ -3,105 +3,114 @@
   "editable": true,
   "graphTooltip": 1,
   "id": null,
-  "title": "HRM \u2014 Production Overview",
+  "title": "HRM — Production Overview",
   "uid": "hrm-overview",
   "tags": ["hrm", "overview", "production"],
+  "description": "Executive Observability & Single Pane of Glass for Awais HR Enterprise SaaS Platform",
   "timezone": "browser",
   "schemaVersion": 38,
-  "version": 1,
-  "refresh": "30s",
+  "version": 3,
+  "refresh": "10s",
   "time": { "from": "now-1h", "to": "now" },
 
   "links": [
-    { "title": "Application",     "url": "/d/hrm-application",    "type": "link", "icon": "bolt" },
-    { "title": "API Performance", "url": "/d/hrm-api",            "type": "link", "icon": "trending-up" },
-    { "title": "Logs",            "url": "/d/hrm-logs",           "type": "link", "icon": "search" },
-    { "title": "Troubleshoot",    "url": "/d/hrm-troubleshoot",   "type": "link", "icon": "bug" }
+    { "title": "🔴 Live Logs",       "url": "/d/hrm-live-logs",      "type": "link", "icon": "search", "targetBlank": false },
+    { "title": "⚡ Error Center",    "url": "/d/hrm-error-center",   "type": "link", "icon": "bug", "targetBlank": false },
+    { "title": "🚀 API Performance", "url": "/d/hrm-api",            "type": "link", "icon": "trending-up", "targetBlank": false },
+    { "title": "☕ Application",     "url": "/d/hrm-application",    "type": "link", "icon": "bolt", "targetBlank": false },
+    { "title": "🖥️ Infrastructure",  "url": "/d/hrm-infrastructure", "type": "link", "icon": "server", "targetBlank": false },
+    { "title": "🗄️ Database & Redis","url": "/d/hrm-datastore",      "type": "link", "icon": "database", "targetBlank": false },
+    { "title": "🔥 Troubleshoot",    "url": "/d/hrm-troubleshoot",   "type": "link", "icon": "fire", "targetBlank": false }
   ],
 
   "panels": [
     {
       "id": 1,
       "type": "row",
-      "title": "STATUS",
+      "title": "SYSTEM HEALTH & CORE TELEMETRY",
       "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
       "collapsed": false
     },
     {
       "id": 2,
-      "title": "Backend",
+      "title": "Backend Service",
       "type": "stat",
       "gridPos": { "h": 4, "w": 3, "x": 0, "y": 1 },
       "targets": [{ "expr": "up{job=\"awais-hr-backend\"}", "legendFormat": "Backend" }],
-      "options": { "colorMode": "background", "graphMode": "none", "textMode": "name", "reduceOptions": { "calcs": ["last"] } },
+      "options": { "colorMode": "value", "graphMode": "none", "textMode": "value", "reduceOptions": { "calcs": ["lastNotNull"] } },
       "fieldConfig": {
         "defaults": {
+          "noValue": "DOWN",
           "mappings": [
-            { "type": "value", "options": { "0": { "text": "DOWN",    "color": "red"   }, "1": { "text": "UP", "color": "green" } } }
+            { "type": "value", "options": { "0": { "text": "DOWN", "color": "red" }, "1": { "text": "UP", "color": "green" } } }
           ],
-          "thresholds": { "mode": "absolute", "steps": [{"color":"red","value":null},{"color":"green","value":1}] }
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "red", "value": null }, { "color": "green", "value": 1 }] }
         }
       }
     },
     {
       "id": 3,
-      "title": "Database",
+      "title": "PostgreSQL DB",
       "type": "stat",
       "gridPos": { "h": 4, "w": 3, "x": 3, "y": 1 },
       "targets": [{ "expr": "pg_up", "legendFormat": "Database" }],
-      "options": { "colorMode": "background", "graphMode": "none", "textMode": "name", "reduceOptions": { "calcs": ["last"] } },
+      "options": { "colorMode": "value", "graphMode": "none", "textMode": "value", "reduceOptions": { "calcs": ["lastNotNull"] } },
       "fieldConfig": {
         "defaults": {
+          "noValue": "DOWN",
           "mappings": [
             { "type": "value", "options": { "0": { "text": "DOWN", "color": "red" }, "1": { "text": "UP", "color": "green" } } }
           ],
-          "thresholds": { "mode": "absolute", "steps": [{"color":"red","value":null},{"color":"green","value":1}] }
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "red", "value": null }, { "color": "green", "value": 1 }] }
         }
       }
     },
     {
       "id": 4,
-      "title": "Redis",
+      "title": "Redis Cache",
       "type": "stat",
       "gridPos": { "h": 4, "w": 3, "x": 6, "y": 1 },
       "targets": [{ "expr": "redis_up", "legendFormat": "Redis" }],
-      "options": { "colorMode": "background", "graphMode": "none", "textMode": "name", "reduceOptions": { "calcs": ["last"] } },
+      "options": { "colorMode": "value", "graphMode": "none", "textMode": "value", "reduceOptions": { "calcs": ["lastNotNull"] } },
       "fieldConfig": {
         "defaults": {
+          "noValue": "DOWN",
           "mappings": [
             { "type": "value", "options": { "0": { "text": "DOWN", "color": "red" }, "1": { "text": "UP", "color": "green" } } }
           ],
-          "thresholds": { "mode": "absolute", "steps": [{"color":"red","value":null},{"color":"green","value":1}] }
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "red", "value": null }, { "color": "green", "value": 1 }] }
         }
       }
     },
     {
       "id": 5,
-      "title": "Error Rate",
+      "title": "HTTP 5xx Error Rate",
       "type": "stat",
       "gridPos": { "h": 4, "w": 3, "x": 9, "y": 1 },
-      "targets": [{ "expr": "(sum(rate(http_server_requests_seconds_count{status=~\"5..\"}[5m])) / sum(rate(http_server_requests_seconds_count[5m]))) * 100", "legendFormat": "Error %" }],
-      "options": { "colorMode": "background", "graphMode": "area", "textMode": "auto", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "targets": [{ "expr": "((sum(rate(http_server_requests_seconds_count{status=~\"5..\"}[5m])) or vector(0)) / (sum(rate(http_server_requests_seconds_count[5m])) or vector(1))) * 100", "legendFormat": "Error %" }],
+      "options": { "colorMode": "value", "graphMode": "area", "textMode": "value_and_name", "reduceOptions": { "calcs": ["lastNotNull"] } },
       "fieldConfig": {
         "defaults": {
           "unit": "percent",
           "decimals": 2,
-          "thresholds": { "mode": "absolute", "steps": [{"color":"green","value":null},{"color":"yellow","value":1},{"color":"red","value":5}] }
+          "noValue": "0.00%",
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 1 }, { "color": "red", "value": 5 }] }
         }
       }
     },
     {
       "id": 6,
-      "title": "Req/sec",
+      "title": "Throughput (Req/sec)",
       "type": "stat",
       "gridPos": { "h": 4, "w": 3, "x": 12, "y": 1 },
-      "targets": [{ "expr": "sum(rate(http_server_requests_seconds_count[5m]))", "legendFormat": "Req/s" }],
-      "options": { "colorMode": "background", "graphMode": "area", "textMode": "auto", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "targets": [{ "expr": "sum(rate(http_server_requests_seconds_count[5m])) or vector(0)", "legendFormat": "Req/s" }],
+      "options": { "colorMode": "value", "graphMode": "area", "textMode": "value_and_name", "reduceOptions": { "calcs": ["lastNotNull"] } },
       "fieldConfig": {
         "defaults": {
           "unit": "reqps",
           "decimals": 1,
-          "thresholds": { "mode": "absolute", "steps": [{"color":"blue","value":null}] }
+          "noValue": "0.0 req/s",
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "blue", "value": null }] }
         }
       }
     },
@@ -110,43 +119,46 @@
       "title": "P95 Latency",
       "type": "stat",
       "gridPos": { "h": 4, "w": 3, "x": 15, "y": 1 },
-      "targets": [{ "expr": "histogram_quantile(0.95, sum(rate(http_server_requests_seconds_bucket[5m])) by (le))", "legendFormat": "P95" }],
-      "options": { "colorMode": "background", "graphMode": "area", "textMode": "auto", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "targets": [{ "expr": "(histogram_quantile(0.95, sum(rate(http_server_requests_seconds_bucket[5m])) by (le)) * 1000) or vector(0)", "legendFormat": "P95" }],
+      "options": { "colorMode": "value", "graphMode": "area", "textMode": "value_and_name", "reduceOptions": { "calcs": ["lastNotNull"] } },
       "fieldConfig": {
         "defaults": {
-          "unit": "s",
-          "decimals": 3,
-          "thresholds": { "mode": "absolute", "steps": [{"color":"green","value":null},{"color":"yellow","value":0.5},{"color":"red","value":2}] }
+          "unit": "ms",
+          "decimals": 1,
+          "noValue": "0.0 ms",
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 300 }, { "color": "red", "value": 1000 }] }
         }
       }
     },
     {
       "id": 8,
-      "title": "JVM Heap %",
+      "title": "JVM Heap Used",
       "type": "stat",
       "gridPos": { "h": 4, "w": 3, "x": 18, "y": 1 },
-      "targets": [{ "expr": "(sum(jvm_memory_used_bytes{area=\"heap\"}) / sum(jvm_memory_max_bytes{area=\"heap\"})) * 100", "legendFormat": "Heap %" }],
-      "options": { "colorMode": "background", "graphMode": "area", "textMode": "auto", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "targets": [{ "expr": "((sum(jvm_memory_used_bytes{area=\"heap\"}) / sum(jvm_memory_max_bytes{area=\"heap\"})) * 100) or vector(0)", "legendFormat": "Heap %" }],
+      "options": { "colorMode": "value", "graphMode": "area", "textMode": "value_and_name", "reduceOptions": { "calcs": ["lastNotNull"] } },
       "fieldConfig": {
         "defaults": {
           "unit": "percent",
           "decimals": 1,
-          "thresholds": { "mode": "absolute", "steps": [{"color":"green","value":null},{"color":"yellow","value":70},{"color":"red","value":88}] }
+          "noValue": "0.0%",
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 70 }, { "color": "red", "value": 85 }] }
         }
       }
     },
     {
       "id": 9,
-      "title": "Host CPU %",
+      "title": "Host CPU Load",
       "type": "stat",
       "gridPos": { "h": 4, "w": 3, "x": 21, "y": 1 },
-      "targets": [{ "expr": "100 - (avg(rate(node_cpu_seconds_total{mode=\"idle\"}[5m])) * 100)", "legendFormat": "CPU %" }],
-      "options": { "colorMode": "background", "graphMode": "area", "textMode": "auto", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "targets": [{ "expr": "(100 - (avg(rate(node_cpu_seconds_total{mode=\"idle\"}[5m])) * 100)) or vector(0)", "legendFormat": "CPU %" }],
+      "options": { "colorMode": "value", "graphMode": "area", "textMode": "value_and_name", "reduceOptions": { "calcs": ["lastNotNull"] } },
       "fieldConfig": {
         "defaults": {
           "unit": "percent",
           "decimals": 1,
-          "thresholds": { "mode": "absolute", "steps": [{"color":"green","value":null},{"color":"yellow","value":70},{"color":"red","value":88}] }
+          "noValue": "0.0%",
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 70 }, { "color": "red", "value": 88 }] }
         }
       }
     },
@@ -154,50 +166,59 @@
     {
       "id": 10,
       "type": "row",
-      "title": "API PERFORMANCE",
+      "title": "API PERFORMANCE & LATENCY BREAKDOWN",
       "gridPos": { "h": 1, "w": 24, "x": 0, "y": 5 },
       "collapsed": false
     },
     {
       "id": 11,
-      "title": "Request Rate & Status",
+      "title": "Request Throughput by Response Status",
       "type": "timeseries",
       "gridPos": { "h": 8, "w": 12, "x": 0, "y": 6 },
       "targets": [
-        { "expr": "sum(rate(http_server_requests_seconds_count{status=~\"2..\"}[5m]))", "legendFormat": "2xx Success" },
-        { "expr": "sum(rate(http_server_requests_seconds_count{status=~\"4..\"}[5m]))", "legendFormat": "4xx Client Error" },
-        { "expr": "sum(rate(http_server_requests_seconds_count{status=~\"5..\"}[5m]))", "legendFormat": "5xx Server Error" }
+        { "expr": "sum(rate(http_server_requests_seconds_count{status=~\"2..\"}[5m])) or vector(0)", "legendFormat": "2xx Success" },
+        { "expr": "sum(rate(http_server_requests_seconds_count{status=~\"4..\"}[5m])) or vector(0)", "legendFormat": "4xx Client Error" },
+        { "expr": "sum(rate(http_server_requests_seconds_count{status=~\"5..\"}[5m])) or vector(0)", "legendFormat": "5xx Server Error" }
       ],
+      "options": {
+        "legend": { "displayMode": "list", "placement": "bottom" },
+        "tooltip": { "mode": "multi" }
+      },
       "fieldConfig": {
         "defaults": {
           "unit": "reqps",
-          "custom": { "drawStyle": "line", "lineInterpolation": "smooth", "fillOpacity": 12, "lineWidth": 2 }
+          "custom": { "drawStyle": "line", "lineInterpolation": "smooth", "fillOpacity": 15, "lineWidth": 2 }
         },
         "overrides": [
-          { "matcher": {"id":"byName","options":"2xx Success"},     "properties": [{"id":"color","value":{"fixedColor":"green","mode":"fixed"}}] },
-          { "matcher": {"id":"byName","options":"4xx Client Error"}, "properties": [{"id":"color","value":{"fixedColor":"yellow","mode":"fixed"}}] },
-          { "matcher": {"id":"byName","options":"5xx Server Error"}, "properties": [{"id":"color","value":{"fixedColor":"red","mode":"fixed"}}] }
+          { "matcher": {"id":"byName","options":"2xx Success"},      "properties": [{"id":"color","value":{"fixedColor":"#37D67A","mode":"fixed"}}] },
+          { "matcher": {"id":"byName","options":"4xx Client Error"}, "properties": [{"id":"color","value":{"fixedColor":"#FFB74D","mode":"fixed"}}] },
+          { "matcher": {"id":"byName","options":"5xx Server Error"}, "properties": [{"id":"color","value":{"fixedColor":"#F44336","mode":"fixed"}}] }
         ]
       }
     },
     {
       "id": 12,
-      "title": "API Latency (P50 / P95 / P99)",
+      "title": "API Response Latency Quantiles (ms)",
       "type": "timeseries",
       "gridPos": { "h": 8, "w": 12, "x": 12, "y": 6 },
       "targets": [
-        { "expr": "histogram_quantile(0.50, sum(rate(http_server_requests_seconds_bucket[5m])) by (le))", "legendFormat": "P50" },
-        { "expr": "histogram_quantile(0.95, sum(rate(http_server_requests_seconds_bucket[5m])) by (le))", "legendFormat": "P95" },
-        { "expr": "histogram_quantile(0.99, sum(rate(http_server_requests_seconds_bucket[5m])) by (le))", "legendFormat": "P99" }
+        { "expr": "histogram_quantile(0.50, sum(rate(http_server_requests_seconds_bucket[5m])) by (le)) * 1000", "legendFormat": "P50 Latency" },
+        { "expr": "histogram_quantile(0.95, sum(rate(http_server_requests_seconds_bucket[5m])) by (le)) * 1000", "legendFormat": "P95 Latency" },
+        { "expr": "histogram_quantile(0.99, sum(rate(http_server_requests_seconds_bucket[5m])) by (le)) * 1000", "legendFormat": "P99 Latency" }
       ],
+      "options": {
+        "legend": { "displayMode": "list", "placement": "bottom" },
+        "tooltip": { "mode": "multi" }
+      },
       "fieldConfig": {
         "defaults": {
-          "unit": "s",
-          "custom": { "drawStyle": "line", "lineInterpolation": "smooth", "fillOpacity": 8, "lineWidth": 2 }
+          "unit": "ms",
+          "custom": { "drawStyle": "line", "lineInterpolation": "smooth", "fillOpacity": 10, "lineWidth": 2 }
         },
         "overrides": [
-          { "matcher": {"id":"byName","options":"P95"}, "properties": [{"id":"color","value":{"fixedColor":"yellow","mode":"fixed"}}] },
-          { "matcher": {"id":"byName","options":"P99"}, "properties": [{"id":"color","value":{"fixedColor":"red","mode":"fixed"}}] }
+          { "matcher": {"id":"byName","options":"P50 Latency"}, "properties": [{"id":"color","value":{"fixedColor":"#29B6F6","mode":"fixed"}}] },
+          { "matcher": {"id":"byName","options":"P95 Latency"}, "properties": [{"id":"color","value":{"fixedColor":"#FFCA28","mode":"fixed"}}] },
+          { "matcher": {"id":"byName","options":"P99 Latency"}, "properties": [{"id":"color","value":{"fixedColor":"#EF5350","mode":"fixed"}}] }
         ]
       }
     },
@@ -205,40 +226,40 @@
     {
       "id": 13,
       "type": "row",
-      "title": "INFRASTRUCTURE",
+      "title": "INFRASTRUCTURE & HOST RESOURCES",
       "gridPos": { "h": 1, "w": 24, "x": 0, "y": 14 },
       "collapsed": false
     },
     {
       "id": 14,
-      "title": "CPU Usage",
+      "title": "Host CPU Utilization",
       "type": "timeseries",
       "gridPos": { "h": 7, "w": 8, "x": 0, "y": 15 },
-      "targets": [{ "expr": "100 - (avg(rate(node_cpu_seconds_total{mode=\"idle\"}[5m])) * 100)", "legendFormat": "Host CPU %" }],
+      "targets": [{ "expr": "100 - (avg(rate(node_cpu_seconds_total{mode=\"idle\"}[5m])) * 100)", "legendFormat": "CPU %" }],
       "fieldConfig": {
         "defaults": {
           "unit": "percent", "min": 0, "max": 100,
-          "custom": { "drawStyle": "line", "lineInterpolation": "smooth", "fillOpacity": 15 },
-          "thresholds": { "mode": "absolute", "steps": [{"color":"green","value":null},{"color":"yellow","value":70},{"color":"red","value":88}] }
+          "custom": { "drawStyle": "line", "lineInterpolation": "smooth", "fillOpacity": 20, "lineWidth": 2 },
+          "thresholds": { "mode": "absolute", "steps": [{"color":"#37D67A","value":null},{"color":"#FFCA28","value":70},{"color":"#EF5350","value":88}] }
         }
       }
     },
     {
       "id": 15,
-      "title": "Memory Usage",
+      "title": "Host Memory Utilization",
       "type": "timeseries",
       "gridPos": { "h": 7, "w": 8, "x": 8, "y": 15 },
-      "targets": [{ "expr": "((node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / node_memory_MemTotal_bytes) * 100", "legendFormat": "Host RAM %" }],
+      "targets": [{ "expr": "((node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / node_memory_MemTotal_bytes) * 100", "legendFormat": "RAM %" }],
       "fieldConfig": {
         "defaults": {
           "unit": "percent", "min": 0, "max": 100,
-          "custom": { "drawStyle": "line", "lineInterpolation": "smooth", "fillOpacity": 15 }
+          "custom": { "drawStyle": "line", "lineInterpolation": "smooth", "fillOpacity": 20, "lineWidth": 2 }
         }
       }
     },
     {
       "id": 16,
-      "title": "Disk Usage",
+      "title": "System Disk Storage",
       "type": "gauge",
       "gridPos": { "h": 7, "w": 8, "x": 16, "y": 15 },
       "targets": [{ "expr": "((node_filesystem_size_bytes{mountpoint=\"/\",fstype!=\"tmpfs\"} - node_filesystem_free_bytes{mountpoint=\"/\",fstype!=\"tmpfs\"}) / node_filesystem_size_bytes{mountpoint=\"/\",fstype!=\"tmpfs\"}) * 100", "legendFormat": "Disk %" }],
@@ -246,7 +267,7 @@
       "fieldConfig": {
         "defaults": {
           "unit": "percent", "min": 0, "max": 100,
-          "thresholds": { "mode": "absolute", "steps": [{"color":"green","value":null},{"color":"yellow","value":75},{"color":"red","value":90}] }
+          "thresholds": { "mode": "absolute", "steps": [{"color":"#37D67A","value":null},{"color":"#FFCA28","value":75},{"color":"#EF5350","value":90}] }
         }
       }
     }

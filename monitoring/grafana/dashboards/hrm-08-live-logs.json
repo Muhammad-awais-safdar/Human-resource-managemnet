@@ -3,19 +3,22 @@
   "editable": true,
   "graphTooltip": 1,
   "id": null,
-  "title": "HRM \u2014 Live Logs",
+  "title": "HRM — Live Logs",
   "uid": "hrm-live-logs",
   "tags": ["hrm", "logs", "live", "application"],
-  "description": "Live application log stream. Shows ONLY application events \u2014 business requests, errors, warnings. Health checks, Prometheus scrapes, and infrastructure events are excluded.",
+  "description": "Live application log stream. Shows ONLY application events — business requests, errors, warnings. Health checks, Prometheus scrapes, and infrastructure events are excluded.",
   "timezone": "browser",
   "schemaVersion": 38,
-  "version": 2,
+  "version": 3,
   "refresh": "5s",
   "time": { "from": "now-15m", "to": "now" },
 
   "links": [
-    { "title": "Error Center", "url": "/d/hrm-error-center", "type": "link", "icon": "bug"  },
-    { "title": "Overview",     "url": "/d/hrm-overview",     "type": "link", "icon": "home" }
+    { "title": "📊 Overview",        "url": "/d/hrm-overview",       "type": "link", "icon": "home", "targetBlank": false },
+    { "title": "⚡ Error Center",    "url": "/d/hrm-error-center",   "type": "link", "icon": "bug", "targetBlank": false },
+    { "title": "🚀 API Performance", "url": "/d/hrm-api",            "type": "link", "icon": "trending-up", "targetBlank": false },
+    { "title": "☕ Application",     "url": "/d/hrm-application",    "type": "link", "icon": "bolt", "targetBlank": false },
+    { "title": "🔥 Troubleshoot",    "url": "/d/hrm-troubleshoot",   "type": "link", "icon": "fire", "targetBlank": false }
   ],
 
   "templating": {
@@ -48,7 +51,7 @@
     {
       "id": 1,
       "type": "row",
-      "title": "APPLICATION STATUS",
+      "title": "APPLICATION LOG METRICS & STREAM STATUS",
       "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
       "collapsed": false
     },
@@ -64,13 +67,13 @@
         "legendFormat": "Log Rate"
       }],
       "options": {
-        "colorMode": "background", "graphMode": "area", "textMode": "auto",
+        "colorMode": "value", "graphMode": "area", "textMode": "value_and_name",
         "reduceOptions": { "calcs": ["lastNotNull"] }
       },
       "fieldConfig": {
         "defaults": {
-          "unit": "short", "decimals": 0,
-          "thresholds": { "mode": "absolute", "steps": [{ "color": "blue", "value": null }] }
+          "unit": "short", "decimals": 0, "noValue": "0",
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "#38bdf8", "value": null }] }
         }
       }
     },
@@ -85,16 +88,16 @@
         "legendFormat": "Errors"
       }],
       "options": {
-        "colorMode": "background", "graphMode": "area", "textMode": "auto",
+        "colorMode": "value", "graphMode": "area", "textMode": "value_and_name",
         "reduceOptions": { "calcs": ["lastNotNull"] }
       },
       "fieldConfig": {
         "defaults": {
-          "unit": "short", "decimals": 0,
+          "unit": "short", "decimals": 0, "noValue": "0",
           "thresholds": { "mode": "absolute", "steps": [
-            { "color": "green", "value": null },
-            { "color": "yellow", "value": 1 },
-            { "color": "red",    "value": 5 }
+            { "color": "#4ade80", "value": null },
+            { "color": "#fbbf24", "value": 1 },
+            { "color": "#f87171", "value": 5 }
           ]}
         }
       }
@@ -110,23 +113,23 @@
         "legendFormat": "Warnings"
       }],
       "options": {
-        "colorMode": "background", "graphMode": "area", "textMode": "auto",
+        "colorMode": "value", "graphMode": "area", "textMode": "value_and_name",
         "reduceOptions": { "calcs": ["lastNotNull"] }
       },
       "fieldConfig": {
         "defaults": {
-          "unit": "short", "decimals": 0,
+          "unit": "short", "decimals": 0, "noValue": "0",
           "thresholds": { "mode": "absolute", "steps": [
-            { "color": "green", "value": null },
-            { "color": "yellow","value": 1 },
-            { "color": "orange","value": 10 }
+            { "color": "#4ade80", "value": null },
+            { "color": "#fbbf24", "value": 1 },
+            { "color": "#fb923c", "value": 10 }
           ]}
         }
       }
     },
     {
       "id": 5,
-      "title": "Log Volume (30m)",
+      "title": "Log Volume by Level (30m)",
       "type": "timeseries",
       "gridPos": { "h": 3, "w": 12, "x": 12, "y": 1 },
       "datasource": { "type": "loki", "uid": "loki-ds" },
@@ -151,9 +154,9 @@
           "custom": { "drawStyle": "bars", "fillOpacity": 70, "lineWidth": 0, "stacking": { "mode": "normal" } }
         },
         "overrides": [
-          { "matcher": { "id": "byName", "options": "ERROR" }, "properties": [{ "id": "color", "value": { "fixedColor": "red",    "mode": "fixed" } }] },
-          { "matcher": { "id": "byName", "options": "WARN"  }, "properties": [{ "id": "color", "value": { "fixedColor": "orange", "mode": "fixed" } }] },
-          { "matcher": { "id": "byName", "options": "INFO"  }, "properties": [{ "id": "color", "value": { "fixedColor": "#3d71d9","mode": "fixed" } }] }
+          { "matcher": { "id": "byName", "options": "ERROR" }, "properties": [{ "id": "color", "value": { "fixedColor": "#ef4444", "mode": "fixed" } }] },
+          { "matcher": { "id": "byName", "options": "WARN"  }, "properties": [{ "id": "color", "value": { "fixedColor": "#f97316", "mode": "fixed" } }] },
+          { "matcher": { "id": "byName", "options": "INFO"  }, "properties": [{ "id": "color", "value": { "fixedColor": "#3b82f6", "mode": "fixed" } }] }
         ]
       }
     },
@@ -161,7 +164,7 @@
     {
       "id": 10,
       "type": "row",
-      "title": "\u25cf LIVE LOG STREAM \u2014 Application Events Only",
+      "title": "● LIVE LOG STREAM — Application Events Only",
       "gridPos": { "h": 1, "w": 24, "x": 0, "y": 4 },
       "collapsed": false
     },
