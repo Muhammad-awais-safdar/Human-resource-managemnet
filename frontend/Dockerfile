@@ -1,5 +1,7 @@
 FROM node:20-alpine AS build
 WORKDIR /app
+ARG BACKEND_API_URL=http://backend:8080
+ENV BACKEND_API_URL=$BACKEND_API_URL
 COPY package*.json ./
 RUN npm ci
 COPY . .
@@ -10,6 +12,8 @@ FROM node:20-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
+ARG BACKEND_API_URL=http://backend:8080
+ENV BACKEND_API_URL=$BACKEND_API_URL
 ENV PORT=3000
 
 COPY --from=build /app/package*.json ./
