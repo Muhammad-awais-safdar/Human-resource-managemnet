@@ -52,13 +52,13 @@ scrape_configs:
                   endpoint: 'requestUri'
             - labels:
                 level:
-            # ── LAYER 3: Drop infrastructure/health/metrics lines at Promtail ──
-            # These should already be absent because ApiLoggingFilter.shouldNotFilter()
-            # prevents them from reaching the logger. This is the final safety net.
+            # ── LAYER 3: Drop infrastructure/health/metrics lines & Hibernate SQL dumps ──
             - drop:
                 expression: '.*(actuator/health|actuator/prometheus|/health|/ping|/ready|/liveness|/readiness)\s.*'
             - drop:
                 expression: '.*\[API (REQUEST|RESPONSE)\].*actuator.*'
+            - drop:
+                expression: '^\s*(Hibernate:|select\s+|insert\s+into\s+|update\s+|delete\s+from\s+).*'
 
       # ── PLAIN TEXT: extract log level for non-backend containers ─────
       - match:
