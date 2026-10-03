@@ -26,7 +26,7 @@ CREATE TABLE IF NOT EXISTS employee (
     password VARCHAR(255) DEFAULT 'admin123' NOT NULL,
     status VARCHAR(20) DEFAULT 'ACTIVE' NOT NULL,
     joining_date DATE NOT NULL,
-    custom_metadata JSONB,
+    custom_metadata JSON,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
 );

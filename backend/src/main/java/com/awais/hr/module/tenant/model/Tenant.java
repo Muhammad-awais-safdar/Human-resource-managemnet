@@ -15,7 +15,6 @@ public class Tenant {
 
     @Id
     @Column(length = 50)
-    @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.UUID)
     private String id;
 
     @Column(nullable = false, length = 100)

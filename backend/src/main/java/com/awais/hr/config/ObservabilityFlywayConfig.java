@@ -20,10 +20,10 @@ public class ObservabilityFlywayConfig {
 
     private static final Logger log = LoggerFactory.getLogger(ObservabilityFlywayConfig.class);
 
-    @Value("${observability.datasource.url:jdbc:postgresql://localhost:5432/awais_hr_observability}")
+    @Value("${observability.datasource.url:jdbc:mysql://localhost:3306/awais_hr_observability?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC}")
     private String url;
 
-    @Value("${observability.datasource.username:postgres}")
+    @Value("${observability.datasource.username:root}")
     private String username;
 
     @Value("${observability.datasource.password:root}")
@@ -62,11 +62,15 @@ public class ObservabilityFlywayConfig {
             if (lastSlashIndex > 0) {
                 String baseUrl = url.substring(0, lastSlashIndex + 1);
                 String dbName = url.substring(lastSlashIndex + 1);
-                String adminUrl = baseUrl + "postgres";
+                int queryIndex = dbName.indexOf('?');
+                if (queryIndex > 0) {
+                    dbName = dbName.substring(0, queryIndex);
+                }
+                String adminUrl = baseUrl + "mysql?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true";
 
                 try (Connection conn = DriverManager.getConnection(adminUrl, username, password);
                      Statement stmt = conn.createStatement()) {
-                    stmt.executeUpdate("CREATE DATABASE " + dbName);
+                    stmt.executeUpdate("CREATE DATABASE IF NOT EXISTS `" + dbName + "`");
                     log.info("Created dedicated Observability database: {}", dbName);
                 } catch (Exception ignored) {
                     // Database likely already exists

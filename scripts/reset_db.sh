@@ -3,20 +3,21 @@ set -e
 
 # Configuration defaults (matching application.properties)
 DB_HOST="${DB_HOST:-localhost}"
-DB_PORT="${DB_PORT:-5432}"
-DB_USER="${DB_USER:-postgres}"
-export PGPASSWORD="${PGPASSWORD:-root}"
+DB_PORT="${DB_PORT:-3306}"
+DB_USER="${DB_USER:-root}"
+MYSQL_PWD="${MYSQL_PWD:-root}"
+export MYSQL_PWD
 
 echo "========================================================================"
-echo "💥 ENTERPRISE HR SAAS DATABASE WIPE & RESET TOOL"
+echo "💥 ENTERPRISE HR SAAS DATABASE WIPE & RESET TOOL (MYSQL)"
 echo "========================================================================"
 echo "Target Host : ${DB_HOST}:${DB_PORT}"
 echo "Target User : ${DB_USER}"
 echo "========================================================================"
 
 # Fetch all project-related databases matching pattern 'awais_hr_%' or 'awais_%'
-DATABASES=$(psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d postgres -t -A -c \
-  "SELECT datname FROM pg_database WHERE datname LIKE 'awais_hr_%' OR datname LIKE 'awais_%';")
+DATABASES=$(mysql -h "$DB_HOST" -P "$DB_PORT" -u "$DB_USER" -e \
+  "SELECT schema_name FROM information_schema.schemata WHERE schema_name LIKE 'awais_hr_%' OR schema_name LIKE 'awais_%';" -sN)
 
 if [ -z "$DATABASES" ]; then
   echo "✨ No enterprise HR databases found matching pattern 'awais_hr_%' or 'awais_%'."
@@ -31,16 +32,8 @@ done
 echo "------------------------------------------------------------------------"
 
 for DB in $DATABASES; do
-  echo "🔥 Terminating connections and dropping database: $DB ..."
-  
-  # Terminate open connections to target database
-  psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d postgres -c \
-    "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = '$DB' AND pid <> pg_backend_pid();" > /dev/null 2>&1 || true
-
-  # Drop the database
-  psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d postgres -c \
-    "DROP DATABASE IF EXISTS \"$DB\";"
-    
+  echo "🔥 Dropping database: $DB ..."
+  mysql -h "$DB_HOST" -P "$DB_PORT" -u "$DB_USER" -e "DROP DATABASE IF EXISTS \`$DB\`;"
   echo "   ✅ Dropped database '$DB' successfully."
 done
 

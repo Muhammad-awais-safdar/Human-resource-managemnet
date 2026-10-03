@@ -1,17 +1,16 @@
 services:
-  postgres:
-    image: postgres:16-alpine
+  mysql:
+    image: mysql:8.0
     container_name: awais-hr-db
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:-awais_hr_master}
-      POSTGRES_USER: ${POSTGRES_USER:-postgres}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-root}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_PASSWORD:-root}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-awais_hr_master}
     ports:
-      - "${POSTGRES_HOST_PORT:-${POSTGRES_PORT:-5432}}:5432"
+      - "${MYSQL_HOST_PORT:-${MYSQL_PORT:-3306}}:3306"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - mysql_data:/var/lib/mysql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u root -p${MYSQL_PASSWORD:-root}"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -26,15 +25,15 @@ services:
     container_name: awais-hr-backend
     environment:
       - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-dev}
-      - SPRING_DATASOURCE_URL=${SPRING_DATASOURCE_URL:-jdbc:postgresql://postgres:5432/awais_hr_master}
-      - SPRING_DATASOURCE_USERNAME=${POSTGRES_USER:-postgres}
-      - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD:-root}
-      - OBSERVABILITY_DATASOURCE_URL=${OBSERVABILITY_DATASOURCE_URL:-jdbc:postgresql://postgres:5432/awais_hr_observability}
-      - OBSERVABILITY_DATASOURCE_USERNAME=${POSTGRES_USER:-postgres}
-      - OBSERVABILITY_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD:-root}
-      - TENANT_DATASOURCE_URL_PREFIX=${TENANT_DATASOURCE_URL_PREFIX:-jdbc:postgresql://postgres:5432/}
-      - TENANT_DATASOURCE_USERNAME=${POSTGRES_USER:-postgres}
-      - TENANT_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD:-root}
+      - SPRING_DATASOURCE_URL=${SPRING_DATASOURCE_URL:-jdbc:mysql://mysql:3306/awais_hr_master?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true}
+      - SPRING_DATASOURCE_USERNAME=${MYSQL_USER:-root}
+      - SPRING_DATASOURCE_PASSWORD=${MYSQL_PASSWORD:-root}
+      - OBSERVABILITY_DATASOURCE_URL=${OBSERVABILITY_DATASOURCE_URL:-jdbc:mysql://mysql:3306/awais_hr_observability?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true}
+      - OBSERVABILITY_DATASOURCE_USERNAME=${MYSQL_USER:-root}
+      - OBSERVABILITY_DATASOURCE_PASSWORD=${MYSQL_PASSWORD:-root}
+      - TENANT_DATASOURCE_URL_PREFIX=${TENANT_DATASOURCE_URL_PREFIX:-jdbc:mysql://mysql:3306/}
+      - TENANT_DATASOURCE_USERNAME=${MYSQL_USER:-root}
+      - TENANT_DATASOURCE_PASSWORD=${MYSQL_PASSWORD:-root}
       - SPRING_DATA_REDIS_HOST=${REDIS_HOST:-redis}
       - SPRING_DATA_REDIS_PORT=${REDIS_PORT:-6379}
       - JWT_SECRET=${JWT_SECRET:-c2VjdXJlX2p3dF9zZWNyZXRfa2V5X2Zvcl9hd2Fpc19oci9lbnRlcnByaXNlX3NhYXNfcGxhdGZvcm0=}
@@ -42,7 +41,7 @@ services:
     ports:
       - "${BACKEND_PORT:-8080}:8080"
     depends_on:
-      postgres:
+      mysql:
         condition: service_healthy
       redis:
         condition: service_healthy
@@ -91,7 +90,7 @@ services:
       - awais-hr-network
 
 volumes:
-  postgres_data:
+  mysql_data:
 
 networks:
   awais-hr-network:

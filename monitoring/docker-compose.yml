@@ -147,13 +147,13 @@ services:
     networks:
       - awais-hr-network
 
-  postgres-exporter:
-    image: prometheuscommunity/postgres-exporter:v0.15.0
-    container_name: awais-hr-postgres-exporter
+  mysql-exporter:
+    image: prom/mysqld-exporter:v0.15.1
+    container_name: awais-hr-mysql-exporter
     environment:
-      DATA_SOURCE_NAME: "postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-root}@postgres:${POSTGRES_PORT:-5432}/${POSTGRES_DB:-awais_hr_master}?sslmode=disable"
+      DATA_SOURCE_NAME: "${MYSQL_USER:-root}:${MYSQL_PASSWORD:-root}@(mysql:3306)/"
     ports:
-      - "${POSTGRES_EXPORTER_PORT:-9187}:9187"
+      - "${MYSQL_EXPORTER_PORT:-9104}:9104"
     restart: unless-stopped
     networks:
       - awais-hr-network

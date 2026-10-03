@@ -258,17 +258,9 @@ public class TenantService {
     }
 
     private void createPhysicalDatabase(String dbName) {
-        log.info("Creating physical PostgreSQL database: {}", dbName);
+        log.info("Creating physical MySQL database: {}", dbName);
         JdbcTemplate jdbcTemplate = new JdbcTemplate(masterDataSource);
-        Boolean exists = jdbcTemplate.queryForObject(
-                "SELECT EXISTS(SELECT 1 FROM pg_database WHERE datname = ?)",
-                Boolean.class, dbName
-        );
-        if (exists != null && exists) {
-            log.info("Database '{}' already exists. Reusing existing database.", dbName);
-            return;
-        }
-        jdbcTemplate.execute("CREATE DATABASE \"" + dbName + "\"");
+        jdbcTemplate.execute("CREATE DATABASE IF NOT EXISTS `" + dbName + "`");
     }
 
     private void runFlywayMigrations(DataSource tenantDataSource) {
@@ -373,7 +365,7 @@ public class TenantService {
             
             for (String modKey : enabledModules) {
                 masterJdbc.update(
-                        "INSERT INTO tenant_module_override (tenant_id, module_key, is_enabled, updated_at) VALUES (?, ?, true, NOW()) ON CONFLICT (tenant_id, module_key) DO UPDATE SET is_enabled = true",
+                        "INSERT INTO tenant_module_override (tenant_id, module_key, is_enabled, updated_at) VALUES (?, ?, true, NOW()) ON DUPLICATE KEY UPDATE is_enabled = true",
                         tenant.getId(), modKey.toUpperCase()
                 );
             }

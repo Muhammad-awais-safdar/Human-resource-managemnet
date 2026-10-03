@@ -36,10 +36,10 @@ public class DatabaseConfig {
 
     private static final Logger log = LoggerFactory.getLogger(DatabaseConfig.class);
 
-    @Value("${spring.datasource.url:jdbc:postgresql://localhost:5432/awais_hr_master}")
+    @Value("${spring.datasource.url:jdbc:mysql://localhost:3306/awais_hr_master?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC}")
     private String masterUrl;
 
-    @Value("${spring.datasource.username:postgres}")
+    @Value("${spring.datasource.username:root}")
     private String masterUsername;
 
     @Value("${spring.datasource.password:root}")
@@ -81,11 +81,11 @@ public class DatabaseConfig {
                 if (queryIndex > 0) {
                     dbName = dbName.substring(0, queryIndex);
                 }
-                String adminUrl = baseUrl + "postgres";
+                String adminUrl = baseUrl + "mysql?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true";
 
                 try (Connection conn = DriverManager.getConnection(adminUrl, masterUsername, masterPassword);
                      Statement stmt = conn.createStatement()) {
-                    stmt.executeUpdate("CREATE DATABASE \"" + dbName + "\"");
+                    stmt.executeUpdate("CREATE DATABASE IF NOT EXISTS `" + dbName + "`");
                     log.info("Created Master database: {}", dbName);
                 } catch (Exception ignored) {
                     // Database likely already exists
@@ -124,7 +124,7 @@ public class DatabaseConfig {
         em.setJpaVendorAdapter(new HibernateJpaVendorAdapter());
 
         Map<String, Object> properties = new HashMap<>();
-        properties.put("hibernate.dialect", "org.hibernate.dialect.PostgreSQLDialect");
+        properties.put("hibernate.dialect", "org.hibernate.dialect.MySQLDialect");
         properties.put("hibernate.show_sql", "false");
         properties.put("hibernate.format_sql", "false");
         // Prevent hibernate from altering structures directly; we rely on Flyway migrations

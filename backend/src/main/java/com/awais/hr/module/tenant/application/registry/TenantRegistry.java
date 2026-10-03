@@ -35,7 +35,7 @@ public class TenantRegistry {
                 .url(tenant.getDatabaseConfiguration().dbUrl())
                 .username(tenant.getDatabaseConfiguration().dbUsername())
                 .password(tenant.getDatabaseConfiguration().dbPassword())
-                .driverClassName("org.postgresql.Driver")
+                .driverClassName("com.mysql.cj.jdbc.Driver")
                 .build();
 
         targetDataSources.put(tenant.getId().toString(), ds);

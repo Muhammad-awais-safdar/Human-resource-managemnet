@@ -103,7 +103,7 @@ public class DataSeeder implements CommandLineRunner {
             String permId = UUID.randomUUID().toString();
             jdbcTemplate.update(
                     "INSERT INTO permission (id, name, description, module_key, feature_key, action_key, ui_label, is_sensitive) VALUES (?, ?, ?, ?, ?, ?, ?, ?) " +
-                    "ON CONFLICT (id) DO UPDATE SET module_key = EXCLUDED.module_key, ui_label = EXCLUDED.ui_label, is_sensitive = EXCLUDED.is_sensitive",
+                    "ON DUPLICATE KEY UPDATE module_key = VALUES(module_key), ui_label = VALUES(ui_label), is_sensitive = VALUES(is_sensitive)",
                     permId, p.name(), p.desc(), p.module(), p.feature(), p.action(), p.label(), p.sensitive()
             );
             List<String> foundMap = jdbcTemplate.queryForList(
@@ -131,7 +131,7 @@ public class DataSeeder implements CommandLineRunner {
             boolean isSystem = List.of("SYSTEM_ADMIN", "TENANT_ADMIN", "EMPLOYEE", "HR_MANAGER").contains(entry.getKey());
             jdbcTemplate.update(
                     "INSERT INTO role (id, name, description, is_system_role, status) VALUES (?, ?, ?, ?, 'ACTIVE') " +
-                    "ON CONFLICT (id) DO UPDATE SET is_system_role = EXCLUDED.is_system_role",
+                    "ON DUPLICATE KEY UPDATE is_system_role = VALUES(is_system_role)",
                     roleId, entry.getKey(), entry.getValue(), isSystem
             );
             List<String> foundRole = jdbcTemplate.queryForList(
@@ -146,7 +146,7 @@ public class DataSeeder implements CommandLineRunner {
             String rId = roleIdMap.get(roleName);
             for (String pId : permIdMap.values()) {
                 jdbcTemplate.update(
-                        "INSERT INTO role_permission (role_id, permission_id, access_scope) VALUES (?, ?, 'COMPANY') ON CONFLICT DO NOTHING",
+                        "INSERT IGNORE INTO role_permission (role_id, permission_id, access_scope) VALUES (?, ?, 'COMPANY')",
                         rId, pId
                 );
             }
@@ -166,7 +166,7 @@ public class DataSeeder implements CommandLineRunner {
 
         for (Object[] lt : leaveTypes) {
             jdbcTemplate.update(
-                    "INSERT INTO leave_policy (id, name, allowance, description) VALUES (?, ?, ?, ?) ON CONFLICT DO NOTHING",
+                    "INSERT IGNORE INTO leave_policy (id, name, allowance, description) VALUES (?, ?, ?, ?)",
                     lt[0], lt[1], lt[2], lt[3]
             );
         }
@@ -215,7 +215,7 @@ public class DataSeeder implements CommandLineRunner {
             String targetRoleId = roleIdMap.get(roleName);
             if (targetRoleId != null) {
                 jdbcTemplate.update(
-                        "INSERT INTO employee_role (employee_id, role_id) VALUES (?, ?) ON CONFLICT DO NOTHING",
+                        "INSERT IGNORE INTO employee_role (employee_id, role_id) VALUES (?, ?)",
                         empId, targetRoleId
                 );
             }
@@ -266,13 +266,13 @@ public class DataSeeder implements CommandLineRunner {
 
         // 6. Seed Sample Shift Schedules
         jdbcTemplate.update(
-                "INSERT INTO shift_schedule (id, name, start_time, end_time) VALUES (?, 'Standard General Shift', '09:00:00', '17:00:00') ON CONFLICT DO NOTHING",
+                "INSERT IGNORE INTO shift_schedule (id, name, start_time, end_time) VALUES (?, 'Standard General Shift', '09:00:00', '17:00:00')",
                 UUID.randomUUID().toString()
         );
 
         // 7. Seed Sample ATS Jobs
         jdbcTemplate.update(
-                "INSERT INTO job_requisition (id, title, description, status, openings, salary_range) VALUES (?, 'Full Stack Staff Engineer', 'Lead dynamic multi-tenant SaaS architecture.', 'OPEN', 2, '$120k - $160k') ON CONFLICT DO NOTHING",
+                "INSERT IGNORE INTO job_requisition (id, title, description, status, openings, salary_range) VALUES (?, 'Full Stack Staff Engineer', 'Lead dynamic multi-tenant SaaS architecture.', 'OPEN', 2, '$120k - $160k')",
                 UUID.randomUUID().toString()
         );
 
