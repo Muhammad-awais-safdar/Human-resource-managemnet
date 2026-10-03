@@ -100,7 +100,7 @@ public class TenantService {
                 .url(tenant.getDbUrl())
                 .username(tenant.getDbUsername())
                 .password(tenant.getDbPassword())
-                .driverClassName("org.postgresql.Driver")
+                .driverClassName("com.mysql.cj.jdbc.Driver")
                 .type(HikariDataSource.class)
                 .build();
 
@@ -304,10 +304,10 @@ public class TenantService {
         String roleId = UUID.randomUUID().toString();
         String employeeId = UUID.randomUUID().toString();
         
-        jdbcTemplate.update("INSERT INTO permission (id, name, description, module_key, feature_key, action_key, ui_label, is_sensitive) VALUES (?, ?, ?, 'CORE_HR', 'EMPLOYEES', 'READ', 'View Employee Directory & Profiles', false) ON CONFLICT DO NOTHING", p1, "corehr:employee:read", "Read access to employee profiles");
-        jdbcTemplate.update("INSERT INTO permission (id, name, description, module_key, feature_key, action_key, ui_label, is_sensitive) VALUES (?, ?, ?, 'CORE_HR', 'EMPLOYEES', 'WRITE', 'Create & Edit Employee Records', false) ON CONFLICT DO NOTHING", p2, "corehr:employee:write", "Write access to employee profiles");
-        jdbcTemplate.update("INSERT INTO permission (id, name, description, module_key, feature_key, action_key, ui_label, is_sensitive) VALUES (?, ?, ?, 'CORE_HR', 'ORG_STRUCTURE', 'WRITE', 'Manage Org Chart & Departments', false) ON CONFLICT DO NOTHING", p3, "corehr:org:write", "Manage organization structure and tree nodes");
-        jdbcTemplate.update("INSERT INTO permission (id, name, description, module_key, feature_key, action_key, ui_label, is_sensitive) VALUES (?, ?, ?, 'CORE_HR', 'SETTINGS', 'WRITE', 'Configure Tenant Branding & Settings', false) ON CONFLICT DO NOTHING", p4, "corehr:settings:write", "Modify white-label tenant branding configurations");
+        jdbcTemplate.update("INSERT IGNORE INTO permission (id, name, description, module_key, feature_key, action_key, ui_label, is_sensitive) VALUES (?, ?, ?, 'CORE_HR', 'EMPLOYEES', 'READ', 'View Employee Directory & Profiles', false)", p1, "corehr:employee:read", "Read access to employee profiles");
+        jdbcTemplate.update("INSERT IGNORE INTO permission (id, name, description, module_key, feature_key, action_key, ui_label, is_sensitive) VALUES (?, ?, ?, 'CORE_HR', 'EMPLOYEES', 'WRITE', 'Create & Edit Employee Records', false)", p2, "corehr:employee:write", "Write access to employee profiles");
+        jdbcTemplate.update("INSERT IGNORE INTO permission (id, name, description, module_key, feature_key, action_key, ui_label, is_sensitive) VALUES (?, ?, ?, 'CORE_HR', 'ORG_STRUCTURE', 'WRITE', 'Manage Org Chart & Departments', false)", p3, "corehr:org:write", "Manage organization structure and tree nodes");
+        jdbcTemplate.update("INSERT IGNORE INTO permission (id, name, description, module_key, feature_key, action_key, ui_label, is_sensitive) VALUES (?, ?, ?, 'CORE_HR', 'SETTINGS', 'WRITE', 'Configure Tenant Branding & Settings', false)", p4, "corehr:settings:write", "Modify white-label tenant branding configurations");
         
         p1 = fetchPermissionId(jdbcTemplate, "corehr:employee:read", p1);
         p2 = fetchPermissionId(jdbcTemplate, "corehr:employee:write", p2);
@@ -315,32 +315,32 @@ public class TenantService {
         p4 = fetchPermissionId(jdbcTemplate, "corehr:settings:write", p4);
         
         String tenantAdminRoleId = UUID.randomUUID().toString();
-        jdbcTemplate.update("INSERT INTO role (id, name, description, is_system_role, status) VALUES (?, 'TENANT_ADMIN', 'Tenant organization workspace administrator', true, 'ACTIVE') ON CONFLICT DO NOTHING", tenantAdminRoleId);
+        jdbcTemplate.update("INSERT IGNORE INTO role (id, name, description, is_system_role, status) VALUES (?, 'TENANT_ADMIN', 'Tenant organization workspace administrator', true, 'ACTIVE')", tenantAdminRoleId);
         List<String> existingRoles = jdbcTemplate.queryForList("SELECT id FROM role WHERE name = 'TENANT_ADMIN'", String.class);
         if (!existingRoles.isEmpty()) tenantAdminRoleId = existingRoles.get(0);
         
         // Seed default auxiliary roles into tenant schema for employee onboarding
-        jdbcTemplate.update("INSERT INTO role (id, name, description, is_system_role, status) VALUES (?, 'HR_MANAGER', 'Human resource department manager', true, 'ACTIVE') ON CONFLICT DO NOTHING", UUID.randomUUID().toString());
-        jdbcTemplate.update("INSERT INTO role (id, name, description, is_system_role, status) VALUES (?, 'EMPLOYEE', 'Standard employee self-service user', true, 'ACTIVE') ON CONFLICT DO NOTHING", UUID.randomUUID().toString());
-        jdbcTemplate.update("INSERT INTO role (id, name, description, is_system_role, status) VALUES (?, 'RECRUITER', 'Talent acquisition recruiter', false, 'ACTIVE') ON CONFLICT DO NOTHING", UUID.randomUUID().toString());
+        jdbcTemplate.update("INSERT IGNORE INTO role (id, name, description, is_system_role, status) VALUES (?, 'HR_MANAGER', 'Human resource department manager', true, 'ACTIVE')", UUID.randomUUID().toString());
+        jdbcTemplate.update("INSERT IGNORE INTO role (id, name, description, is_system_role, status) VALUES (?, 'EMPLOYEE', 'Standard employee self-service user', true, 'ACTIVE')", UUID.randomUUID().toString());
+        jdbcTemplate.update("INSERT IGNORE INTO role (id, name, description, is_system_role, status) VALUES (?, 'RECRUITER', 'Talent acquisition recruiter', false, 'ACTIVE')", UUID.randomUUID().toString());
         
-        jdbcTemplate.update("INSERT INTO role_permission (role_id, permission_id, access_scope) VALUES (?, ?, 'COMPANY') ON CONFLICT DO NOTHING", tenantAdminRoleId, p1);
-        jdbcTemplate.update("INSERT INTO role_permission (role_id, permission_id, access_scope) VALUES (?, ?, 'COMPANY') ON CONFLICT DO NOTHING", tenantAdminRoleId, p2);
-        jdbcTemplate.update("INSERT INTO role_permission (role_id, permission_id, access_scope) VALUES (?, ?, 'COMPANY') ON CONFLICT DO NOTHING", tenantAdminRoleId, p3);
-        jdbcTemplate.update("INSERT INTO role_permission (role_id, permission_id, access_scope) VALUES (?, ?, 'COMPANY') ON CONFLICT DO NOTHING", tenantAdminRoleId, p4);
+        jdbcTemplate.update("INSERT IGNORE INTO role_permission (role_id, permission_id, access_scope) VALUES (?, ?, 'COMPANY')", tenantAdminRoleId, p1);
+        jdbcTemplate.update("INSERT IGNORE INTO role_permission (role_id, permission_id, access_scope) VALUES (?, ?, 'COMPANY')", tenantAdminRoleId, p2);
+        jdbcTemplate.update("INSERT IGNORE INTO role_permission (role_id, permission_id, access_scope) VALUES (?, ?, 'COMPANY')", tenantAdminRoleId, p3);
+        jdbcTemplate.update("INSERT IGNORE INTO role_permission (role_id, permission_id, access_scope) VALUES (?, ?, 'COMPANY')", tenantAdminRoleId, p4);
 
         // Seed default Leave Policies (Vacation Types)
-        jdbcTemplate.update("INSERT INTO leave_policy (id, name, allowance, description) VALUES (?, 'Annual Vacation', 20, 'Standard annual paid vacation allocation') ON CONFLICT DO NOTHING", UUID.randomUUID().toString());
-        jdbcTemplate.update("INSERT INTO leave_policy (id, name, allowance, description) VALUES (?, 'Casual Leave', 10, 'Short-notice casual leave allowance') ON CONFLICT DO NOTHING", UUID.randomUUID().toString());
-        jdbcTemplate.update("INSERT INTO leave_policy (id, name, allowance, description) VALUES (?, 'Sick Leave', 12, 'Paid medical emergency allocations') ON CONFLICT DO NOTHING", UUID.randomUUID().toString());
-        jdbcTemplate.update("INSERT INTO leave_policy (id, name, allowance, description) VALUES (?, 'Maternity Leave', 90, 'Maternal care paid leave allocation') ON CONFLICT DO NOTHING", UUID.randomUUID().toString());
-        jdbcTemplate.update("INSERT INTO leave_policy (id, name, allowance, description) VALUES (?, 'Paternity Leave', 14, 'Paternal support leave allocation') ON CONFLICT DO NOTHING", UUID.randomUUID().toString());
-        jdbcTemplate.update("INSERT INTO leave_policy (id, name, allowance, description) VALUES (?, 'Unpaid Leave / LOP', 30, 'Loss of Pay uncompensated leave') ON CONFLICT DO NOTHING", UUID.randomUUID().toString());
+        jdbcTemplate.update("INSERT IGNORE INTO leave_policy (id, name, allowance, description) VALUES (?, 'Annual Vacation', 20, 'Standard annual paid vacation allocation')", UUID.randomUUID().toString());
+        jdbcTemplate.update("INSERT IGNORE INTO leave_policy (id, name, allowance, description) VALUES (?, 'Casual Leave', 10, 'Short-notice casual leave allowance')", UUID.randomUUID().toString());
+        jdbcTemplate.update("INSERT IGNORE INTO leave_policy (id, name, allowance, description) VALUES (?, 'Sick Leave', 12, 'Paid medical emergency allocations')", UUID.randomUUID().toString());
+        jdbcTemplate.update("INSERT IGNORE INTO leave_policy (id, name, allowance, description) VALUES (?, 'Maternity Leave', 90, 'Maternal care paid leave allocation')", UUID.randomUUID().toString());
+        jdbcTemplate.update("INSERT IGNORE INTO leave_policy (id, name, allowance, description) VALUES (?, 'Paternity Leave', 14, 'Paternal support leave allocation')", UUID.randomUUID().toString());
+        jdbcTemplate.update("INSERT IGNORE INTO leave_policy (id, name, allowance, description) VALUES (?, 'Unpaid Leave / LOP', 30, 'Loss of Pay uncompensated leave')", UUID.randomUUID().toString());
 
         String hashedPassword = passwordEncoder.encode(rawPassword);
 
         jdbcTemplate.update(
-                "INSERT INTO employee (id, employee_code, first_name, last_name, email, password, status, joining_date) VALUES (?, ?, ?, ?, ?, ?, 'ACTIVE', CURRENT_DATE) ON CONFLICT DO NOTHING",
+                "INSERT IGNORE INTO employee (id, employee_code, first_name, last_name, email, password, status, joining_date) VALUES (?, ?, ?, ?, ?, ?, 'ACTIVE', CURRENT_DATE)",
                 employeeId, "EMP-ADMIN-001", "Tenant", "Administrator", adminEmail, hashedPassword
         );
         
@@ -350,7 +350,7 @@ public class TenantService {
         }
 
         jdbcTemplate.update(
-                "INSERT INTO employee_role (employee_id, role_id) VALUES (?, ?) ON CONFLICT DO NOTHING",
+                "INSERT IGNORE INTO employee_role (employee_id, role_id) VALUES (?, ?)",
                 employeeId, tenantAdminRoleId
         );
     }

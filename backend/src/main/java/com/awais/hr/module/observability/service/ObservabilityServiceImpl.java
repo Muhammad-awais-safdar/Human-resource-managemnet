@@ -27,32 +27,32 @@ public class ObservabilityServiceImpl implements ObservabilityService {
     private void ensureTablesExist(JdbcTemplate jdbc) {
         try {
             jdbc.execute("CREATE TABLE IF NOT EXISTS platform_audit_log (" +
-                    "id UUID PRIMARY KEY DEFAULT gen_random_uuid(), tenant_id VARCHAR(100) NOT NULL, user_id VARCHAR(100), " +
+                    "id VARCHAR(50) PRIMARY KEY, tenant_id VARCHAR(100) NOT NULL, user_id VARCHAR(100), " +
                     "request_id VARCHAR(100), trace_id VARCHAR(100), correlation_id VARCHAR(100), module_code VARCHAR(50) NOT NULL, " +
-                    "action_type VARCHAR(100) NOT NULL, entity_name VARCHAR(100), entity_id VARCHAR(100), old_value JSONB, " +
-                    "new_value JSONB, ip_address VARCHAR(45), user_agent TEXT, status_code INT, response_time_ms BIGINT, created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL)");
+                    "action_type VARCHAR(100) NOT NULL, entity_name VARCHAR(100), entity_id VARCHAR(100), old_value JSON, " +
+                    "new_value JSON, ip_address VARCHAR(45), user_agent TEXT, status_code INT, response_time_ms BIGINT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL)");
 
             try {
-                jdbc.execute("ALTER TABLE platform_audit_log ADD COLUMN IF NOT EXISTS status_code INT");
-                jdbc.execute("ALTER TABLE platform_audit_log ADD COLUMN IF NOT EXISTS response_time_ms BIGINT");
+                jdbc.execute("ALTER TABLE platform_audit_log ADD COLUMN status_code INT");
+                jdbc.execute("ALTER TABLE platform_audit_log ADD COLUMN response_time_ms BIGINT");
             } catch (Exception ignored) {}
 
             jdbc.execute("CREATE TABLE IF NOT EXISTS platform_security_event (" +
-                    "id UUID PRIMARY KEY DEFAULT gen_random_uuid(), tenant_id VARCHAR(100), user_id VARCHAR(100), " +
+                    "id VARCHAR(50) PRIMARY KEY, tenant_id VARCHAR(100), user_id VARCHAR(100), " +
                     "event_type VARCHAR(50) NOT NULL, severity VARCHAR(20) NOT NULL DEFAULT 'WARN', ip_address VARCHAR(45), " +
-                    "user_agent TEXT, request_uri TEXT, request_method VARCHAR(10), details JSONB, created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL)");
+                    "user_agent TEXT, request_uri TEXT, request_method VARCHAR(10), details JSON, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL)");
 
             jdbc.execute("CREATE TABLE IF NOT EXISTS platform_exception_log (" +
-                    "id UUID PRIMARY KEY DEFAULT gen_random_uuid(), tenant_id VARCHAR(100), request_id VARCHAR(100), " +
+                    "id VARCHAR(50) PRIMARY KEY, tenant_id VARCHAR(100), request_id VARCHAR(100), " +
                     "trace_id VARCHAR(100), exception_class VARCHAR(255) NOT NULL, message TEXT, stack_trace TEXT, " +
                     "service_name VARCHAR(100), controller_name VARCHAR(100), request_uri TEXT, http_method VARCHAR(10), user_id VARCHAR(100), " +
-                    "created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL)");
+                    "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL)");
 
             jdbc.execute("CREATE TABLE IF NOT EXISTS platform_alert_configuration (" +
-                    "id UUID PRIMARY KEY DEFAULT gen_random_uuid(), rule_name VARCHAR(100) NOT NULL UNIQUE, metric_name VARCHAR(100) NOT NULL, " +
+                    "id VARCHAR(50) PRIMARY KEY, rule_name VARCHAR(100) NOT NULL UNIQUE, metric_name VARCHAR(100) NOT NULL, " +
                     "threshold_value NUMERIC(12, 2) NOT NULL, comparison_operator VARCHAR(10) NOT NULL, duration_seconds INT DEFAULT 300, " +
                     "notification_channel VARCHAR(50) NOT NULL, destination_target TEXT NOT NULL, is_active BOOLEAN DEFAULT TRUE, " +
-                    "created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL)");
+                    "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL)");
         } catch (Exception e) {
             log.warn("Table verification check in Observability service: {}", e.getMessage());
         }
@@ -83,7 +83,7 @@ public class ObservabilityServiceImpl implements ObservabilityService {
         try {
             List<Map<String, Object>> secEvents = jdbc.queryForList(
                     "SELECT created_at AS timestamp, severity AS level, tenant_id AS tenantId, 'security' AS module, " +
-                            "id::text AS traceId, ('Security Event: ' || event_type || ' at ' || COALESCE(request_uri, '')) AS message, " +
+                            "id AS traceId, CONCAT('Security Event: ', event_type, ' at ', COALESCE(request_uri, '')) AS message, " +
                             "COALESCE(ip_address, '127.0.0.1') AS ip FROM platform_security_event ORDER BY created_at DESC LIMIT ?",
                     maxLimit
             );
@@ -93,7 +93,7 @@ public class ObservabilityServiceImpl implements ObservabilityService {
         try {
             List<Map<String, Object>> auditEvents = jdbc.queryForList(
                     "SELECT created_at AS timestamp, 'INFO' AS level, tenant_id AS tenantId, module_code AS module, " +
-                            "COALESCE(trace_id, id::text) AS traceId, ('Audit Action: ' || action_type || ' on ' || COALESCE(entity_name, '')) AS message, " +
+                            "COALESCE(trace_id, id) AS traceId, CONCAT('Audit Action: ', action_type, ' on ', COALESCE(entity_name, '')) AS message, " +
                             "COALESCE(ip_address, '127.0.0.1') AS ip FROM platform_audit_log ORDER BY created_at DESC LIMIT ?",
                     maxLimit
             );
@@ -114,7 +114,7 @@ public class ObservabilityServiceImpl implements ObservabilityService {
         ensureTablesExist(jdbc);
         try {
             return jdbc.queryForList(
-                    "SELECT id::text AS id, tenant_id AS tenantId, user_id AS userId, request_id AS requestId, " +
+                    "SELECT id AS id, tenant_id AS tenantId, user_id AS userId, request_id AS requestId, " +
                             "trace_id AS traceId, module_code AS moduleCode, action_type AS actionType, entity_name AS entityName, " +
                             "entity_id AS entityId, ip_address AS ipAddress, created_at AS createdAt FROM platform_audit_log ORDER BY created_at DESC LIMIT ?",
                     limit > 0 ? limit : 50
@@ -131,7 +131,7 @@ public class ObservabilityServiceImpl implements ObservabilityService {
         ensureTablesExist(jdbc);
         try {
             return jdbc.queryForList(
-                    "SELECT id::text AS id, tenant_id AS tenantId, user_id AS userId, event_type AS eventType, " +
+                    "SELECT id AS id, tenant_id AS tenantId, user_id AS userId, event_type AS eventType, " +
                             "severity, ip_address AS ipAddress, user_agent AS userAgent, request_uri AS requestUri, created_at AS createdAt FROM platform_security_event ORDER BY created_at DESC LIMIT ?",
                     limit > 0 ? limit : 50
             );
@@ -147,7 +147,7 @@ public class ObservabilityServiceImpl implements ObservabilityService {
         ensureTablesExist(jdbc);
         try {
             return jdbc.queryForList(
-                    "SELECT id::text AS id, tenant_id AS tenantId, request_id AS requestId, trace_id AS traceId, " +
+                    "SELECT id AS id, tenant_id AS tenantId, request_id AS requestId, trace_id AS traceId, " +
                             "exception_class AS exceptionClass, message, stack_trace AS stackTrace, service_name AS serviceName, controller_name AS controllerName, created_at AS createdAt FROM platform_exception_log ORDER BY created_at DESC LIMIT ?",
                     limit > 0 ? limit : 50
             );
@@ -163,7 +163,7 @@ public class ObservabilityServiceImpl implements ObservabilityService {
         ensureTablesExist(jdbc);
         try {
             return jdbc.queryForList(
-                    "SELECT id::text AS id, rule_name AS ruleName, metric_name AS metricName, threshold_value AS thresholdValue, " +
+                    "SELECT id AS id, rule_name AS ruleName, metric_name AS metricName, threshold_value AS thresholdValue, " +
                             "comparison_operator AS comparisonOperator, duration_seconds AS durationSeconds, notification_channel AS channel, destination_target AS destinationTarget, is_active AS isActive FROM platform_alert_configuration ORDER BY created_at DESC"
             );
         } catch (Exception e) {
@@ -186,7 +186,7 @@ public class ObservabilityServiceImpl implements ObservabilityService {
 
         String id = UUID.randomUUID().toString();
         try {
-            jdbc.update("INSERT INTO platform_alert_configuration (id, rule_name, metric_name, threshold_value, comparison_operator, notification_channel, destination_target) VALUES (CAST(? AS UUID), ?, ?, ?, ?, ?, ?)",
+            jdbc.update("INSERT INTO platform_alert_configuration (id, rule_name, metric_name, threshold_value, comparison_operator, notification_channel, destination_target) VALUES (?, ?, ?, ?, ?, ?, ?)",
                     id, name, metric, threshold, op, channel, target);
         } catch (Exception ignored) {}
         
@@ -210,8 +210,8 @@ public class ObservabilityServiceImpl implements ObservabilityService {
         try {
             JdbcTemplate jdbc = new JdbcTemplate(dataSource);
             jdbc.update(
-                    "INSERT INTO platform_audit_log (tenant_id, user_id, request_id, trace_id, module_code, action_type, entity_name, entity_id, ip_address, user_agent, status_code, response_time_ms) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                    tenantId != null ? tenantId : "awais", userId, requestId, traceId, moduleCode, actionType, entityName, entityId, ipAddress, userAgent, statusCode, responseTimeMs
+                    "INSERT INTO platform_audit_log (id, tenant_id, user_id, request_id, trace_id, module_code, action_type, entity_name, entity_id, ip_address, user_agent, status_code, response_time_ms) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                    UUID.randomUUID().toString(), tenantId != null ? tenantId : "awais", userId, requestId, traceId, moduleCode, actionType, entityName, entityId, ipAddress, userAgent, statusCode, responseTimeMs
             );
         } catch (Exception ignored) {}
     }
@@ -224,8 +224,8 @@ public class ObservabilityServiceImpl implements ObservabilityService {
         try {
             JdbcTemplate jdbc = new JdbcTemplate(dataSource);
             jdbc.update(
-                    "INSERT INTO platform_security_event (tenant_id, user_id, event_type, severity, ip_address, user_agent, request_uri, request_method) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-                    tenantId != null ? tenantId : "awais", userId, eventType, severity != null ? severity : "INFO", ipAddress, userAgent, requestUri, requestMethod
+                    "INSERT INTO platform_security_event (id, tenant_id, user_id, event_type, severity, ip_address, user_agent, request_uri, request_method) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                    UUID.randomUUID().toString(), tenantId != null ? tenantId : "awais", userId, eventType, severity != null ? severity : "INFO", ipAddress, userAgent, requestUri, requestMethod
             );
         } catch (Exception ignored) {}
     }
@@ -238,8 +238,8 @@ public class ObservabilityServiceImpl implements ObservabilityService {
         try {
             JdbcTemplate jdbc = new JdbcTemplate(dataSource);
             jdbc.update(
-                    "INSERT INTO platform_exception_log (tenant_id, request_id, trace_id, exception_class, message, stack_trace, service_name, controller_name, request_uri, http_method, user_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                    tenantId != null ? tenantId : "awais", requestId, traceId, exceptionClass, message, stackTrace, serviceName, controllerName, requestUri, httpMethod, userId
+                    "INSERT INTO platform_exception_log (id, tenant_id, request_id, trace_id, exception_class, message, stack_trace, service_name, controller_name, request_uri, http_method, user_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                    UUID.randomUUID().toString(), tenantId != null ? tenantId : "awais", requestId, traceId, exceptionClass, message, stackTrace, serviceName, controllerName, requestUri, httpMethod, userId
             );
         } catch (Exception ignored) {}
     }

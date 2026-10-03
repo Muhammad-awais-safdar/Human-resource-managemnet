@@ -82,8 +82,8 @@ public class RetailModuleController {
         JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
         String id = UUID.randomUUID().toString();
         jdbcTemplate.update(
-                "INSERT INTO pos_commission (id, employee_id, sales_amount, commission_rate, commission_amount, log_date) " +
-                "VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT DO NOTHING",
+                "INSERT IGNORE INTO pos_commission (id, employee_id, sales_amount, commission_rate, commission_amount, log_date) " +
+                "VALUES (?, ?, ?, ?, ?, ?)",
                 id, employeeId, sales, commissionRate, commission, Date.valueOf(LocalDate.now())
         );
 

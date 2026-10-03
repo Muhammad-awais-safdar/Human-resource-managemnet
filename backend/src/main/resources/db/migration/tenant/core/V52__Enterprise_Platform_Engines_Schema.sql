@@ -121,9 +121,9 @@ CREATE TABLE IF NOT EXISTS pos_commission (
 );
 
 -- Performance indexes for engine tables
-CREATE INDEX IF NOT EXISTS idx_piece_rate_employee ON piece_rate_entry (employee_id);
-CREATE INDEX IF NOT EXISTS idx_piece_rate_unit ON piece_rate_entry (production_unit);
-CREATE INDEX IF NOT EXISTS idx_allowance_employee ON allowance_ledger (employee_id);
-CREATE INDEX IF NOT EXISTS idx_certification_employee ON certification_registry (employee_id);
-CREATE INDEX IF NOT EXISTS idx_maker_checker_status ON maker_checker_request (status);
-CREATE INDEX IF NOT EXISTS idx_roster_shift_dept ON roster_shift_market (department, shift_status);
+CREATE INDEX idx_piece_rate_employee ON piece_rate_entry (employee_id);
+CREATE INDEX idx_piece_rate_unit ON piece_rate_entry (production_unit);
+CREATE INDEX idx_allowance_employee ON allowance_ledger (employee_id);
+CREATE INDEX idx_certification_employee ON certification_registry (employee_id);
+CREATE INDEX idx_maker_checker_status ON maker_checker_request (status);
+CREATE INDEX idx_roster_shift_dept ON roster_shift_market (department, shift_status);

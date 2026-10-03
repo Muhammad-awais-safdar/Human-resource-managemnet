@@ -31,6 +31,12 @@ SELECT 'geo-setting-main-office', 'Islamabad Corporate HQ', 33.6844, 73.0479, 5.
 WHERE NOT EXISTS (SELECT 1 FROM geofence_setting WHERE id = 'geo-setting-main-office');
 
 -- 3. Extend ATS candidate application table for metadata persistence (Phase 10 ATS CV Parser)
-ALTER TABLE candidate_application ADD COLUMN IF NOT EXISTS phone VARCHAR(30);
-ALTER TABLE candidate_application ADD COLUMN IF NOT EXISTS extracted_skills TEXT;
-ALTER TABLE candidate_application ADD COLUMN IF NOT EXISTS extracted_experience VARCHAR(100);
+SET @dbname = DATABASE();
+SET @preparedStatement = (SELECT IF((SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = @dbname AND TABLE_NAME = 'candidate_application' AND COLUMN_NAME = 'phone') > 0, 'SELECT 1', 'ALTER TABLE candidate_application ADD COLUMN phone VARCHAR(30)'));
+PREPARE stmt FROM @preparedStatement; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+SET @preparedStatement = (SELECT IF((SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = @dbname AND TABLE_NAME = 'candidate_application' AND COLUMN_NAME = 'extracted_skills') > 0, 'SELECT 1', 'ALTER TABLE candidate_application ADD COLUMN extracted_skills TEXT'));
+PREPARE stmt FROM @preparedStatement; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+SET @preparedStatement = (SELECT IF((SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = @dbname AND TABLE_NAME = 'candidate_application' AND COLUMN_NAME = 'extracted_experience') > 0, 'SELECT 1', 'ALTER TABLE candidate_application ADD COLUMN extracted_experience VARCHAR(100)'));
+PREPARE stmt FROM @preparedStatement; EXECUTE stmt; DEALLOCATE PREPARE stmt;

@@ -33,7 +33,7 @@ public class CompensationServiceImpl implements CompensationService {
         String id = UUID.randomUUID().toString();
         jdbc.update(
             "INSERT INTO compensation_band (id, grade, min_salary, max_salary, currency) VALUES (?, ?, ?, ?, ?) " +
-            "ON CONFLICT (grade) DO UPDATE SET min_salary = EXCLUDED.min_salary, max_salary = EXCLUDED.max_salary",
+            "ON DUPLICATE KEY UPDATE min_salary = VALUES(min_salary), max_salary = VALUES(max_salary)",
             id,
             body.get("grade"),
             new BigDecimal(String.valueOf(body.get("minSalary"))),

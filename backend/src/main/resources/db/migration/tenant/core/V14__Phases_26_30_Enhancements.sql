@@ -37,8 +37,8 @@ CREATE TABLE IF NOT EXISTS workflow_execution (
     deleted             BOOLEAN      NOT NULL DEFAULT FALSE
 );
 
-CREATE INDEX IF NOT EXISTS idx_workflow_execution_status    ON workflow_execution(status);
-CREATE INDEX IF NOT EXISTS idx_workflow_execution_workflow  ON workflow_execution(workflow_id);
+CREATE INDEX idx_workflow_execution_status    ON workflow_execution(status);
+CREATE INDEX idx_workflow_execution_workflow  ON workflow_execution(workflow_id);
 
 -- =============================================
 -- PHASE 27: COMMUNICATION & NOTIFICATIONS
@@ -69,8 +69,8 @@ CREATE TABLE IF NOT EXISTS notification_queue (
     deleted         BOOLEAN       NOT NULL DEFAULT FALSE
 );
 
-CREATE INDEX IF NOT EXISTS idx_notification_employee ON notification_queue(employee_id);
-CREATE INDEX IF NOT EXISTS idx_notification_read     ON notification_queue(is_read);
+CREATE INDEX idx_notification_employee ON notification_queue(employee_id);
+CREATE INDEX idx_notification_read     ON notification_queue(is_read);
 
 -- =============================================
 -- PHASE 28: REPORTS & ANALYTICS
@@ -133,4 +133,4 @@ CREATE TABLE IF NOT EXISTS mobile_device_sync (
     deleted         BOOLEAN       NOT NULL DEFAULT FALSE
 );
 
-CREATE INDEX IF NOT EXISTS idx_mobile_sync_employee ON mobile_device_sync(employee_id);
+CREATE INDEX idx_mobile_sync_employee ON mobile_device_sync(employee_id);

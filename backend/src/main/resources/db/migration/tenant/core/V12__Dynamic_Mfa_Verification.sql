@@ -10,4 +10,4 @@ CREATE TABLE IF NOT EXISTS mfa_code (
 );
 
 -- Index for quick lookups on active verification requests
-CREATE INDEX IF NOT EXISTS idx_mfa_code_email_status ON mfa_code (email, used, expires_at);
+CREATE INDEX idx_mfa_code_email_status ON mfa_code (email, used, expires_at);

@@ -138,7 +138,7 @@ public class RoleController {
             );
             for (Map<String, Object> p : perms) {
                 jdbcTemplate.update(
-                        "INSERT INTO role_permission (role_id, permission_id, access_scope) VALUES (?, ?, ?) ON CONFLICT DO NOTHING",
+                        "INSERT IGNORE INTO role_permission (role_id, permission_id, access_scope) VALUES (?, ?, ?)",
                         newRoleId, p.get("permission_id"), p.get("access_scope")
                 );
             }
@@ -277,7 +277,7 @@ public class RoleController {
 
         try {
             jdbcTemplate.update(
-                    "INSERT INTO employee_role (employee_id, role_id) VALUES (?, ?) ON CONFLICT DO NOTHING",
+                    "INSERT IGNORE INTO employee_role (employee_id, role_id) VALUES (?, ?)",
                     employeeId, roleId
             );
             return ResponseEntity.ok(Map.of("success", true, "message", "Role assigned to user successfully."));

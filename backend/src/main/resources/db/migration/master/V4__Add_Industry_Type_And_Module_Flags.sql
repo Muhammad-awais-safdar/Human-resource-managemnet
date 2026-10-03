@@ -1,5 +1,21 @@
 -- Migration V4: Add industry_type column and platform module tables
-ALTER TABLE tenant ADD COLUMN IF NOT EXISTS industry_type VARCHAR(50) DEFAULT 'GENERAL';
+SET @dbname = DATABASE();
+SET @tablename = 'tenant';
+SET @columnname = 'industry_type';
+SET @preparedStatement = (SELECT IF(
+  (
+    SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+    WHERE
+      TABLE_SCHEMA = @dbname
+      AND TABLE_NAME = @tablename
+      AND COLUMN_NAME = @columnname
+  ) > 0,
+  'SELECT 1',
+  'ALTER TABLE tenant ADD COLUMN industry_type VARCHAR(50) DEFAULT ''GENERAL'''
+));
+PREPARE alterIfNotExists FROM @preparedStatement;
+EXECUTE alterIfNotExists;
+DEALLOCATE PREPARE alterIfNotExists;
 
 CREATE TABLE IF NOT EXISTS platform_module (
     module_key VARCHAR(100) PRIMARY KEY,

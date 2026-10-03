@@ -100,8 +100,7 @@ public class SuccessionServiceImpl implements SuccessionService {
         JdbcTemplate jdbc = new JdbcTemplate(dataSource);
         String id = UUID.randomUUID().toString();
         jdbc.update(
-            "INSERT INTO talent_pool_member (id, pool_id, employee_id) VALUES (?, ?, ?) " +
-            "ON CONFLICT (pool_id, employee_id) DO NOTHING",
+            "INSERT IGNORE INTO talent_pool_member (id, pool_id, employee_id) VALUES (?, ?, ?)",
             id, body.get("poolId"), body.get("employeeId")
         );
     }

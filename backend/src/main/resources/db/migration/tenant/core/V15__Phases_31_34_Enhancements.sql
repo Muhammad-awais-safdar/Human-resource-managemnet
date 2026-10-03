@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS ai_anomaly_flag (
     resolved        BOOLEAN      NOT NULL DEFAULT FALSE
 );
 
-CREATE INDEX IF NOT EXISTS idx_ai_anomaly_entity ON ai_anomaly_flag(entity_type, entity_id);
+CREATE INDEX idx_ai_anomaly_entity ON ai_anomaly_flag(entity_type, entity_id);
 
 -- =============================================
 -- PHASE 32: COMPLIANCE & GOVERNANCE
@@ -42,8 +42,8 @@ CREATE TABLE IF NOT EXISTS compliance_audit_log (
     created_at      TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX IF NOT EXISTS idx_compliance_audit_table ON compliance_audit_log(table_name);
-CREATE INDEX IF NOT EXISTS idx_compliance_audit_user  ON compliance_audit_log(changed_by);
+CREATE INDEX idx_compliance_audit_table ON compliance_audit_log(table_name);
+CREATE INDEX idx_compliance_audit_user  ON compliance_audit_log(changed_by);
 
 -- =============================================
 -- PHASE 33: PLATFORM SETTINGS
@@ -61,9 +61,8 @@ CREATE TABLE IF NOT EXISTS platform_settings (
 );
 
 -- Seed initial settings row so it's always queryable
-INSERT INTO platform_settings (id, company_name, primary_color, support_email, currency, timezone, date_format)
-VALUES ('default-settings-id-001', 'Awais HR Corp', '#6366f1', 'support@company.com', 'USD', 'UTC', 'yyyy-MM-dd')
-ON CONFLICT (id) DO NOTHING;
+INSERT IGNORE INTO platform_settings (id, company_name, primary_color, support_email, currency, timezone, date_format)
+VALUES ('default-settings-id-001', 'Awais HR Corp', '#6366f1', 'support@company.com', 'USD', 'UTC', 'yyyy-MM-dd');
 
 -- =============================================
 -- PHASE 34: ENTERPRISE FEATURES
@@ -87,74 +86,62 @@ CREATE TABLE IF NOT EXISTS tenant_backup_log (
     created_at      TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX IF NOT EXISTS idx_api_key_hash ON api_key(key_hash);
+CREATE INDEX idx_api_key_hash ON api_key(key_hash);
 
 -- =============================================
 -- RESILIENCE SEEDING: Ensure SYSTEM_ADMIN has all 4 core permissions mapped
 -- =============================================
-INSERT INTO permission (id, name, description)
-VALUES ('perm-id-corehr-emp-read', 'corehr:employee:read', 'Read access to employee profiles')
-ON CONFLICT (name) DO NOTHING;
+INSERT IGNORE INTO permission (id, name, description)
+VALUES ('perm-id-corehr-emp-read', 'corehr:employee:read', 'Read access to employee profiles');
 
-INSERT INTO permission (id, name, description)
-VALUES ('perm-id-corehr-emp-write', 'corehr:employee:write', 'Write access to employee profiles')
-ON CONFLICT (name) DO NOTHING;
+INSERT IGNORE INTO permission (id, name, description)
+VALUES ('perm-id-corehr-emp-write', 'corehr:employee:write', 'Write access to employee profiles');
 
-INSERT INTO permission (id, name, description)
-VALUES ('perm-id-corehr-org-write', 'corehr:org:write', 'Manage organization structure and tree nodes')
-ON CONFLICT (name) DO NOTHING;
+INSERT IGNORE INTO permission (id, name, description)
+VALUES ('perm-id-corehr-org-write', 'corehr:org:write', 'Manage organization structure and tree nodes');
 
-INSERT INTO permission (id, name, description)
-VALUES ('perm-id-corehr-set-write', 'corehr:settings:write', 'Modify white-label tenant branding configurations')
-ON CONFLICT (name) DO NOTHING;
+INSERT IGNORE INTO permission (id, name, description)
+VALUES ('perm-id-corehr-set-write', 'corehr:settings:write', 'Modify white-label tenant branding configurations');
 
-INSERT INTO role (id, name, description)
-VALUES ('role-id-sys-admin', 'SYSTEM_ADMIN', 'Full access administrator')
-ON CONFLICT (name) DO NOTHING;
+INSERT IGNORE INTO role (id, name, description)
+VALUES ('role-id-sys-admin', 'SYSTEM_ADMIN', 'Full access administrator');
 
-INSERT INTO role_permission (role_id, permission_id)
+INSERT IGNORE INTO role_permission (role_id, permission_id)
 SELECT r.id, p.id
 FROM role r, permission p
 WHERE r.name = 'SYSTEM_ADMIN'
-  AND p.name IN ('corehr:employee:read', 'corehr:employee:write', 'corehr:org:write', 'corehr:settings:write')
-ON CONFLICT (role_id, permission_id) DO NOTHING;
+  AND p.name IN ('corehr:employee:read', 'corehr:employee:write', 'corehr:org:write', 'corehr:settings:write');
 
 -- Seed standard roles
-INSERT INTO role (id, name, description)
-VALUES ('role-id-employee', 'EMPLOYEE', 'Standard employee self-service access')
-ON CONFLICT (name) DO NOTHING;
+INSERT IGNORE INTO role (id, name, description)
+VALUES ('role-id-employee', 'EMPLOYEE', 'Standard employee self-service access');
 
-INSERT INTO role (id, name, description)
-VALUES ('role-id-manager', 'MANAGER', 'Department supervisor access and approvals')
-ON CONFLICT (name) DO NOTHING;
+INSERT IGNORE INTO role (id, name, description)
+VALUES ('role-id-manager', 'MANAGER', 'Department supervisor access and approvals');
 
-INSERT INTO role (id, name, description)
-VALUES ('role-id-hr-manager', 'HR_MANAGER', 'Core HR staff and operational management')
-ON CONFLICT (name) DO NOTHING;
+INSERT IGNORE INTO role (id, name, description)
+VALUES ('role-id-hr-manager', 'HR_MANAGER', 'Core HR staff and operational management');
 
 -- Map EMPLOYEE permissions (corehr:employee:read)
-INSERT INTO role_permission (role_id, permission_id)
+INSERT IGNORE INTO role_permission (role_id, permission_id)
 SELECT r.id, p.id
 FROM role r, permission p
 WHERE r.name = 'EMPLOYEE'
-  AND p.name = 'corehr:employee:read'
-ON CONFLICT (role_id, permission_id) DO NOTHING;
+  AND p.name = 'corehr:employee:read';
 
 -- Map MANAGER permissions (corehr:employee:read)
-INSERT INTO role_permission (role_id, permission_id)
+INSERT IGNORE INTO role_permission (role_id, permission_id)
 SELECT r.id, p.id
 FROM role r, permission p
 WHERE r.name = 'MANAGER'
-  AND p.name = 'corehr:employee:read'
-ON CONFLICT (role_id, permission_id) DO NOTHING;
+  AND p.name = 'corehr:employee:read';
 
 -- Map HR_MANAGER permissions (all corehr permissions)
-INSERT INTO role_permission (role_id, permission_id)
+INSERT IGNORE INTO role_permission (role_id, permission_id)
 SELECT r.id, p.id
 FROM role r, permission p
 WHERE r.name = 'HR_MANAGER'
-  AND p.name IN ('corehr:employee:read', 'corehr:employee:write', 'corehr:org:write', 'corehr:settings:write')
-ON CONFLICT (role_id, permission_id) DO NOTHING;
+  AND p.name IN ('corehr:employee:read', 'corehr:employee:write', 'corehr:org:write', 'corehr:settings:write');
 
 CREATE TABLE IF NOT EXISTS employee_invite (
     id          VARCHAR(36)  NOT NULL PRIMARY KEY,
@@ -166,7 +153,7 @@ CREATE TABLE IF NOT EXISTS employee_invite (
     created_at  TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX IF NOT EXISTS idx_employee_invite_token ON employee_invite(token);
+CREATE INDEX idx_employee_invite_token ON employee_invite(token);
 
 
 

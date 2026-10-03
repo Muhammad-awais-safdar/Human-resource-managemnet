@@ -113,7 +113,7 @@ public class EmployeeLifecycleServiceImpl implements EmployeeLifecycleService {
         String token = UUID.randomUUID().toString();
         String inviteId = UUID.randomUUID().toString();
         jdbcTemplate.update(
-                "INSERT INTO employee_invite (id, email, token, role_id, expires_at) VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP + INTERVAL '2 days')",
+                "INSERT INTO employee_invite (id, email, token, role_id, expires_at) VALUES (?, ?, ?, ?, DATE_ADD(NOW(), INTERVAL 2 DAY))",
                 inviteId, email, token, roleId
         );
 

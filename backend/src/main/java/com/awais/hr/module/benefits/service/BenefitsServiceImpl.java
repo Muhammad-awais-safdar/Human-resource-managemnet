@@ -91,7 +91,7 @@ public class BenefitsServiceImpl implements BenefitsService {
         String id = UUID.randomUUID().toString();
         jdbc.update(
             "INSERT INTO benefit_enrollment (id, employee_id, plan_id) VALUES (?, ?, ?) " +
-            "ON CONFLICT (employee_id, plan_id) DO UPDATE SET status = 'ACTIVE', ended_at = NULL",
+            "ON DUPLICATE KEY UPDATE status = 'ACTIVE', ended_at = NULL",
             id, employeeId, planId
         );
     }

@@ -48,6 +48,10 @@ public class Tenant {
     @Builder.Default
     private String industryType = "GENERAL";
 
+    @Column(name = "type", length = 50)
+    @Builder.Default
+    private String type = "SHARED_SCHEMA";
+
     @Column(nullable = false, length = 20)
     @Builder.Default
     private String status = "ACTIVE";

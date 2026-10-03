@@ -8,5 +8,9 @@ CREATE TABLE IF NOT EXISTS onboarding_policy_signature (
 );
 
 -- Phase 12: Resignation Extensions
-ALTER TABLE resignation ADD COLUMN IF NOT EXISTS exit_interview_feedback TEXT;
-ALTER TABLE resignation ADD COLUMN IF NOT EXISTS final_settlement_amount NUMERIC(12,2) DEFAULT 0.00;
+SET @dbname = DATABASE();
+SET @preparedStatement = (SELECT IF((SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = @dbname AND TABLE_NAME = 'resignation' AND COLUMN_NAME = 'exit_interview_feedback') > 0, 'SELECT 1', 'ALTER TABLE resignation ADD COLUMN exit_interview_feedback TEXT'));
+PREPARE stmt FROM @preparedStatement; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+SET @preparedStatement = (SELECT IF((SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = @dbname AND TABLE_NAME = 'resignation' AND COLUMN_NAME = 'final_settlement_amount') > 0, 'SELECT 1', 'ALTER TABLE resignation ADD COLUMN final_settlement_amount NUMERIC(12,2) DEFAULT 0.00'));
+PREPARE stmt FROM @preparedStatement; EXECUTE stmt; DEALLOCATE PREPARE stmt;

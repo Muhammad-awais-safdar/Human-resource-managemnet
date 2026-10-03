@@ -84,8 +84,7 @@ public class WorkforceSchedulingServiceImpl implements WorkforceSchedulingServic
         );
         String id = UUID.randomUUID().toString();
         jdbc.update(
-            "INSERT INTO shift_bid (id, open_shift_id, employee_id) VALUES (?, ?, ?) " +
-            "ON CONFLICT (open_shift_id, employee_id) DO NOTHING",
+            "INSERT IGNORE INTO shift_bid (id, open_shift_id, employee_id) VALUES (?, ?, ?)",
             id, openShiftId, employeeId
         );
     }
@@ -111,7 +110,7 @@ public class WorkforceSchedulingServiceImpl implements WorkforceSchedulingServic
             jdbc.update(
                 "INSERT INTO workforce_schedule (id, employee_id, schedule_date, start_time, end_time, status) " +
                 "VALUES (?, ?, ?, ?, ?, 'SCHEDULED') " +
-                "ON CONFLICT (employee_id, schedule_date) DO UPDATE SET start_time = EXCLUDED.start_time, end_time = EXCLUDED.end_time",
+                "ON DUPLICATE KEY UPDATE start_time = VALUES(start_time), end_time = VALUES(end_time)",
                 scheduleId,
                 bidInfo.get("employee_id"),
                 bidInfo.get("shift_date"),

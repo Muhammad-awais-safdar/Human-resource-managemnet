@@ -83,6 +83,6 @@ CREATE TABLE IF NOT EXISTS asset_allocation (
     employee_id VARCHAR(50) REFERENCES employee(id) ON DELETE CASCADE,
     asset_name VARCHAR(100) NOT NULL,
     asset_code VARCHAR(50) UNIQUE NOT NULL,
-    allocated_at DATE DEFAULT CURRENT_DATE NOT NULL,
+    allocated_at DATE DEFAULT (CURRENT_DATE) NOT NULL,
     returned_at DATE
 );

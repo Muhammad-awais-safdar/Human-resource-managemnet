@@ -105,7 +105,7 @@ public class ComplianceManagementServiceImpl implements ComplianceManagementServ
 
         String id = UUID.randomUUID().toString();
         jdbc.update(
-                "INSERT INTO policy_acknowledgement (id, policy_name, employee_id, policy_version) VALUES (?, ?, ?, ?) ON CONFLICT DO NOTHING",
+                "INSERT IGNORE INTO policy_acknowledgement (id, policy_name, employee_id, policy_version) VALUES (?, ?, ?, ?)",
                 id, policyName.trim(), employeeId, version
         );
         log.info("Policy acknowledged: policy={} employee={}", policyName, email);

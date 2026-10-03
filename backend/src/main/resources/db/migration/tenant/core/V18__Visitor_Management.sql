@@ -1,7 +1,7 @@
 -- V18: Visitor Management
 
 CREATE TABLE IF NOT EXISTS visitor_log (
-    id                  VARCHAR(36) PRIMARY KEY DEFAULT gen_random_uuid()::text,
+    id                  VARCHAR(36) PRIMARY KEY DEFAULT (UUID()),
     visitor_name        VARCHAR(255) NOT NULL,
     email               VARCHAR(255),
     phone               VARCHAR(50),
@@ -13,5 +13,5 @@ CREATE TABLE IF NOT EXISTS visitor_log (
     check_out_time      TIMESTAMP,
     status              VARCHAR(50) NOT NULL DEFAULT 'PENDING', -- PENDING, APPROVED, CHECKED_IN, CHECKED_OUT, REJECTED
     security_clearance VARCHAR(50) NOT NULL DEFAULT 'PASSED',
-    created_at          TIMESTAMP NOT NULL DEFAULT NOW()
+    created_at          TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );

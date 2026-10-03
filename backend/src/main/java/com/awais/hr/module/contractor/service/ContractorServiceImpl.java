@@ -93,7 +93,7 @@ public class ContractorServiceImpl implements ContractorService {
         jdbc.update(
             "INSERT INTO contractor_timesheet (id, contractor_id, week_start_date, hours_logged, description) " +
             "VALUES (?, ?, CAST(? AS DATE), ?, ?) " +
-            "ON CONFLICT (contractor_id, week_start_date) DO UPDATE SET hours_logged = EXCLUDED.hours_logged, description = EXCLUDED.description, status = 'PENDING'",
+            "ON DUPLICATE KEY UPDATE hours_logged = VALUES(hours_logged), description = VALUES(description), status = 'PENDING'",
             id,
             body.get("contractorId"),
             body.get("weekStartDate"),

@@ -24,7 +24,9 @@ CREATE TABLE IF NOT EXISTS quiz (
 );
 
 -- Add enrolled_at to course_enrollment if it doesn't exist
-ALTER TABLE course_enrollment ADD COLUMN IF NOT EXISTS enrolled_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
+SET @dbname = DATABASE();
+SET @preparedStatement = (SELECT IF((SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = @dbname AND TABLE_NAME = 'course_enrollment' AND COLUMN_NAME = 'enrolled_at') > 0, 'SELECT 1', 'ALTER TABLE course_enrollment ADD COLUMN enrolled_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP'));
+PREPARE stmt FROM @preparedStatement; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 
 -- Phase 20: Asset inventory (consistent with AssetServiceImpl)
 CREATE TABLE IF NOT EXISTS asset (
@@ -39,13 +41,13 @@ CREATE TABLE IF NOT EXISTS asset (
 
 -- Seed sample assets
 INSERT INTO asset (id, name, category, serial_number, status)
-SELECT gen_random_uuid()::VARCHAR, 'Dell Laptop', 'LAPTOP', 'DL-2026-001', 'AVAILABLE'
+SELECT UUID(), 'Dell Laptop', 'LAPTOP', 'DL-2026-001', 'AVAILABLE'
 WHERE NOT EXISTS (SELECT 1 FROM asset WHERE serial_number = 'DL-2026-001');
 
 INSERT INTO asset (id, name, category, serial_number, status)
-SELECT gen_random_uuid()::VARCHAR, 'iPhone 15', 'MOBILE', 'IP15-2026-001', 'AVAILABLE'
+SELECT UUID(), 'iPhone 15', 'MOBILE', 'IP15-2026-001', 'AVAILABLE'
 WHERE NOT EXISTS (SELECT 1 FROM asset WHERE serial_number = 'IP15-2026-001');
 
 INSERT INTO asset (id, name, category, serial_number, status)
-SELECT gen_random_uuid()::VARCHAR, 'Office Chair', 'FURNITURE', 'OC-2026-001', 'AVAILABLE'
+SELECT UUID(), 'Office Chair', 'FURNITURE', 'OC-2026-001', 'AVAILABLE'
 WHERE NOT EXISTS (SELECT 1 FROM asset WHERE serial_number = 'OC-2026-001');

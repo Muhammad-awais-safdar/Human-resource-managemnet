@@ -100,7 +100,7 @@ public class AuthController {
             List<String> roles = jdbcTemplate.queryForList("SELECT id FROM role WHERE name = 'EMPLOYEE'", String.class);
             if (!roles.isEmpty()) {
                 jdbcTemplate.update(
-                        "INSERT INTO employee_role (employee_id, role_id) VALUES (?, ?) ON CONFLICT DO NOTHING",
+                        "INSERT IGNORE INTO employee_role (employee_id, role_id) VALUES (?, ?)",
                         employeeId, roles.get(0)
                 );
             }
@@ -153,7 +153,7 @@ public class AuthController {
                 String mfaCode = String.format("%06d", new java.security.SecureRandom().nextInt(1000000));
                 JdbcTemplate masterJdbc = new JdbcTemplate(routingDataSource);
                 masterJdbc.update(
-                        "INSERT INTO mfa_code (id, email, code, expires_at) VALUES (?, ?, ?, CURRENT_TIMESTAMP + INTERVAL '5 minutes')",
+                        "INSERT INTO mfa_code (id, email, code, expires_at) VALUES (?, ?, ?, DATE_ADD(NOW(), INTERVAL 5 MINUTE))",
                         UUID.randomUUID().toString(), email, mfaCode
                 );
 
@@ -210,7 +210,7 @@ public class AuthController {
                 if (passwordEncoder.matches(password, dbHashedPassword)) {
                     String mfaCode = String.format("%06d", new java.security.SecureRandom().nextInt(1000000));
                     tJdbc.update(
-                            "INSERT INTO mfa_code (id, email, code, expires_at) VALUES (?, ?, ?, CURRENT_TIMESTAMP + INTERVAL '5 minutes')",
+                            "INSERT INTO mfa_code (id, email, code, expires_at) VALUES (?, ?, ?, DATE_ADD(NOW(), INTERVAL 5 MINUTE))",
                             UUID.randomUUID().toString(), email, mfaCode
                     );
                     log.info("{} Verification code issued for workspace user: {} in tenant: {}", mfaCode, email, requestTenantId);

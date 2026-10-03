@@ -47,6 +47,7 @@ public class ObservabilityFlywayConfig {
                     .baselineOnMigrate(true)
                     .load();
 
+            flyway.repair();
             flyway.migrate();
             log.info("Dedicated Observability Flyway migration completed successfully for: {}", url);
             return flyway;
