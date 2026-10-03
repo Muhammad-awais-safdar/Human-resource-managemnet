@@ -44,7 +44,7 @@ FRONTEND_CMD="npm run dev"
 kill_port() {
     local port=$1
     if command -v fuser &> /dev/null; then
-        fuser -k "$port/tcp" 2>/dev/null || true
+        fuser -k -9 "$port/tcp" 2>/dev/null || true
     elif command -v lsof &> /dev/null; then
         local pid
         pid=$(lsof -t -i:"$port")
@@ -52,6 +52,15 @@ kill_port() {
             kill -9 $pid 2>/dev/null || true
         fi
     fi
+}
+
+kill_all_ports() {
+    echo -e "${BOLD}${YELLOW}🧹 Clearing all ports currently in use (${BACKEND_PORT:-8080}, ${FRONTEND_PORT:-3000}, 5173, 8081)...${RESET}"
+    kill_port "${BACKEND_PORT:-8080}"
+    kill_port "${FRONTEND_PORT:-3000}"
+    kill_port 5173
+    kill_port 8081
+    echo -e "${GREEN}✅ All ports cleared.${RESET}\n"
 }
 
 # Function: Run Spring Boot & QA Test Suites
@@ -158,6 +167,8 @@ run_stress_testing() {
         echo -e "${BLUE}Cleaning up temporary stress test backend process (PID: $STRESS_BACKEND_PID)...${RESET}"
         kill -9 $STRESS_BACKEND_PID 2>/dev/null || true
     fi
+    # Forcefully clear backend port 8080 occupied during stress testing
+    kill_port "${BACKEND_PORT:-8080}"
 
     echo -e "\n${BOLD}${MAGENTA}========================================================${RESET}"
     echo -e "${BOLD}${MAGENTA}📊 STRESS & PERFORMANCE VERIFICATION COMPLETED${RESET}"
@@ -218,7 +229,10 @@ esac
 
 show_banner
 
-# Step 1: Pre-flight tool check
+# Step 1: Kill all active ports first before tests & launching application
+kill_all_ports
+
+# Step 2: Pre-flight tool check
 echo -e "${BLUE}Checking system tool requirements...${RESET}"
 if ! command -v mvn &> /dev/null; then
     echo -e "${RED}Error: Maven (mvn) is not installed.${RESET}"
@@ -235,23 +249,20 @@ if ! command -v python3 &> /dev/null; then
     exit 1
 fi
 
-# Step 2: Run All Test Cases if requested
+# Step 3: Run All Test Cases if requested
 if [ "$RUN_TESTS" = true ]; then
     run_all_tests
 fi
 
-# Step 3: Run Stress Testing if requested
+# Step 4: Run Stress Testing if requested
 if [ "$RUN_STRESS" = true ]; then
     run_stress_testing 20 500 "multi"
 fi
 
-# Step 4: Clear active ports and launch applications
-echo -e "${BLUE}Clearing active server ports...${RESET}"
-kill_port "${BACKEND_PORT:-8080}"
-kill_port "${FRONTEND_PORT:-3000}"
-kill_port 5173
+# Step 5: Final port check & launch applications
+kill_all_ports
 
-echo -e "\n${BOLD}${GREEN}Ports cleared. Launching Awais HR SaaS Application...${RESET}"
+echo -e "\n${BOLD}${GREEN}Launching Awais HR SaaS Application...${RESET}"
 echo -e "${BOLD}--------------------------------------------------------${RESET}"
 echo -e "💻 Frontend Web App:          ${CYAN}http://localhost:${FRONTEND_PORT:-3000}${RESET}"
 echo -e "⚙️ Backend API Engine:        ${CYAN}http://localhost:${BACKEND_PORT:-8080}${RESET}"
