@@ -52,6 +52,22 @@ public class TenantController {
         ));
     }
 
+    private Optional<Tenant> safeFindTenant(String identifier) {
+        if (identifier == null || identifier.isBlank()) {
+            return Optional.empty();
+        }
+        String key = identifier.toLowerCase().trim();
+        Optional<Tenant> tenantOpt = tenantRepository.findBySubdomain(key);
+        if (tenantOpt.isPresent()) {
+            return tenantOpt;
+        }
+        try {
+            return tenantRepository.findById(identifier);
+        } catch (Exception e) {
+            return Optional.empty();
+        }
+    }
+
     @GetMapping("/active-modules")
     public ResponseEntity<Map<String, Object>> getActiveTenantModules(HttpServletRequest request) {
         String tenantId = com.awais.hr.context.TenantContextHolder.getCurrentTenant();
@@ -63,10 +79,7 @@ public class TenantController {
         String currentIndustry = "GENERAL";
 
         if (tenantId != null && !tenantId.isBlank()) {
-            Optional<Tenant> tenantOpt = tenantRepository.findById(tenantId);
-            if (tenantOpt.isEmpty()) {
-                tenantOpt = tenantRepository.findBySubdomain(tenantId.toLowerCase().trim());
-            }
+            Optional<Tenant> tenantOpt = safeFindTenant(tenantId);
             if (tenantOpt.isPresent()) {
                 currentIndustry = tenantOpt.get().getIndustryType();
                 if (currentIndustry == null || currentIndustry.isBlank()) {
@@ -123,10 +136,7 @@ public class TenantController {
         String targetIndustry = newIndustry.toUpperCase().trim();
 
         if (tenantId != null && !tenantId.isBlank()) {
-            Optional<Tenant> tenantOpt = tenantRepository.findById(tenantId);
-            if (tenantOpt.isEmpty()) {
-                tenantOpt = tenantRepository.findBySubdomain(tenantId.toLowerCase().trim());
-            }
+            Optional<Tenant> tenantOpt = safeFindTenant(tenantId);
             if (tenantOpt.isPresent()) {
                 Tenant tenant = tenantOpt.get();
                 tenant.setIndustryType(targetIndustry);

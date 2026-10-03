@@ -273,13 +273,19 @@ public class TenantService {
 
     private void runFlywayMigrations(DataSource tenantDataSource) {
         log.info("Running dynamic Flyway migrations against tenant database context...");
-        Flyway flyway = Flyway.configure()
-                .dataSource(tenantDataSource)
-                .locations("classpath:db/migration/tenant/core")
-                .cleanDisabled(true)
-                .load();
-        flyway.repair();
-        flyway.migrate();
+        try {
+            Flyway flyway = Flyway.configure()
+                    .dataSource(tenantDataSource)
+                    .locations("classpath:db/migration/tenant/core")
+                    .baselineOnMigrate(true)
+                    .cleanDisabled(true)
+                    .load();
+            flyway.repair();
+            flyway.migrate();
+            log.info("Dynamic Flyway migrations applied successfully against tenant database.");
+        } catch (Exception e) {
+            log.error("Flyway migration error against tenant database context: {}", e.getMessage());
+        }
     }
 
     private void seedTenantMetadata(DataSource tenantDataSource, String adminEmail) {

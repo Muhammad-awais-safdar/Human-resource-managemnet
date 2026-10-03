@@ -39,10 +39,15 @@ scrape_configs:
         replacement: 'production'
 
     pipeline_stages:
-      # ── BACKEND: parse structured JSON log lines ─────────────────────
+      # ── BACKEND: parse multiline stack traces and structured log lines ───
       - match:
           selector: '{container="awais-hr-backend"}'
           stages:
+            - multiline:
+                firstline: '^\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2}\.\d{3}'
+                max_wait: 3s
+            - regex:
+                expression: '.*\s+(?P<level>TRACE|DEBUG|INFO|WARN|ERROR)\s+.*'
             - json:
                 expressions:
                   level:    'level'

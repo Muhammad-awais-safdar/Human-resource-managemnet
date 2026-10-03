@@ -246,10 +246,17 @@ public class AuthController {
     }
 
     private Optional<Tenant> findTenantByIdMaster(String id) {
+        if (id == null || id.isBlank()) return Optional.empty();
         String currentCtx = TenantContextHolder.getCurrentTenant();
         try {
             TenantContextHolder.clear();
-            return tenantRepository.findById(id);
+            Optional<Tenant> tenantOpt = tenantRepository.findBySubdomain(id.toLowerCase().trim());
+            if (tenantOpt.isPresent()) return tenantOpt;
+            try {
+                return tenantRepository.findById(id);
+            } catch (Exception e) {
+                return Optional.empty();
+            }
         } finally {
             if (currentCtx != null) {
                 TenantContextHolder.setCurrentTenant(currentCtx);

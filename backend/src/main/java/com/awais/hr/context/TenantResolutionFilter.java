@@ -34,9 +34,11 @@ public class TenantResolutionFilter implements Filter {
             if ("MASTER".equalsIgnoreCase(headerVal) || "SYSTEM_MASTER".equalsIgnoreCase(headerVal)) {
                 resolvedTenantId = "MASTER";
             } else {
-                Optional<Tenant> tenantOpt = tenantRepository.findBySubdomain(headerVal);
+                Optional<Tenant> tenantOpt = tenantRepository.findBySubdomain(headerVal.toLowerCase().trim());
                 if (tenantOpt.isEmpty()) {
-                    tenantOpt = tenantRepository.findById(headerVal);
+                    try {
+                        tenantOpt = tenantRepository.findById(headerVal);
+                    } catch (Exception ignored) {}
                 }
                 if (tenantOpt.isPresent()) {
                     resolvedTenantId = tenantOpt.get().getId();
