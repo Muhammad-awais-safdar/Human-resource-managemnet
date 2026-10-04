@@ -55,7 +55,7 @@
   font-size: var(--fs-caption);
   font-weight: var(--fw-semibold);
   color: var(--text-secondary);
-  margin-bottom: 8px;
+  margin-bottom: 6px;
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
@@ -63,69 +63,20 @@
 .input {
   width: 100%;
   height: 42px;
-  box-sizing: border-box;
-  background: var(--bg-surface);
-  border: 1px solid var(--border-default);
+  padding: 0 14px;
   border-radius: var(--radius-md);
-  padding: 8px 14px;
+  border: 1px solid var(--border-default);
+  background: var(--bg-surface);
   color: var(--text-primary);
   font-size: var(--fs-body);
-  outline: none;
   transition: var(--transition-smooth);
-}
-
-.input option {
-  background-color: var(--bg-surface);
-  color: var(--text-primary);
-}
-
-.input:-webkit-autofill,
-.input:-webkit-autofill:hover, 
-.input:-webkit-autofill:focus {
-  -webkit-box-shadow: 0 0 0px 1000px var(--bg-surface) inset !important;
-  -webkit-text-fill-color: var(--text-primary) !important;
-  transition: background-color 5000s ease-in-out 0s;
-}
-
-.input::placeholder {
-  color: var(--text-muted);
+  box-sizing: border-box;
 }
 
 .input:focus {
-  border-color: var(--border-focus);
+  outline: none;
+  border-color: var(--primary);
   box-shadow: var(--shadow-focus);
-}
-
-.inputError {
-  border-color: var(--danger) !important;
-}
-
-.errorText {
-  color: var(--danger);
-  font-size: var(--fs-caption);
-  margin-top: 6px;
-  font-weight: var(--fw-medium);
-}
-
-.subdomainInputWrapper {
-  display: flex;
-  position: relative;
-}
-
-.subdomainInputWrapper input {
-  flex: 1;
-  padding-right: 140px;
-}
-
-.subdomainSuffix {
-  position: absolute;
-  right: 16px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: var(--text-muted);
-  font-size: 0.9rem;
-  pointer-events: none;
-  font-weight: var(--fw-medium);
 }
 
 .btn {
@@ -154,420 +105,28 @@
   box-shadow: var(--shadow-md);
 }
 
-.btnPrimary:active {
-  background: var(--primary-active);
-}
-
-.btnPrimary:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
 .btnSecondary {
   background: var(--bg-surface-alt);
   border: 1px solid var(--border-default);
   color: var(--text-primary);
 }
 
-.btnSecondary:hover {
-  background: var(--bg-surface-hover);
-  border-color: var(--border-strong);
-}
-
-.alert {
+.alertDanger {
+  background: var(--danger-light);
+  border: 1px solid var(--danger);
+  color: var(--danger);
   padding: 12px 16px;
   border-radius: var(--radius-md);
   font-size: var(--fs-body);
   margin-bottom: 20px;
 }
 
-.alertDanger {
-  background: var(--danger-light);
-  border: 1px solid var(--danger);
-  color: var(--danger);
-}
-
 .alertSuccess {
   background: var(--success-light);
   border: 1px solid var(--success);
   color: var(--success);
-}
-
-.spinnerWrapper {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.spinner {
-  width: 18px;
-  height: 18px;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  border-top-color: #ffffff;
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-.successCard {
-  text-align: center;
-}
-
-.iconContainer {
-  width: 60px;
-  height: 60px;
-  background: rgba(6, 78, 59, 0.6);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 0 auto 20px auto;
-  border: 1px solid rgba(16, 185, 129, 0.4);
-}
-
-.successIcon {
-  width: 32px;
-  height: 32px;
-  color: #10b981;
-}
-
-.successMsg {
-  color: #94a3b8;
-  font-size: 0.9rem;
-  line-height: 1.5;
-  margin-bottom: 24px;
-}
-
-.detailsBox {
-  background: #020617;
-  border: 1px solid #1e293b;
+  padding: 12px 16px;
   border-radius: var(--radius-md);
-  padding: 16px;
-  text-align: left;
-}
-
-.detailsRow {
-  display: flex;
-  justify-content: space-between;
   font-size: var(--fs-body);
-  margin-bottom: 8px;
-}
-
-.detailsRow:last-child {
-  margin-bottom: 0;
-}
-
-.detailsRow span {
-  color: var(--text-secondary);
-}
-
-.detailsRow strong {
-  color: var(--text-primary);
-}
-
-.detailsRow code {
-  background: var(--bg-surface-alt);
-  padding: 2px 6px;
-  border-radius: var(--radius-sm);
-  font-size: var(--fs-caption);
-  color: var(--primary);
-  border: 1px solid var(--border-default);
-}
-
-.link {
-  color: var(--primary);
-  font-size: var(--fs-small);
-  font-weight: var(--fw-semibold);
-  text-decoration: none;
-  transition: var(--transition-smooth);
-}
-
-.link:hover {
-  color: var(--primary-hover);
-  text-decoration: underline;
-}
-
-.authHeader {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  margin-bottom: 24px;
-}
-
-.logoBadge {
-  width: 44px;
-  height: 44px;
-  border-radius: var(--radius-lg);
-  background: var(--primary);
-  color: var(--text-inverse);
-  font-weight: var(--fw-bold);
-  font-size: 1.25rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 16px;
-  box-shadow: var(--shadow-sm);
-}
-
-.authFooter {
-  margin-top: 24px;
-  padding-top: 20px;
-  border-top: 1px solid var(--border-default);
-  text-align: center;
-  font-size: var(--fs-small);
-  color: var(--text-secondary);
-}
-
-/* Wizard Stepper & Card Sizing Utilities */
-.cardMaxWidth520 { max-width: 520px !important; }
-.cardMaxWidth540 { max-width: 540px !important; }
-.cardMaxWidth560 { max-width: 560px !important; }
-
-.stepperContainer {
-  margin-bottom: 28px;
-}
-
-.stepperHeader {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 12px;
-}
-
-.stepperItem {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  flex: 1;
-}
-
-.stepperBadge {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: var(--fs-caption);
-  font-weight: var(--fw-bold);
-  background: var(--bg-surface-alt);
-  color: var(--text-secondary);
-  border: 1px solid var(--border-default);
-  transition: var(--transition-smooth);
-}
-
-.stepperBadgeActive {
-  background: var(--primary);
-  color: var(--text-inverse);
-  border-color: var(--primary);
-  box-shadow: var(--shadow-focus);
-}
-
-.stepperBadgeDone {
-  background: var(--success);
-  color: var(--text-inverse);
-  border-color: var(--success);
-}
-
-.stepperLabel {
-  font-size: var(--fs-caption);
-  margin-top: 6px;
-  color: var(--text-muted);
-  font-weight: var(--fw-regular);
-}
-
-.stepperLabelActive {
-  color: var(--text-primary);
-  font-weight: var(--fw-semibold);
-}
-
-.stepperProgressBg {
-  height: 4px;
-  background: var(--bg-surface-alt);
-  border-radius: 2px;
-  overflow: hidden;
-}
-
-.stepperProgressFill {
-  height: 100%;
-  background: var(--primary);
-  transition: width 0.3s ease;
-}
-
-.formGrid2 {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
-}
-
-.subdomainGroup {
-  display: flex;
-  align-items: center;
-}
-
-.subdomainSuffixAddon {
-  padding: 0 14px;
-  height: 42px;
-  display: flex;
-  align-items: center;
-  background: var(--bg-surface-alt);
-  border: 1px solid var(--border-default);
-  border-left: none;
-  border-top-right-radius: var(--radius-md);
-  border-bottom-right-radius: var(--radius-md);
-  color: var(--text-muted);
-  font-size: var(--fs-body);
-  font-weight: var(--fw-medium);
-}
-
-.livePreviewCard {
-  padding: 16px;
-  border-radius: var(--radius-lg);
-  background: var(--bg-surface-alt);
-  border: 1px solid var(--border-default);
-  margin-top: 8px;
-}
-
-.livePreviewBadge {
-  font-size: var(--fs-caption);
-  font-weight: var(--fw-semibold);
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.livePreviewContent {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-top: 10px;
-}
-
-.livePreviewAvatar {
-  width: 36px;
-  height: 36px;
-  border-radius: var(--radius-sm);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--text-inverse);
-  font-weight: var(--fw-bold);
-}
-
-.livePreviewTitle {
-  margin: 0;
-  font-size: 0.95rem;
-  color: var(--text-primary);
-  font-weight: var(--fw-semibold);
-}
-
-.colorPickerRow {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-}
-
-.colorInputBox {
-  width: 40px;
-  height: 40px;
-  padding: 0;
-  border: none;
-  border-radius: var(--radius-md);
-  cursor: pointer;
-  background: transparent;
-}
-
-.planTierList {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.planTierCard {
-  padding: 16px;
-  border-radius: var(--radius-lg);
-  background: var(--bg-surface-alt);
-  border: 1px solid var(--border-default);
-  cursor: pointer;
-  transition: var(--transition-smooth);
-}
-
-.planTierCard:hover {
-  border-color: var(--primary);
-}
-
-.planTierCardActive {
-  background: var(--primary-light);
-  border-color: var(--primary);
-  box-shadow: 0 0 0 1px var(--primary);
-}
-
-.planTierHeader {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 4px;
-}
-
-.planTierName {
-  font-size: 0.95rem;
-  color: var(--text-primary);
-  font-weight: var(--fw-semibold);
-}
-
-.planTierPrice {
-  font-weight: var(--fw-bold);
-  color: var(--primary);
-}
-
-.planTierDesc {
-  margin: 0;
-  font-size: var(--fs-small);
-  color: var(--text-secondary);
-}
-
-.checkboxWrapper {
-  margin-top: 12px;
-  padding: 12px;
-  border-radius: var(--radius-md);
-  background: var(--bg-surface-alt);
-  border: 1px solid var(--border-default);
-}
-
-.checkboxLabel {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  cursor: pointer;
-  font-size: var(--fs-body);
-  color: var(--text-primary);
-}
-
-.checkboxInput {
-  width: 18px;
-  height: 18px;
-  accent-color: var(--primary);
-}
-
-.roleBadge {
-  display: inline-block;
-  padding: 6px 14px;
-  border-radius: var(--radius-pill);
-  background: var(--primary-light);
-  color: var(--primary);
-  border: 1px solid var(--primary-subtle);
-  font-size: var(--fs-caption);
-  font-weight: var(--fw-bold);
-  margin-bottom: 12px;
-}
-
-.submitBtnLarge {
-  width: 100%;
-  padding: 14px;
-  font-size: 0.95rem;
-  margin-top: 24px;
-  cursor: pointer;
+  margin-bottom: 20px;
 }

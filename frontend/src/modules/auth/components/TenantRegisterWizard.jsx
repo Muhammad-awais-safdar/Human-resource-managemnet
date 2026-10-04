@@ -4,7 +4,7 @@ import React, { useState, useEffect, useTransition } from 'react';
 import { authService } from '../services/authService';
 import styles from '../styles/register.module.css';
 
-export default function TenantRegisterWizard() {
+export function TenantRegisterWizard() {
   const [mounted, setMounted] = useState(false);
   const [isSubdomainRestricted, setIsSubdomainRestricted] = useState(false);
   const [step, setStep] = useState(1);
@@ -638,3 +638,5 @@ export default function TenantRegisterWizard() {
     </div>
   );
 }
+
+export default TenantRegisterWizard;

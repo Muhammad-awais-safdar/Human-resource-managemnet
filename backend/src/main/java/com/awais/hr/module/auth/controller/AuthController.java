@@ -21,8 +21,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.stream.Collectors;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
+@Tag(name = "Authentication & MFA", description = "Endpoints for user authentication, multi-factor authentication (MFA), employee registration, invite acceptance, and session context.")
 @RestController
 @RequestMapping("/auth")
 @CrossOrigin(origins = "*")
@@ -49,6 +53,12 @@ public class AuthController {
         this.platformUserRepository = platformUserRepository;
     }
 
+    @Operation(summary = "Register Employee Account", description = "Registers a new employee within the current workspace tenant organization context.")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Employee account created successfully"),
+        @ApiResponse(responseCode = "400", description = "Missing required fields or invalid tenant context"),
+        @ApiResponse(responseCode = "499", description = "Email already registered in workspace")
+    })
     @PostMapping({"/register", "/register-employee"})
     public ResponseEntity<?> registerEmployee(@RequestBody Map<String, String> body) {
         String tenantId = TenantContextHolder.getCurrentTenant();
@@ -121,6 +131,12 @@ public class AuthController {
         }
     }
 
+    @Operation(summary = "User Workspace Login", description = "Authenticates user credentials and sends an MFA code required for session generation.")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Credentials verified, MFA code dispatched"),
+        @ApiResponse(responseCode = "401", description = "Invalid credentials for workspace subdomain"),
+        @ApiResponse(responseCode = "403", description = "Platform/Tenant security domain restriction")
+    })
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody Map<String, String> credentials, HttpServletRequest request) {
         String email = credentials.get("email");

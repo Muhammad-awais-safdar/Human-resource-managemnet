@@ -1,23 +1,10 @@
-import apiClient from '../../../services/api';
+import apiClient from '@/core/api/apiClient';
 
 export const employeeService = {
-  async getEmployees(params = {}) {
-    return apiClient.get('/employees', { params });
-  },
-
-  async getEmployeeById(id) {
-    return apiClient.get(`/employees/${id}`);
-  },
-
-  async createEmployee(employeeData) {
-    return apiClient.post('/employees', employeeData);
-  },
-
-  async updateEmployee(id, employeeData) {
-    return apiClient.put(`/employees/${id}`, employeeData);
-  },
-
-  async deleteEmployee(id) {
-    return apiClient.delete(`/employees/${id}`);
-  }
+  getAllEmployees: () => apiClient.get('/employees'),
+  getEmployeeById: (id) => apiClient.get(`/employees/${id}`),
+  createEmployee: (data) => apiClient.post('/employees', data),
+  updateEmployee: (id, data) => apiClient.put(`/employees/${id}`, data),
+  deleteEmployee: (id) => apiClient.delete(`/employees/${id}`),
+  getOrgChart: () => apiClient.get('/employees/org-chart'),
 };

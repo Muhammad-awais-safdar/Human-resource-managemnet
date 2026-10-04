@@ -37,7 +37,8 @@ public class SecurityConfig {
             .csrf(AbstractHttpConfigurer::disable)
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                // Allow dynamic properties API version context paths
+                .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html", "/swagger-resources/**").permitAll()
+                .requestMatchers("/api/*/swagger-ui/**", "/api/*/v3/api-docs/**", "/api/*/swagger-ui.html").permitAll()
                 .requestMatchers("/tenants/register", "/api/*/tenants/register").permitAll()
                 .requestMatchers("/auth/**", "/api/*/auth/**").permitAll()
                 .requestMatchers("/health", "/api/*/health", "/api/v1/health", "/actuator/**", "/api/*/actuator/**").permitAll()
