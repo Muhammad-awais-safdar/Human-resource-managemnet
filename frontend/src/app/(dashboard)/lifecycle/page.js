@@ -285,7 +285,7 @@ export default function LifecycleDashboardPage() {
               <strong style={{ fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--accent-primary)', display: 'block', marginBottom: '4px' }}>
                 Secure Activation Token
               </strong>
-              <code style={{ fontSize: '0.9rem', color: '#fff', wordBreak: 'break-all', display: 'block', background: 'var(--bg-tertiary)', padding: '6px 8px', borderRadius: '4px' }}>
+              <code style={{ fontSize: '0.9rem', color: 'var(--text-primary)', wordBreak: 'break-all', display: 'block', background: 'var(--bg-tertiary)', padding: '6px 8px', borderRadius: '4px' }}>
                 {invitedToken}
               </code>
               <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', display: 'block', marginTop: '6px' }}>
@@ -412,7 +412,7 @@ export default function LifecycleDashboardPage() {
               {employees.map(emp => (
                 <tr key={emp.id} style={{ borderBottom: '1px solid var(--border-light)' }}>
                   <td style={{ padding: '12px', fontWeight: '600', color: 'var(--accent-primary)' }}>{emp.employeeCode}</td>
-                  <td style={{ padding: '12px', color: '#fff', fontWeight: '550' }}>{emp.firstName} {emp.lastName}</td>
+                  <td style={{ padding: '12px', color: 'var(--text-primary)', fontWeight: '550' }}>{emp.firstName} {emp.lastName}</td>
                   <td style={{ padding: '12px', color: 'var(--text-secondary)' }}>{emp.email}</td>
                   <td style={{ padding: '12px' }}>
                     <span style={{ fontSize: '0.75rem', padding: '2px 8px', borderRadius: '4px', background: 'rgba(16,185,129,0.1)', color: 'var(--accent-success)', fontWeight: '700' }}>
@@ -482,7 +482,7 @@ export default function LifecycleDashboardPage() {
                 {clearances.map(c => (
                   <tr key={c.id} style={{ borderBottom: '1px solid var(--border-light)' }}>
                     <td style={{ padding: '12px' }}>
-                      <div style={{ fontWeight: '600', color: '#fff' }}>{c.firstName} {c.lastName}</div>
+                      <div style={{ fontWeight: '600', color: 'var(--text-primary)' }}>{c.firstName} {c.lastName}</div>
                       <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>{c.email}</div>
                     </td>
                     <td style={{ padding: '12px' }}>
@@ -562,7 +562,7 @@ export default function LifecycleDashboardPage() {
                 }}
               >
                 <div>
-                  <strong style={{ color: '#fff' }}>{item.firstName} {item.lastName}</strong>
+                  <strong style={{ color: 'var(--text-primary)' }}>{item.firstName} {item.lastName}</strong>
                   <span style={{ fontSize: '0.75rem', padding: '2px 6px', borderRadius: '4px', background: 'rgba(59,130,246,0.1)', color: 'var(--accent-primary)', marginLeft: '12px', fontWeight: '700' }}>
                     {item.type}
                   </span>

@@ -18,8 +18,8 @@ export default function TenantRegisterWizard() {
 
   // Branding Fields
   const [logoUrl, setLogoUrl] = useState('https://via.placeholder.com/150?text=Company+Logo');
-  const [primaryColor, setPrimaryColor] = useState('#6366f1');
-  const [secondaryColor, setSecondaryColor] = useState('#10b981');
+  const [primaryColor, setPrimaryColor] = useState('var(--primary)');
+  const [secondaryColor, setSecondaryColor] = useState('var(--success)');
 
   // Plan & Payment Fields
   const [planTier, setPlanTier] = useState('ENTERPRISE');
@@ -162,11 +162,13 @@ export default function TenantRegisterWizard() {
     });
   };
 
+  if (!mounted) return null;
+
   // 1. Employee Registration Form (on Tenant Subdomain context)
   if (isSubdomainRestricted) {
     if (empSuccess) {
       return (
-        <div className={`${styles.card} ${styles.successCard}`} style={{ maxWidth: '520px' }}>
+        <div className={`${styles.card} ${styles.successCard} ${styles.cardMaxWidth520}`}>
           <div className={styles.iconContainer}>
             <svg className={styles.successIcon} fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -179,7 +181,6 @@ export default function TenantRegisterWizard() {
           <a 
             href="/login" 
             className={`${styles.btn} ${styles.btnPrimary}`}
-            style={{ textDecoration: 'none', display: 'block', textAlign: 'center', marginTop: '20px' }}
           >
             Sign In to Workspace
           </a>
@@ -188,19 +189,19 @@ export default function TenantRegisterWizard() {
     }
 
     return (
-      <div className={styles.card} style={{ maxWidth: '540px' }}>
-        <div style={{ textAlign: 'center', marginBottom: '24px' }}>
-          <div style={{ display: 'inline-block', padding: '8px 16px', borderRadius: '20px', background: 'rgba(99, 102, 241, 0.1)', color: 'var(--primary-color)', fontSize: '0.85rem', fontWeight: 600, marginBottom: '12px' }}>
+      <div className={`${styles.card} ${styles.cardMaxWidth540}`}>
+        <div className={styles.authHeader}>
+          <div className={styles.roleBadge}>
             EMPLOYEE WORKSPACE REGISTRATION
           </div>
-          <h2 className={styles.title} style={{ marginBottom: '8px' }}>Join Your Workspace</h2>
+          <h2 className={styles.title}>Join Your Workspace</h2>
           <p className={styles.subtitle}>Create your employee account to access your company directory & portal.</p>
         </div>
 
-        {empErrors.submit && <div className={styles.errorBanner}>{empErrors.submit}</div>}
+        {empErrors.submit && <div className={`${styles.alert} ${styles.alertDanger}`}>{empErrors.submit}</div>}
 
-        <form onSubmit={handleEmployeeRegisterSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+        <form onSubmit={handleEmployeeRegisterSubmit} className={styles.formGroup}>
+          <div className={styles.formGrid2}>
             <div className={styles.formGroup}>
               <label className={styles.label}>First Name *</label>
               <input
@@ -263,14 +264,13 @@ export default function TenantRegisterWizard() {
             type="submit"
             disabled={isPending}
             className={`${styles.btn} ${styles.btnPrimary}`}
-            style={{ marginTop: '8px' }}
           >
             {isPending ? 'Registering Account...' : 'Register Employee Account'}
           </button>
 
-          <div style={{ textAlign: 'center', marginTop: '12px', fontSize: '0.9rem', color: 'var(--text-muted)' }}>
+          <div className={styles.authFooter}>
             Already have an active workspace account?{' '}
-            <a href="/login" style={{ color: 'var(--primary-color)', textDecoration: 'none', fontWeight: 600 }}>
+            <a href="/login" className={styles.link}>
               Sign In
             </a>
           </div>
@@ -284,10 +284,10 @@ export default function TenantRegisterWizard() {
     const targetUrl = `http://${successData.subdomain}.localhost:3000/login?payment=success`;
 
     return (
-      <div className={`${styles.card} ${styles.successCard}`} style={{ maxWidth: '560px' }}>
-        <div className={styles.iconContainer} style={{ background: 'rgba(16, 185, 129, 0.15)' }}>
-          <svg className={styles.successIcon} style={{ color: '#10b981' }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+      <div className={`${styles.card} ${styles.successCard} ${styles.cardMaxWidth560}`}>
+        <div className={styles.iconContainer}>
+          <svg className={styles.successIcon} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 0 0118 0z" />
           </svg>
         </div>
 
@@ -296,24 +296,24 @@ export default function TenantRegisterWizard() {
           Your subscription order for <strong>{companyName}</strong> has been processed successfully.
         </p>
 
-        <div style={{ background: 'rgba(16, 185, 129, 0.1)', border: '1px solid #10b981', padding: '12px 16px', borderRadius: '8px', marginBottom: '20px', color: '#10b981', fontSize: '0.88rem', fontWeight: 600, textAlign: 'center' }}>
+        <div className={`${styles.alert} ${styles.alertSuccess}`}>
           ✅ Gateway Payment Checkout Succeeded • Status: ACTIVE (30-Day Renewal)
         </div>
 
-        <div className={styles.tenantDetails}>
-          <div className={styles.detailRow}>
+        <div className={styles.detailsBox}>
+          <div className={styles.detailsRow}>
             <span>Subdomain Workspace:</span>
             <strong>{successData.subdomain}.localhost:3000</strong>
           </div>
-          <div className={styles.detailRow}>
+          <div className={styles.detailsRow}>
             <span>Admin Email:</span>
             <strong>{successData.adminEmail}</strong>
           </div>
-          <div className={styles.detailRow}>
+          <div className={styles.detailsRow}>
             <span>Assigned Role:</span>
-            <strong style={{ color: '#6366f1' }}>🏢 TENANT_ADMIN (Workspace Owner)</strong>
+            <code>🏢 TENANT_ADMIN (Workspace Owner)</code>
           </div>
-          <div className={styles.detailRow}>
+          <div className={styles.detailsRow}>
             <span>Subscription Tier:</span>
             <strong>{successData.planTier} Plan</strong>
           </div>
@@ -323,8 +323,7 @@ export default function TenantRegisterWizard() {
           onClick={() => {
             window.location.href = targetUrl;
           }} 
-          className={`${styles.btn} ${styles.btnPrimary}`}
-          style={{ width: '100%', padding: '14px', fontSize: '1rem', marginTop: '24px', cursor: 'pointer', background: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)' }}
+          className={`${styles.btn} ${styles.btnPrimary} ${styles.submitBtnLarge}`}
         >
           🚀 Launch Workspace & Login as Tenant Admin →
         </button>
@@ -336,51 +335,40 @@ export default function TenantRegisterWizard() {
   return (
     <div className={styles.card}>
       {/* Stepper Header */}
-      <div style={{ marginBottom: '28px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
+      <div className={styles.stepperContainer}>
+        <div className={styles.stepperHeader}>
           {[
             { num: 1, label: 'Workspace' },
             { num: 2, label: 'Branding' },
             { num: 3, label: 'Plan & Billing' },
             { num: 4, label: 'Provision' },
           ].map((s) => (
-            <div key={s.num} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flex: 1 }}>
+            <div key={s.num} className={styles.stepperItem}>
               <div 
-                style={{
-                  width: '32px',
-                  height: '32px',
-                  borderRadius: '50%',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontWeight: 600,
-                  fontSize: '0.9rem',
-                  background: step >= s.num ? 'var(--primary-color)' : 'var(--bg-card-hover)',
-                  color: step >= s.num ? '#ffffff' : 'var(--text-muted)',
-                  border: step === s.num ? '2px solid #818cf8' : 'none',
-                  transition: 'all 0.3s ease'
-                }}
+                className={`${styles.stepperBadge} ${
+                  step === s.num ? styles.stepperBadgeActive : step > s.num ? styles.stepperBadgeDone : ''
+                }`}
               >
-                {s.num}
+                {step > s.num ? '✓' : s.num}
               </div>
-              <span style={{ fontSize: '0.75rem', marginTop: '6px', color: step >= s.num ? 'var(--text-primary)' : 'var(--text-muted)', fontWeight: step === s.num ? 600 : 400 }}>
+              <span className={`${styles.stepperLabel} ${step === s.num ? styles.stepperLabelActive : ''}`}>
                 {s.label}
               </span>
             </div>
           ))}
         </div>
-        <div style={{ height: '4px', background: 'var(--bg-card-hover)', borderRadius: '2px', overflow: 'hidden' }}>
-          <div style={{ height: '100%', width: `${((step - 1) / 3) * 100}%`, background: 'var(--primary-color)', transition: 'width 0.3s ease' }} />
+        <div className={styles.stepperProgressBg}>
+          <div className={styles.stepperProgressFill} style={{ width: `${((step - 1) / 3) * 100}%` }} />
         </div>
       </div>
 
-      {errors.submit && <div className={styles.errorBanner}>{errors.submit}</div>}
+      {errors.submit && <div className={`${styles.alert} ${styles.alertDanger}`}>{errors.submit}</div>}
 
-      <form onSubmit={step === 4 ? handleSubmit : handleNextStep} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      <form onSubmit={step === 4 ? handleSubmit : handleNextStep} className={styles.formGroup}>
         {/* STEP 1: WORKSPACE SETUP */}
         {step === 1 && (
           <>
-            <div style={{ textAlign: 'center', marginBottom: '8px' }}>
+            <div className={styles.authHeader}>
               <h2 className={styles.title}>Create Enterprise Tenant</h2>
               <p className={styles.subtitle}>Initialize your organization workspace</p>
             </div>
@@ -399,16 +387,15 @@ export default function TenantRegisterWizard() {
 
             <div className={styles.formGroup}>
               <label className={styles.label}>Workspace Subdomain *</label>
-              <div style={{ display: 'flex', alignItems: 'center' }}>
+              <div className={styles.subdomainGroup}>
                 <input
                   type="text"
                   className={styles.input}
                   placeholder="acme"
                   value={subdomain}
                   onChange={(e) => setSubdomain(e.target.value.toLowerCase())}
-                  style={{ borderTopRightRadius: 0, borderBottomRightRadius: 0 }}
                 />
-                <span style={{ padding: '0 14px', height: '42px', display: 'flex', alignItems: 'center', background: 'var(--bg-card-hover)', border: '1px solid var(--border-color)', borderLeft: 'none', borderTopRightRadius: '8px', borderBottomRightRadius: '8px', color: 'var(--text-muted)', fontSize: '0.9rem', fontWeight: 500 }}>
+                <span className={styles.subdomainSuffixAddon}>
                   .workforceos.com
                 </span>
               </div>
@@ -421,7 +408,6 @@ export default function TenantRegisterWizard() {
                 className={styles.input}
                 value={industryType}
                 onChange={(e) => setIndustryType(e.target.value)}
-                style={{ backgroundColor: 'var(--bg-card)', color: 'var(--text-primary)', cursor: 'pointer' }}
               >
                 <option value="GENERAL">🏢 General Corporate Enterprise (Standard Core HR)</option>
                 <option value="HEALTHCARE">🏥 Healthcare & Hospitals (Ward Shifts, Clinical LMS, Medical Licenses)</option>
@@ -466,7 +452,7 @@ export default function TenantRegisterWizard() {
         {/* STEP 2: BRANDING CUSTOMIZATION */}
         {step === 2 && (
           <>
-            <div style={{ textAlign: 'center', marginBottom: '8px' }}>
+            <div className={styles.authHeader}>
               <h2 className={styles.title}>White-Label Branding</h2>
               <p className={styles.subtitle}>Customize logo & colors for your tenant portal</p>
             </div>
@@ -482,15 +468,15 @@ export default function TenantRegisterWizard() {
               />
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+            <div className={styles.formGrid2}>
               <div className={styles.formGroup}>
                 <label className={styles.label}>Primary Theme Color</label>
-                <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                <div className={styles.colorPickerRow}>
                   <input
                     type="color"
-                    value={primaryColor}
+                    value={primaryColor.startsWith('var') ? '#6366f1' : primaryColor}
                     onChange={(e) => setPrimaryColor(e.target.value)}
-                    style={{ width: '42px', height: '42px', padding: 0, border: 'none', borderRadius: '8px', cursor: 'pointer' }}
+                    className={styles.colorInputBox}
                   />
                   <input
                     type="text"
@@ -503,12 +489,12 @@ export default function TenantRegisterWizard() {
 
               <div className={styles.formGroup}>
                 <label className={styles.label}>Secondary Theme Color</label>
-                <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                <div className={styles.colorPickerRow}>
                   <input
                     type="color"
-                    value={secondaryColor}
+                    value={secondaryColor.startsWith('var') ? '#10b981' : secondaryColor}
                     onChange={(e) => setSecondaryColor(e.target.value)}
-                    style={{ width: '42px', height: '42px', padding: 0, border: 'none', borderRadius: '8px', cursor: 'pointer' }}
+                    className={styles.colorInputBox}
                   />
                   <input
                     type="text"
@@ -521,14 +507,14 @@ export default function TenantRegisterWizard() {
             </div>
 
             {/* Live Brand Preview Card */}
-            <div style={{ padding: '16px', borderRadius: '12px', background: 'var(--bg-card-hover)', border: '1px solid var(--border-color)', marginTop: '8px' }}>
-              <span style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Portal Branding Live Preview</span>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '10px' }}>
-                <div style={{ width: '36px', height: '36px', borderRadius: '8px', background: primaryColor, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 'bold' }}>
+            <div className={styles.livePreviewCard}>
+              <span className={styles.livePreviewBadge}>Portal Branding Live Preview</span>
+              <div className={styles.livePreviewContent}>
+                <div className={styles.livePreviewAvatar} style={{ background: primaryColor }}>
                   {companyName ? companyName.charAt(0).toUpperCase() : 'A'}
                 </div>
                 <div>
-                  <h4 style={{ margin: 0, fontSize: '0.95rem', color: 'var(--text-primary)' }}>{companyName || 'Acme HR'} Portal</h4>
+                  <h4 className={styles.livePreviewTitle}>{companyName || 'Acme HR'} Portal</h4>
                   <span style={{ fontSize: '0.8rem', color: secondaryColor }}>{subdomain ? `${subdomain}.workforceos.com` : 'subdomain.workforceos.com'}</span>
                 </div>
               </div>
@@ -539,12 +525,12 @@ export default function TenantRegisterWizard() {
         {/* STEP 3: PLAN & BILLING */}
         {step === 3 && (
           <>
-            <div style={{ textAlign: 'center', marginBottom: '8px' }}>
+            <div className={styles.authHeader}>
               <h2 className={styles.title}>Subscription & Billing</h2>
               <p className={styles.subtitle}>Select enterprise tier & validate payment authorization</p>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <div className={styles.planTierList}>
               {[
                 { id: 'ENTERPRISE', name: 'Enterprise Unlimited', price: '$499 / mo', desc: 'Unlimited employees, dedicated PostgreSQL schema, ATS, Payroll & Audit Logs' },
                 { id: 'GROWTH', name: 'Growth Business', price: '$199 / mo', desc: 'Up to 250 employees, automated leave management & attendance tracking' },
@@ -553,35 +539,28 @@ export default function TenantRegisterWizard() {
                 <div
                   key={tier.id}
                   onClick={() => setPlanTier(tier.id)}
-                  style={{
-                    padding: '16px',
-                    borderRadius: '12px',
-                    border: planTier === tier.id ? '2px solid var(--primary-color)' : '1px solid var(--border-color)',
-                    background: planTier === tier.id ? 'rgba(99, 102, 241, 0.08)' : 'transparent',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease'
-                  }}
+                  className={`${styles.planTierCard} ${planTier === tier.id ? styles.planTierCardActive : ''}`}
                 >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                    <strong style={{ fontSize: '1rem', color: 'var(--text-primary)' }}>{tier.name}</strong>
-                    <span style={{ fontWeight: 700, color: 'var(--primary-color)' }}>{tier.price}</span>
+                  <div className={styles.planTierHeader}>
+                    <strong className={styles.planTierName}>{tier.name}</strong>
+                    <span className={styles.planTierPrice}>{tier.price}</span>
                   </div>
-                  <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-muted)' }}>{tier.desc}</p>
+                  <p className={styles.planTierDesc}>{tier.desc}</p>
                 </div>
               ))}
             </div>
 
-            <div style={{ marginTop: '12px', padding: '12px', borderRadius: '8px', background: 'var(--bg-card-hover)', border: '1px solid var(--border-color)' }}>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', fontSize: '0.88rem', color: 'var(--text-primary)' }}>
+            <div className={styles.checkboxWrapper}>
+              <label className={styles.checkboxLabel}>
                 <input
                   type="checkbox"
                   checked={paymentConfirmed}
                   onChange={(e) => setPaymentConfirmed(e.target.checked)}
-                  style={{ width: '18px', height: '18px', accentColor: 'var(--primary-color)' }}
+                  className={styles.checkboxInput}
                 />
                 Confirm payment method authorization & automatic provisioning agreement
               </label>
-              {errors.payment && <span className={styles.errorText} style={{ display: 'block', marginTop: '6px' }}>{errors.payment}</span>}
+              {errors.payment && <span className={styles.errorText}>{errors.payment}</span>}
             </div>
           </>
         )}
@@ -589,44 +568,43 @@ export default function TenantRegisterWizard() {
         {/* STEP 4: PROVISIONING CONFIRMATION */}
         {step === 4 && (
           <>
-            <div style={{ textAlign: 'center', marginBottom: '8px' }}>
+            <div className={styles.authHeader}>
               <h2 className={styles.title}>Confirm & Provision</h2>
               <p className={styles.subtitle}>Review your details before launching your isolated database context</p>
             </div>
 
-            <div className={styles.tenantDetails}>
-              <div className={styles.detailRow}>
+            <div className={styles.detailsBox}>
+              <div className={styles.detailsRow}>
                 <span>Company Name:</span>
                 <strong>{companyName}</strong>
               </div>
-              <div className={styles.detailRow}>
+              <div className={styles.detailsRow}>
                 <span>Subdomain URL:</span>
                 <strong>{subdomain}.workforceos.com</strong>
               </div>
-              <div className={styles.detailRow}>
+              <div className={styles.detailsRow}>
                 <span>Master Admin:</span>
                 <strong>{adminEmail}</strong>
               </div>
-              <div className={styles.detailRow}>
+              <div className={styles.detailsRow}>
                 <span>Selected Tier:</span>
                 <strong>{planTier}</strong>
               </div>
-              <div className={styles.detailRow}>
+              <div className={styles.detailsRow}>
                 <span>Database Allocation:</span>
-                <strong style={{ color: 'var(--primary-color)' }}>Isolated PostgreSQL Schema</strong>
+                <code>Isolated PostgreSQL Schema</code>
               </div>
             </div>
           </>
         )}
 
         {/* Navigation Buttons */}
-        <div style={{ display: 'flex', gap: '12px', marginTop: '12px' }}>
+        <div className={styles.formGrid2}>
           {step > 1 && (
             <button
               type="button"
               onClick={handlePrevStep}
               className={`${styles.btn} ${styles.btnSecondary}`}
-              style={{ flex: 1 }}
             >
               Back
             </button>
@@ -636,7 +614,6 @@ export default function TenantRegisterWizard() {
             <button
               type="submit"
               className={`${styles.btn} ${styles.btnPrimary}`}
-              style={{ flex: 1 }}
             >
               Continue Next
             </button>
@@ -645,16 +622,15 @@ export default function TenantRegisterWizard() {
               type="submit"
               disabled={isPending}
               className={`${styles.btn} ${styles.btnPrimary}`}
-              style={{ flex: 1 }}
             >
               {isPending ? 'Provisioning Workspace...' : 'Launch Workspace'}
             </button>
           )}
         </div>
 
-        <div style={{ textAlign: 'center', marginTop: '8px', fontSize: '0.9rem', color: 'var(--text-muted)' }}>
+        <div className={styles.authFooter}>
           Existing enterprise admin?{' '}
-          <a href="/login" style={{ color: 'var(--primary-color)', textDecoration: 'none', fontWeight: 600 }}>
+          <a href="/login" className={styles.link}>
             Sign In
           </a>
         </div>

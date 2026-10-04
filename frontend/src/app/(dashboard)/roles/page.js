@@ -27,9 +27,6 @@ export default function RolesDashboardPage() {
   const [showCloneModal, setShowCloneModal] = useState(false);
   const [cloneSourceRoleId, setCloneSourceRoleId] = useState('');
 
-  // Accordion Expand/Collapse
-  const [expandedModules, setExpandedModules] = useState({});
-
   // Effective Permissions State
   const [inspectEmail, setInspectEmail] = useState('');
   const [effectiveData, setEffectiveData] = useState(null);
@@ -45,12 +42,6 @@ export default function RolesDashboardPage() {
         if (res.success) {
           setRoles(res.roles);
           setAllPermissions(res.allPermissions);
-
-          const mods = {};
-          res.allPermissions.forEach(p => {
-            mods[p.module_key || 'CORE_HR'] = true;
-          });
-          setExpandedModules(mods);
         }
       })
       .catch((err) => {
@@ -113,32 +104,6 @@ export default function RolesDashboardPage() {
     });
   };
 
-  const handleCloneRole = (e) => {
-    e.preventDefault();
-    setError('');
-    setMessage('');
-    if (!newRoleName || !cloneSourceRoleId) return setError('Role name and source role are required.');
-
-    startTransition(async () => {
-      try {
-        const res = await apiClient.post('/roles/clone', {
-          sourceRoleId: cloneSourceRoleId,
-          name: newRoleName,
-          description: newRoleDesc,
-        });
-        if (res.success) {
-          setMessage('Role cloned successfully!');
-          setNewRoleName('');
-          setNewRoleDesc('');
-          setShowCloneModal(false);
-          loadData();
-        }
-      } catch (err) {
-        setError(err.message || 'Failed to clone role.');
-      }
-    });
-  };
-
   const handleDeleteRole = (role) => {
     if (role.is_system_role) {
       alert('System roles are protected and cannot be deleted.');
@@ -153,30 +118,6 @@ export default function RolesDashboardPage() {
         loadData();
       } catch (err) {
         setError(err.message || 'Failed to delete role.');
-      }
-    });
-  };
-
-  const handleCheckboxToggle = (role, permissionId, isChecked) => {
-    setError('');
-    setMessage('');
-
-    let updated = [...role.permissions];
-    if (isChecked) {
-      if (!updated.includes(permissionId)) updated.push(permissionId);
-    } else {
-      updated = updated.filter(id => id !== permissionId);
-    }
-
-    startTransition(async () => {
-      try {
-        await apiClient.put(`/roles/${role.id}/permissions`, {
-          permissionIds: updated,
-        });
-        setRoles(prev => prev.map(r => r.id === role.id ? { ...r, permissions: updated } : r));
-        setMessage(`Updated permissions for role ${role.name}`);
-      } catch (err) {
-        setError(err.message || 'Failed to update role permissions.');
       }
     });
   };
@@ -207,16 +148,16 @@ export default function RolesDashboardPage() {
   return (
     <div data-tour="roles-permissions" className="p-6 space-y-6 max-w-7xl mx-auto">
       {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-slate-900 p-6 rounded-2xl border border-indigo-500/20 shadow-xl">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-6 rounded-2xl border border-slate-200 shadow-xs">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold text-white">Enterprise Role & Permission Management</h1>
+            <h1 className="text-2xl font-bold text-slate-900">Enterprise Role & Permission Management</h1>
             <ContextualHelpPopover
               title="Feature-Based RBAC Matrix"
               content="Permissions are organized hierarchically: Module -> Feature -> Action. Custom roles inherit permissions cleanly without breaking system administrative boundaries."
             />
           </div>
-          <p className="text-xs text-slate-300 mt-1">
+          <p className="text-xs text-slate-500 mt-1">
             Fine-grained access control, system role guards, and real-time effective permissions inspector.
           </p>
         </div>
@@ -240,29 +181,29 @@ export default function RolesDashboardPage() {
       </div>
 
       {/* Tabs */}
-      <div className="flex border-b border-slate-800 text-xs font-semibold gap-6">
+      <div className="flex border-b border-slate-200 text-xs font-semibold gap-6">
         <button
           onClick={() => setActiveTab('matrix')}
-          className={`pb-3 transition-colors cursor-pointer border-b-2 ${activeTab === 'matrix' ? 'border-indigo-500 text-indigo-400 font-bold' : 'border-transparent text-slate-400 hover:text-white'}`}
+          className={`pb-3 transition-colors cursor-pointer border-b-2 ${activeTab === 'matrix' ? 'border-blue-600 text-blue-600 font-bold' : 'border-transparent text-slate-500 hover:text-slate-900'}`}
         >
           🔐 Role Builder & Permission Matrix
         </button>
         <button
           onClick={() => setActiveTab('effective')}
-          className={`pb-3 transition-colors cursor-pointer border-b-2 ${activeTab === 'effective' ? 'border-indigo-500 text-indigo-400 font-bold' : 'border-transparent text-slate-400 hover:text-white'}`}
+          className={`pb-3 transition-colors cursor-pointer border-b-2 ${activeTab === 'effective' ? 'border-blue-600 text-blue-600 font-bold' : 'border-transparent text-slate-500 hover:text-slate-900'}`}
         >
           🔍 Effective Permissions Inspector
         </button>
       </div>
 
       {/* Banners */}
-      {error && <div className="p-3 rounded-lg bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs font-medium">⚠️ {error}</div>}
-      {message && <div className="p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-medium">✅ {message}</div>}
+      {error && <div className="p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-xs font-medium">⚠️ {error}</div>}
+      {message && <div className="p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-medium">✅ {message}</div>}
 
       {/* TAB 1: ROLE MATRIX */}
       {activeTab === 'matrix' && (
         <div className="space-y-6">
-          <div className="flex flex-col sm:flex-row justify-between items-center gap-4 bg-slate-900 p-4 rounded-xl border border-slate-800">
+          <div className="flex flex-col sm:flex-row justify-between items-center gap-4 bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
             <div className="flex items-center gap-3 w-full sm:w-auto">
               <Input
                 placeholder="Search roles or descriptions..."
@@ -295,24 +236,24 @@ export default function RolesDashboardPage() {
           {/* Roles List & Matrix */}
           <div data-tour="rbac-roles-list" className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Roles Sidebar Card */}
-            <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 space-y-3">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 pb-2 border-b border-slate-800">
+            <div className="bg-white border border-slate-200 rounded-xl p-4 space-y-3 shadow-xs">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 pb-2 border-b border-slate-100">
                 Enterprise Workspace Roles
               </h3>
 
               <div className="space-y-2">
                 {filteredRoles.map(role => (
-                  <div key={role.id} className="p-3 bg-slate-800/60 border border-slate-700/60 rounded-lg flex items-center justify-between">
+                  <div key={role.id} className="p-3 bg-slate-50 border border-slate-200 rounded-lg flex items-center justify-between">
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="text-sm font-bold text-white">{role.name}</span>
+                        <span className="text-sm font-semibold text-slate-900">{role.name}</span>
                         {role.is_system_role ? (
                           <Badge variant="warning" size="sm">System Guarded</Badge>
                         ) : (
                           <Badge variant="info" size="sm">Custom</Badge>
                         )}
                       </div>
-                      <p className="text-[11px] text-slate-400 mt-1">{role.description || 'No description provided.'}</p>
+                      <p className="text-[11px] text-slate-500 mt-1">{role.description || 'No description provided.'}</p>
                     </div>
 
                     {!role.is_system_role && (
@@ -330,22 +271,22 @@ export default function RolesDashboardPage() {
             </div>
 
             {/* Permission Matrix */}
-            <div data-tour="rbac-permission-matrix" className="lg:col-span-2 bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-4">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 pb-2 border-b border-slate-800">
+            <div data-tour="rbac-permission-matrix" className="lg:col-span-2 bg-white border border-slate-200 rounded-xl p-5 space-y-4 shadow-xs">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 pb-2 border-b border-slate-100">
                 Hierarchical Permission Matrix ({allPermissions.length} Actions)
               </h3>
 
               <div className="space-y-4 max-h-[500px] overflow-y-auto pr-1">
                 {Object.entries(groupedPermissions).map(([modKey, perms]) => (
-                  <div key={modKey} className="border border-slate-800 rounded-lg p-3 bg-slate-950/40">
-                    <h4 className="text-xs font-bold text-indigo-400 uppercase tracking-wider mb-2">
+                  <div key={modKey} className="border border-slate-200 rounded-lg p-3 bg-slate-50/50">
+                    <h4 className="text-xs font-bold text-blue-600 uppercase tracking-wider mb-2">
                       Module: {modKey}
                     </h4>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                       {perms.map(p => (
-                        <div key={p.id} className="p-2 bg-slate-900 border border-slate-800 rounded flex items-center justify-between text-xs">
-                          <span className="text-slate-200">
+                        <div key={p.id} className="p-2 bg-white border border-slate-200 rounded flex items-center justify-between text-xs">
+                          <span className="text-slate-800">
                             {showDevKeys ? p.permission_key : humanizePermission(p.permission_key)}
                           </span>
                           <Badge variant="success" size="sm">Active</Badge>
@@ -362,9 +303,9 @@ export default function RolesDashboardPage() {
 
       {/* TAB 2: EFFECTIVE INSPECTOR */}
       {activeTab === 'effective' && (
-        <div className="bg-slate-900 border border-slate-800 rounded-xl p-6 space-y-4">
-          <h3 className="text-sm font-bold text-white">Effective User Permission Inspector</h3>
-          <p className="text-xs text-slate-400">Inspect inherited, direct, and system permissions for any employee email session.</p>
+        <div className="bg-white border border-slate-200 rounded-xl p-6 space-y-4 shadow-xs">
+          <h3 className="text-sm font-bold text-slate-900">Effective User Permission Inspector</h3>
+          <p className="text-xs text-slate-500">Inspect inherited, direct, and system permissions for any employee email session.</p>
 
           <form onSubmit={handleInspectUser} className="flex gap-3 max-w-md">
             <Input

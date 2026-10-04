@@ -113,7 +113,7 @@ export default function SuperAdminTenantsPage() {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px', marginBottom: '32px' }}>
         <div className="form-card" style={{ padding: '20px' }}>
           <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>TOTAL TENANTS</span>
-          <div style={{ fontSize: '1.8rem', fontWeight: '800', color: '#fff', marginTop: '6px' }}>{tenants.length}</div>
+          <div style={{ fontSize: '1.8rem', fontWeight: '800', color: 'var(--text-primary)', marginTop: '6px' }}>{tenants.length}</div>
         </div>
         <div className="form-card" style={{ padding: '20px' }}>
           <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>ACTIVE SUBSCRIPTIONS</span>
@@ -125,7 +125,7 @@ export default function SuperAdminTenantsPage() {
         </div>
         <div className="form-card" style={{ padding: '20px' }}>
           <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>EXPIRED SUBSCRIPTIONS</span>
-          <div style={{ fontSize: '1.8rem', fontWeight: '800', color: '#ef4444', marginTop: '6px' }}>{expiredCount}</div>
+          <div style={{ fontSize: '1.8rem', fontWeight: '800', color: 'var(--danger)', marginTop: '6px' }}>{expiredCount}</div>
         </div>
       </div>
 
@@ -150,7 +150,7 @@ export default function SuperAdminTenantsPage() {
             <tbody>
               {tenants.map(t => (
                 <tr key={t.id} style={{ borderBottom: '1px solid var(--border-light)' }}>
-                  <td style={{ padding: '12px', fontWeight: '700', color: '#fff' }}>
+                  <td style={{ padding: '12px', fontWeight: '700', color: 'var(--text-primary)' }}>
                     {t.name}
                     <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>ID: {t.id}</div>
                   </td>
@@ -166,16 +166,16 @@ export default function SuperAdminTenantsPage() {
                       borderRadius: '4px', 
                       fontSize: '0.7rem', 
                       fontWeight: '700',
-                      background: t.status === 'ACTIVE' ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)',
-                      color: t.status === 'ACTIVE' ? 'var(--accent-success)' : '#ef4444'
+                      background: t.status === 'ACTIVE' ? 'var(--success-light)' : 'var(--danger-light)',
+                      color: t.status === 'ACTIVE' ? 'var(--success)' : 'var(--danger)'
                     }}>
                       {t.status}
                     </span>
                   </td>
-                  <td style={{ padding: '12px', color: t.daysRemaining < 7 ? '#ef4444' : 'var(--text-secondary)' }}>
+                  <td style={{ padding: '12px', color: t.daysRemaining < 7 ? 'var(--danger)' : 'var(--text-secondary)' }}>
                     ⏳ {t.daysRemaining != null ? `${t.daysRemaining} Days` : '30 Days'}
                   </td>
-                  <td style={{ padding: '12px', color: '#fff' }}>👥 {t.totalUsers || 1}</td>
+                  <td style={{ padding: '12px', color: 'var(--text-primary)' }}>👥 {t.totalUsers || 1}</td>
                   <td style={{ padding: '12px', textAlign: 'right' }}>
                     <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end' }}>
                       <button
@@ -211,7 +211,7 @@ export default function SuperAdminTenantsPage() {
                       <button
                         onClick={() => handleOpenRoster(t)}
                         className={styles.btn}
-                        style={{ padding: '4px 8px', fontSize: '0.7rem', background: 'var(--bg-tertiary)', color: '#fff', border: '1px solid var(--border-light)' }}
+                        style={{ padding: '4px 8px', fontSize: '0.7rem', background: 'var(--bg-tertiary)', color: 'var(--text-primary)', border: '1px solid var(--border-light)' }}
                       >
                         🔍 Roster
                       </button>
@@ -299,7 +299,7 @@ export default function SuperAdminTenantsPage() {
               {tenantUsers.map(u => (
                 <div key={u.id} style={{ padding: '12px', background: 'var(--bg-tertiary)', border: '1px solid var(--border-light)', borderRadius: 'var(--radius-md)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <div>
-                    <strong style={{ color: '#fff', fontSize: '0.9rem' }}>{u.first_name || u.email} {u.last_name || ''}</strong>
+                    <strong style={{ color: 'var(--text-primary)', fontSize: '0.9rem' }}>{u.first_name || u.email} {u.last_name || ''}</strong>
                     <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>{u.email} {u.job_title ? `• ${u.job_title}` : ''}</div>
                   </div>
                   <span style={{ fontSize: '0.7rem', padding: '2px 8px', borderRadius: '4px', background: 'rgba(99,102,241,0.15)', color: 'var(--accent-primary)', fontWeight: '700' }}>

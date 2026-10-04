@@ -120,7 +120,7 @@ export default function PerformancePage() {
               return (
                 <div key={g.id} style={{ padding: '16px', background: 'var(--bg-tertiary)', border: '1px solid var(--border-light)', borderRadius: 'var(--radius-md)' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <strong style={{ color: '#fff', fontSize: '0.95rem' }}>{g.title}</strong>
+                    <strong style={{ color: 'var(--text-primary)', fontSize: '0.95rem' }}>{g.title}</strong>
                     <span style={{ fontSize: '0.8rem', fontWeight: '800', color: pct >= 100 ? 'var(--accent-success)' : 'var(--accent-primary)' }}>
                       {pct}% Complete
                     </span>
@@ -202,7 +202,7 @@ export default function PerformancePage() {
               <div key={idx} style={{ padding: '16px', background: 'var(--bg-tertiary)', border: '1px solid var(--border-light)', borderRadius: 'var(--radius-md)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <div>
-                    <strong style={{ color: '#fff', fontSize: '0.9rem' }}>Review for: {f.targetEmployeeName || f.target_employee_id || 'Team Member'}</strong>
+                    <strong style={{ color: 'var(--text-primary)', fontSize: '0.9rem' }}>Review for: {f.targetEmployeeName || f.target_employee_id || 'Team Member'}</strong>
                     <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>From: {f.reviewerEmail || f.reviewer_email || 'Anonymous Peer'}</div>
                   </div>
                   <div style={{ fontSize: '0.9rem', color: 'var(--accent-warning)', fontWeight: '800' }}>

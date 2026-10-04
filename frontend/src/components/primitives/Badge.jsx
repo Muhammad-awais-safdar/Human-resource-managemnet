@@ -2,19 +2,19 @@ import React from 'react';
 
 export function Badge({ children, variant = 'neutral', size = 'md', className = '', ...props }) {
   const variants = {
-    neutral: 'bg-slate-800 text-slate-300 border-slate-700',
-    primary: 'bg-indigo-500/15 text-indigo-400 border-indigo-500/30',
-    secondary: 'bg-purple-500/15 text-purple-400 border-purple-500/30',
-    success: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30',
-    warning: 'bg-amber-500/15 text-amber-400 border-amber-500/30',
-    danger: 'bg-rose-500/15 text-rose-400 border-rose-500/30',
-    info: 'bg-blue-500/15 text-blue-400 border-blue-500/30',
+    neutral: 'bg-slate-100 text-slate-700 border-slate-200',
+    primary: 'bg-blue-50 text-blue-700 border-blue-200',
+    secondary: 'bg-slate-100 text-slate-700 border-slate-200',
+    success: 'bg-emerald-50 text-emerald-800 border-emerald-200',
+    warning: 'bg-amber-50 text-amber-800 border-amber-200',
+    danger: 'bg-red-50 text-red-800 border-red-200',
+    info: 'bg-sky-50 text-sky-800 border-sky-200',
   };
 
   const sizes = {
-    sm: 'px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider',
-    md: 'px-2.5 py-1 text-xs font-semibold',
-    lg: 'px-3 py-1 text-sm font-semibold',
+    sm: 'px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wider',
+    md: 'px-2.5 py-0.5 text-xs font-medium',
+    lg: 'px-3 py-1 text-sm font-medium',
   };
 
   return (

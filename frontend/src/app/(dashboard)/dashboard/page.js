@@ -78,18 +78,18 @@ export default function DashboardPage() {
       <OnboardingWizard isOpen={isOnboardingOpen} onClose={() => setIsOnboardingOpen(false)} />
 
       {/* 1. WELCOME BANNER */}
-      <div className="p-6 bg-gradient-to-r from-slate-900 via-indigo-950/40 to-slate-900 border border-slate-800 rounded-2xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-xl">
+      <div className="p-6 bg-white border border-slate-200 rounded-2xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-xs">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <span className="text-xs font-extrabold uppercase tracking-wider text-indigo-400">
+            <span className="text-xs font-semibold uppercase tracking-wider text-blue-600">
               {userRole === 'SYSTEM_ADMIN' ? '👑 Platform Super Admin' : '🏢 ' + workspaceName}
             </span>
             <Badge variant="primary" size="sm">Live Session</Badge>
           </div>
-          <h1 className="text-2xl font-black text-white tracking-tight">
+          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
             Welcome back, {userName || 'Enterprise Administrator'}
           </h1>
-          <p className="text-xs text-slate-300 mt-1 max-w-xl">
+          <p className="text-xs text-slate-500 mt-1 max-w-xl leading-relaxed">
             Here is your live operational overview across workforce, organization hierarchy, payroll, and compliance.
           </p>
         </div>
@@ -116,14 +116,14 @@ export default function DashboardPage() {
       <SetupChecklistWidget onOpenWizard={() => setIsOnboardingOpen(true)} />
 
       {/* 3. ACTION REQUIRED BAR */}
-      <div className="p-4 bg-amber-950/20 border border-amber-500/30 rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+      <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-amber-500/20 text-amber-400">
+          <div className="p-2 rounded-lg bg-amber-100 text-amber-700 font-bold">
             ⚠️
           </div>
           <div>
-            <h4 className="text-xs font-bold text-amber-300">Action Required Overview</h4>
-            <p className="text-[11px] text-slate-300">
+            <h4 className="text-xs font-semibold text-amber-900">Action Required Overview</h4>
+            <p className="text-[11px] text-amber-700">
               2 pending leave approvals, 1 expense claim review, and 3 upcoming employee certification renewals.
             </p>
           </div>
@@ -173,8 +173,8 @@ export default function DashboardPage() {
       </div>
 
       {/* 5. QUICK ACTIONS PANEL */}
-      <div data-tour="quick-actions" className="p-6 bg-slate-900/90 border border-slate-800 rounded-xl">
-        <h3 className="text-sm font-bold text-white mb-3">⚡ Quick Actions & Workflows</h3>
+      <div data-tour="quick-actions" className="p-6 bg-white border border-slate-200 rounded-xl shadow-xs">
+        <h3 className="text-sm font-semibold text-slate-900 mb-3">⚡ Quick Actions & Workflows</h3>
         <div className="flex flex-wrap gap-3">
           <Link href="/employees">
             <Button variant="primary" size="sm">

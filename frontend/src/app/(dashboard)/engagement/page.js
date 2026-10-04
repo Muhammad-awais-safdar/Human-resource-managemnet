@@ -101,13 +101,13 @@ export default function EngagementPage() {
       {message && <div className={styles.alert} style={{ background: 'rgba(16, 185, 129, 0.1)', color: 'var(--accent-success)', marginBottom: '24px' }}>{message}</div>}
 
       <div style={{ display: 'flex', gap: '12px', borderBottom: '1px solid var(--border-light)', marginBottom: '24px', paddingBottom: '8px' }}>
-        <button className={`tab-btn ${activeTab === 'surveys' ? 'active' : ''}`} onClick={() => setActiveTab('surveys')} style={{ background: activeTab === 'surveys' ? 'var(--bg-tertiary)' : 'none', border: 'none', color: '#fff', padding: '8px 16px', borderRadius: '4px', cursor: 'pointer' }}>
+        <button className={`tab-btn ${activeTab === 'surveys' ? 'active' : ''}`} onClick={() => setActiveTab('surveys')} style={{ background: activeTab === 'surveys' ? 'var(--bg-tertiary)' : 'none', border: 'none', color: activeTab === 'surveys' ? 'var(--text-primary)' : 'var(--text-secondary)', padding: '8px 16px', borderRadius: '4px', cursor: 'pointer', fontWeight: 600 }}>
           Pulse & Engagement Surveys
         </button>
-        <button className={`tab-btn ${activeTab === 'recognitions' ? 'active' : ''}`} onClick={() => setActiveTab('recognitions')} style={{ background: activeTab === 'recognitions' ? 'var(--bg-tertiary)' : 'none', border: 'none', color: '#fff', padding: '8px 16px', borderRadius: '4px', cursor: 'pointer' }}>
+        <button className={`tab-btn ${activeTab === 'recognitions' ? 'active' : ''}`} onClick={() => setActiveTab('recognitions')} style={{ background: activeTab === 'recognitions' ? 'var(--bg-tertiary)' : 'none', border: 'none', color: activeTab === 'recognitions' ? 'var(--text-primary)' : 'var(--text-secondary)', padding: '8px 16px', borderRadius: '4px', cursor: 'pointer', fontWeight: 600 }}>
           Peer Recognition & Badges
         </button>
-        <button className={`tab-btn ${activeTab === 'suggestions' ? 'active' : ''}`} onClick={() => setActiveTab('suggestions')} style={{ background: activeTab === 'suggestions' ? 'var(--bg-tertiary)' : 'none', border: 'none', color: '#fff', padding: '8px 16px', borderRadius: '4px', cursor: 'pointer' }}>
+        <button className={`tab-btn ${activeTab === 'suggestions' ? 'active' : ''}`} onClick={() => setActiveTab('suggestions')} style={{ background: activeTab === 'suggestions' ? 'var(--bg-tertiary)' : 'none', border: 'none', color: activeTab === 'suggestions' ? 'var(--text-primary)' : 'var(--text-secondary)', padding: '8px 16px', borderRadius: '4px', cursor: 'pointer', fontWeight: 600 }}>
           Suggestion Box
         </button>
       </div>

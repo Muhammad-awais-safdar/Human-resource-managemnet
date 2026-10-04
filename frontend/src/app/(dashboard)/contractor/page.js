@@ -141,7 +141,7 @@ export default function ContractorPage() {
       {/* Select Contractor context */}
       <div style={{ marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '12px' }}>
         <label style={{ fontWeight: 'bold' }}>Active Contractor Focus:</label>
-        <select value={selectedContractorId} onChange={e => setSelectedContractorId(e.target.value)} style={{ background: 'var(--bg-tertiary)', border: '1px solid var(--border-light)', color: '#fff', padding: '8px 16px', borderRadius: '4px', cursor: 'pointer' }}>
+        <select value={selectedContractorId} onChange={e => setSelectedContractorId(e.target.value)} style={{ background: 'var(--bg-tertiary)', border: '1px solid var(--border-light)', color: 'var(--text-primary)', padding: '8px 16px', borderRadius: '4px', cursor: 'pointer' }}>
           <option value="">-- Select Contractor --</option>
           {contractors.map(c => <option key={c.id} value={c.id}>{c.fullName} ({c.vendorCompany || 'Independent'})</option>)}
         </select>
@@ -149,10 +149,10 @@ export default function ContractorPage() {
 
       {/* Tabs */}
       <div style={{ display: 'flex', gap: '12px', borderBottom: '1px solid var(--border-light)', marginBottom: '24px', paddingBottom: '8px' }}>
-        <button className={`tab-btn ${activeTab === 'contractors' ? 'active' : ''}`} onClick={() => setActiveTab('contractors')} style={{ background: activeTab === 'contractors' ? 'var(--bg-tertiary)' : 'none', border: 'none', color: '#fff', padding: '8px 16px', borderRadius: '4px', cursor: 'pointer' }}>
+        <button className={`tab-btn ${activeTab === 'contractors' ? 'active' : ''}`} onClick={() => setActiveTab('contractors')} style={{ background: activeTab === 'contractors' ? 'var(--bg-tertiary)' : 'none', border: 'none', color: activeTab === 'contractors' ? 'var(--text-primary)' : 'var(--text-secondary)', padding: '8px 16px', borderRadius: '4px', cursor: 'pointer', fontWeight: 600 }}>
           Contractors & Agreements
         </button>
-        <button className={`tab-btn ${activeTab === 'timesheets' ? 'active' : ''}`} onClick={() => setActiveTab('timesheets')} style={{ background: activeTab === 'timesheets' ? 'var(--bg-tertiary)' : 'none', border: 'none', color: '#fff', padding: '8px 16px', borderRadius: '4px', cursor: 'pointer' }}>
+        <button className={`tab-btn ${activeTab === 'timesheets' ? 'active' : ''}`} onClick={() => setActiveTab('timesheets')} style={{ background: activeTab === 'timesheets' ? 'var(--bg-tertiary)' : 'none', border: 'none', color: activeTab === 'timesheets' ? 'var(--text-primary)' : 'var(--text-secondary)', padding: '8px 16px', borderRadius: '4px', cursor: 'pointer', fontWeight: 600 }}>
           Weekly Timesheets
         </button>
       </div>
@@ -173,12 +173,12 @@ export default function ContractorPage() {
                 </thead>
                 <tbody>
                   {contractors.map((c, idx) => (
-                    <tr key={idx} style={{ borderBottom: '1px solid var(--border-light)', background: c.id === selectedContractorId ? 'rgba(99,102,241,0.05)' : 'none' }}>
+                    <tr key={idx} style={{ borderBottom: '1px solid var(--border-light)', background: c.id === selectedContractorId ? 'var(--primary-light)' : 'none' }}>
                       <td style={{ padding: '12px' }}><strong>{c.fullName}</strong><br/><span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{c.email}</span></td>
                       <td style={{ padding: '12px' }}>{c.vendorCompany || 'Independent'}</td>
                       <td style={{ padding: '12px' }}>${c.hourlyRate}/hr ({c.currency})</td>
                       <td style={{ padding: '12px' }}>
-                        <span style={{ fontSize: '0.75rem', padding: '3px 8px', borderRadius: '4px', fontWeight: 'bold', background: c.status === 'ACTIVE' ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)', color: c.status === 'ACTIVE' ? 'var(--accent-success)' : '#ef4444' }}>
+                        <span style={{ fontSize: '0.75rem', padding: '3px 8px', borderRadius: '4px', fontWeight: 'bold', background: c.status === 'ACTIVE' ? 'var(--success-light)' : 'var(--danger-light)', color: c.status === 'ACTIVE' ? 'var(--success)' : 'var(--danger)' }}>
                           {c.status}
                         </span>
                       </td>
@@ -252,7 +252,7 @@ export default function ContractorPage() {
                 <div key={idx} style={{ padding: '16px', background: 'var(--bg-tertiary)', border: '1px solid var(--border-light)', borderRadius: 'var(--radius-md)' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <strong style={{ color: 'var(--accent-primary)' }}>Week Starting: {ts.weekStartDate}</strong>
-                    <span style={{ fontSize: '0.75rem', padding: '3px 8px', borderRadius: '4px', fontWeight: 'bold', background: ts.status === 'PENDING' ? 'rgba(234,179,8,0.1)' : ts.status === 'APPROVED' ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)', color: ts.status === 'PENDING' ? '#eab308' : ts.status === 'APPROVED' ? 'var(--accent-success)' : '#ef4444' }}>
+                    <span style={{ fontSize: '0.75rem', padding: '3px 8px', borderRadius: '4px', fontWeight: 'bold', background: ts.status === 'PENDING' ? 'var(--warning-light)' : ts.status === 'APPROVED' ? 'var(--success-light)' : 'var(--danger-light)', color: ts.status === 'PENDING' ? 'var(--warning)' : ts.status === 'APPROVED' ? 'var(--success)' : 'var(--danger)' }}>
                       {ts.status}
                     </span>
                   </div>
@@ -265,10 +265,10 @@ export default function ContractorPage() {
 
                   {ts.status === 'PENDING' && (
                     <div style={{ display: 'flex', gap: '12px', marginTop: '16px' }}>
-                      <button className={styles.btn} onClick={() => handleActionTimesheet(ts.id, true)} style={{ padding: '6px 12px', background: 'var(--accent-success)', border: 'none', borderRadius: '4px', color: '#fff', fontSize: '0.8rem', cursor: 'pointer' }} disabled={isPending}>
+                      <button className={styles.btn} onClick={() => handleActionTimesheet(ts.id, true)} style={{ padding: '6px 12px', background: 'var(--success)', border: 'none', borderRadius: '4px', color: 'var(--text-inverse)', fontSize: '0.8rem', cursor: 'pointer' }} disabled={isPending}>
                         Approve billing
                       </button>
-                      <button className={styles.btn} onClick={() => handleActionTimesheet(ts.id, false)} style={{ padding: '6px 12px', background: '#ef4444', border: 'none', borderRadius: '4px', color: '#fff', fontSize: '0.8rem', cursor: 'pointer' }} disabled={isPending}>
+                      <button className={styles.btn} onClick={() => handleActionTimesheet(ts.id, false)} style={{ padding: '6px 12px', background: 'var(--danger)', border: 'none', borderRadius: '4px', color: 'var(--text-inverse)', fontSize: '0.8rem', cursor: 'pointer' }} disabled={isPending}>
                         Reject hours
                       </button>
                     </div>

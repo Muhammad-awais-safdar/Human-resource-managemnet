@@ -33,22 +33,22 @@ export function OnboardingWizard({ isOpen, onClose }) {
     >
       <div className="space-y-6">
         {/* Progress Bar */}
-        <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
+        <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
           <div
-            className="bg-indigo-500 h-full transition-all duration-300"
+            className="bg-blue-600 h-full transition-all duration-300"
             style={{ width: `${(currentStep / totalSteps) * 100}%` }}
           />
         </div>
 
-        <div className="p-6 bg-slate-800/50 border border-slate-700/60 rounded-xl text-center space-y-3">
-          <div className="w-12 h-12 rounded-full bg-indigo-500/20 text-indigo-400 font-extrabold text-lg flex items-center justify-center mx-auto">
+        <div className="p-6 bg-slate-50 border border-slate-200 rounded-xl text-center space-y-3">
+          <div className="w-12 h-12 rounded-full bg-blue-100 text-blue-600 font-bold text-lg flex items-center justify-center mx-auto">
             {currentStep}
           </div>
-          <h4 className="text-base font-bold text-white">{activeInfo.title}</h4>
-          <p className="text-xs text-slate-300 leading-relaxed max-w-md mx-auto">{activeInfo.desc}</p>
+          <h4 className="text-base font-semibold text-slate-900">{activeInfo.title}</h4>
+          <p className="text-xs text-slate-600 leading-relaxed max-w-md mx-auto">{activeInfo.desc}</p>
         </div>
 
-        <div className="flex items-center justify-between pt-4 border-t border-slate-800">
+        <div className="flex items-center justify-between pt-4 border-t border-slate-100">
           <Button
             variant="ghost"
             size="sm"

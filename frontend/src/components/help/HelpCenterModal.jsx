@@ -55,7 +55,7 @@ export function HelpCenterModal({ isOpen, onClose }) {
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           leftIcon={
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg className="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
           }
@@ -66,14 +66,14 @@ export function HelpCenterModal({ isOpen, onClose }) {
             filtered.map((item) => (
               <div
                 key={item.id}
-                className="p-4 bg-slate-800/60 border border-slate-700/60 rounded-xl flex items-center justify-between gap-4 transition-all hover:border-slate-600"
+                className="p-4 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between gap-4 transition-colors hover:border-slate-300"
               >
                 <div>
-                  <span className="text-[10px] font-extrabold uppercase tracking-wider text-indigo-400">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-blue-600">
                     {item.category}
                   </span>
-                  <h4 className="text-sm font-bold text-white mt-0.5">{item.title}</h4>
-                  <p className="text-xs text-slate-300 mt-1">{item.description}</p>
+                  <h4 className="text-sm font-semibold text-slate-900 mt-0.5">{item.title}</h4>
+                  <p className="text-xs text-slate-600 mt-1">{item.description}</p>
                 </div>
 
                 <Button
@@ -89,7 +89,7 @@ export function HelpCenterModal({ isOpen, onClose }) {
               </div>
             ))
           ) : (
-            <p className="text-xs text-slate-400 text-center py-6">No matching tutorials found.</p>
+            <p className="text-xs text-slate-500 text-center py-6">No matching tutorials found.</p>
           )}
         </div>
       </div>

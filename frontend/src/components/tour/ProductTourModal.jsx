@@ -19,7 +19,6 @@ export function ProductTourModal() {
     const updatePosition = () => {
       const el = document.querySelector(currentStep.target);
       if (el) {
-        // Highlight element
         document.querySelectorAll('.tour-target-highlight').forEach((item) => {
           item.classList.remove('tour-target-highlight');
         });
@@ -57,7 +56,6 @@ export function ProductTourModal() {
   const totalSteps = activeTour.steps.length;
   const isLastStep = currentStepIndex === totalSteps - 1;
 
-  // Simple floating placement calculation
   let modalStyle = { position: 'fixed', zIndex: 10002 };
   if (targetRect) {
     if (currentStep.placement === 'bottom') {
@@ -81,31 +79,31 @@ export function ProductTourModal() {
   }
 
   return (
-    <div className="fixed inset-0 z-[10000] bg-slate-950/60 backdrop-blur-[2px] animate-fade-in">
+    <div className="fixed inset-0 z-[10000] bg-slate-900/30 animate-fade-in">
       <div
         style={modalStyle}
-        className="w-[360px] max-w-[90vw] bg-slate-900 border border-indigo-500/50 rounded-xl p-5 shadow-2xl shadow-indigo-950/50 animate-fade-in"
+        className="w-[360px] max-w-[90vw] bg-white border border-slate-200 rounded-xl p-5 shadow-xl animate-fade-in text-slate-900"
         role="dialog"
         aria-modal="true"
         data-tour="tour-modal"
       >
         <div className="flex items-center justify-between gap-2 mb-2">
-          <span className="text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-400 border border-indigo-500/30">
+          <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
             Step {currentStepIndex + 1} of {totalSteps}
           </span>
           <button
             type="button"
             onClick={skipTour}
-            className="text-xs text-slate-400 hover:text-white transition-colors"
+            className="text-xs text-slate-400 hover:text-slate-700 transition-colors cursor-pointer"
           >
             Skip Tour
           </button>
         </div>
 
-        <h4 className="text-base font-bold text-white mb-1.5">{currentStep.title}</h4>
-        <p className="text-xs text-slate-300 leading-relaxed mb-5">{currentStep.description}</p>
+        <h4 className="text-base font-semibold text-slate-900 mb-1.5">{currentStep.title}</h4>
+        <p className="text-xs text-slate-600 leading-relaxed mb-5">{currentStep.description}</p>
 
-        <div className="flex items-center justify-between pt-3 border-t border-slate-800">
+        <div className="flex items-center justify-between pt-3 border-t border-slate-100">
           <Button
             variant="ghost"
             size="sm"
@@ -120,7 +118,7 @@ export function ProductTourModal() {
               <div
                 key={i}
                 className={`w-1.5 h-1.5 rounded-full transition-all ${
-                  i === currentStepIndex ? 'w-4 bg-indigo-500' : 'bg-slate-700'
+                  i === currentStepIndex ? 'w-4 bg-blue-600' : 'bg-slate-200'
                 }`}
               />
             ))}

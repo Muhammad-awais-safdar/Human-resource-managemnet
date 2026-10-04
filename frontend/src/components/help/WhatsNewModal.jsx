@@ -29,14 +29,14 @@ export function WhatsNewModal({ isOpen, onClose }) {
       <div className="space-y-6">
         {releases.map((rel, idx) => (
           <div key={idx} className="space-y-3">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-2">
-              <h3 className="text-sm font-bold text-white">{rel.title}</h3>
-              <span className="text-xs text-slate-400 font-mono">{rel.version}</span>
+            <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+              <h3 className="text-sm font-semibold text-slate-900">{rel.title}</h3>
+              <span className="text-xs text-slate-500 font-mono">{rel.version}</span>
             </div>
 
             <div className="space-y-2">
               {rel.items.map((item, itemIdx) => (
-                <div key={itemIdx} className="flex items-start gap-2.5 text-xs text-slate-300">
+                <div key={itemIdx} className="flex items-start gap-2.5 text-xs text-slate-700">
                   <Badge variant={item.type === 'NEW' ? 'primary' : 'success'} size="sm">
                     {item.type}
                   </Badge>

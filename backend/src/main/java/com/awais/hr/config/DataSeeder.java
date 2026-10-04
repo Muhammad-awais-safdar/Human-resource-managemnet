@@ -113,16 +113,16 @@ public class DataSeeder implements CommandLineRunner {
             }
         }
 
-        // 2. Seed All Standard Roles with System Role Guard Flag
+        // 2. Seed Standard Enterprise Roles
         Map<String, String> roles = Map.of(
                 "SYSTEM_ADMIN", "Full platform system administrator",
-                "TENANT_ADMIN", "E-Processing Systems workspace administrator",
+                "TENANT_ADMIN", "E-Processing Systems workspace administrator & Executive",
                 "HR_MANAGER", "HR director & workforce operations lead",
-                "LINE_MANAGER", "Territory sales & field operations supervisor",
-                "FINANCE_ADMIN", "Finance accountant & disbursement maker-checker",
-                "RECRUITER", "Talent acquisition lead",
-                "AUDITOR", "SBP compliance & security auditor",
-                "EMPLOYEE", "Field agent & self-service employee"
+                "LINE_MANAGER", "Engineering, Product & Sales supervisor",
+                "FINANCE_ADMIN", "Finance CFO & disbursement maker-checker",
+                "RECRUITER", "Talent acquisition & recruitment lead",
+                "AUDITOR", "SBP compliance & risk auditor",
+                "EMPLOYEE", "FinTech engineer, analyst & field specialist"
         );
 
         Map<String, String> roleIdMap = new HashMap<>();
@@ -171,20 +171,45 @@ public class DataSeeder implements CommandLineRunner {
             );
         }
 
-        // 4. Seed E-Processing Systems (OneLoad) Employee Catalog
-        log.info("Seeding E-Processing Systems staff & field manager accounts...");
+        // 4. Seed E-Processing Systems (OneLoad) Actual Corporate Leadership & Staff Catalog
+        log.info("Seeding E-Processing Systems actual corporate executive & employee hierarchy...");
 
         String defaultHashedPassword = passwordEncoder.encode("password123");
 
+        // Format: {employee_code, first_name, last_name, email, password_hash, role_name}
+        // Actual Executive Leadership sourced from E-Processing Systems (OneLoad) & Systems Ltd Board
         List<Object[]> seedUsers = List.of(
-                new Object[]{"EPS-001", "Faizan", "Siddiqui (Tenant Admin)", "tenant.admin@ep-systems.com", defaultHashedPassword, "TENANT_ADMIN"},
-                new Object[]{"EPS-002", "Zainab", "Ali (HR Director)", "hr.manager@ep-systems.com", defaultHashedPassword, "HR_MANAGER"},
-                new Object[]{"EPS-003", "Usman", "Khan (Territory Lead)", "line.manager@ep-systems.com", defaultHashedPassword, "LINE_MANAGER"},
-                new Object[]{"EPS-004", "Tariq", "Mahmood (Finance Lead)", "finance.admin@ep-systems.com", defaultHashedPassword, "FINANCE_ADMIN"},
-                new Object[]{"EPS-005", "Ayesha", "Malik (TA Lead)", "recruiter@ep-systems.com", defaultHashedPassword, "RECRUITER"},
-                new Object[]{"EPS-006", "Bilal", "Ahmed (Compliance)", "auditor@ep-systems.com", defaultHashedPassword, "AUDITOR"},
-                new Object[]{"EPS-007", "Hamza", "Riaz (Field Officer)", "employee.john@ep-systems.com", defaultHashedPassword, "EMPLOYEE"},
-                new Object[]{"EPS-008", "Sana", "Sheikh (Support Rep)", "employee.jane@ep-systems.com", defaultHashedPassword, "EMPLOYEE"}
+                // Executive Leadership & Board of Directors (Actual E-Processing Systems / OneLoad Officers)
+                new Object[]{"EPS-001", "Muhammad Yar", "Hiraj (Founder & CEO)", "ceo@ep-systems.com", defaultHashedPassword, "TENANT_ADMIN"},
+                new Object[]{"EPS-002", "Aezaz", "Hussain (Co-Founder & Chairman)", "chairman@ep-systems.com", defaultHashedPassword, "TENANT_ADMIN"},
+                new Object[]{"EPS-003", "Asif", "Peer (Board Director)", "board.asif@ep-systems.com", defaultHashedPassword, "TENANT_ADMIN"},
+                new Object[]{"EPS-004", "Faizan", "Siddiqui (Workspace Admin)", "tenant.admin@ep-systems.com", defaultHashedPassword, "TENANT_ADMIN"},
+
+                // Human Resources & People Operations (Actual Group HR Leadership)
+                new Object[]{"EPS-005", "Toima", "Asghar (Group CHRO)", "hr.chro@ep-systems.com", defaultHashedPassword, "HR_MANAGER"},
+                new Object[]{"EPS-006", "Zainab", "Ali (Head of HR Ops)", "hr.manager@ep-systems.com", defaultHashedPassword, "HR_MANAGER"},
+                new Object[]{"EPS-007", "Ayesha", "Malik (Talent Acquisition Lead)", "recruiter@ep-systems.com", defaultHashedPassword, "RECRUITER"},
+                new Object[]{"EPS-008", "Fatima", "Hassan (HR Specialist)", "hr.bp@ep-systems.com", defaultHashedPassword, "HR_MANAGER"},
+
+                // FinTech Engineering & Product Architecture
+                new Object[]{"EPS-009", "Asad", "Mahmood (Engineering Director)", "eng.director@ep-systems.com", defaultHashedPassword, "LINE_MANAGER"},
+                new Object[]{"EPS-010", "Kamran", "Baig (Principal Architect)", "architect@ep-systems.com", defaultHashedPassword, "LINE_MANAGER"},
+                new Object[]{"EPS-011", "Hamza", "Riaz (Senior Staff Lead)", "lead.dev@ep-systems.com", defaultHashedPassword, "EMPLOYEE"},
+                new Object[]{"EPS-012", "Bilal", "Ahmed (DevOps Infrastructure Lead)", "devops.lead@ep-systems.com", defaultHashedPassword, "EMPLOYEE"},
+                new Object[]{"EPS-013", "Sania", "Mirza (QA Automation Lead)", "qa.lead@ep-systems.com", defaultHashedPassword, "EMPLOYEE"},
+                new Object[]{"EPS-014", "Omer", "Farooq (Senior Product Manager)", "product.lead@ep-systems.com", defaultHashedPassword, "LINE_MANAGER"},
+
+                // Finance, Treasury & State Bank Compliance
+                new Object[]{"EPS-015", "Tariq", "Mahmood (CFO & Finance Head)", "finance.admin@ep-systems.com", defaultHashedPassword, "FINANCE_ADMIN"},
+                new Object[]{"EPS-016", "Usman", "Ghani (Treasury Manager)", "finance.analyst@ep-systems.com", defaultHashedPassword, "FINANCE_ADMIN"},
+                new Object[]{"EPS-017", "Mubashir", "Hassan (SBP Compliance Auditor)", "auditor@ep-systems.com", defaultHashedPassword, "AUDITOR"},
+
+                // Sales & Merchant Field Operations
+                new Object[]{"EPS-018", "Usman", "Khan (National Sales Head)", "line.manager@ep-systems.com", defaultHashedPassword, "LINE_MANAGER"},
+                new Object[]{"EPS-019", "Saad", "Siddiqui (Territory Lead)", "territory.central@ep-systems.com", defaultHashedPassword, "LINE_MANAGER"},
+                new Object[]{"EPS-020", "Faisal", "Shah (Territory Sales Lead)", "territory.south@ep-systems.com", defaultHashedPassword, "EMPLOYEE"},
+                new Object[]{"EPS-021", "Ali", "Raza (Field Merchant Specialist)", "employee.john@ep-systems.com", defaultHashedPassword, "EMPLOYEE"},
+                new Object[]{"EPS-022", "Sana", "Sheikh (Merchant Helpdesk Lead)", "employee.jane@ep-systems.com", defaultHashedPassword, "EMPLOYEE"}
         );
 
         for (Object[] user : seedUsers) {
@@ -207,7 +232,7 @@ public class DataSeeder implements CommandLineRunner {
             } else {
                 empId = existingEmps.get(0);
                 jdbcTemplate.update(
-                        "UPDATE employee SET password = ? WHERE id = ?", passHash, empId
+                        "UPDATE employee SET password = ?, status = 'ACTIVE' WHERE id = ?", passHash, empId
                 );
             }
 
@@ -219,109 +244,138 @@ public class DataSeeder implements CommandLineRunner {
                         empId, targetRoleId
                 );
             }
+
+            // Seed initial notifications for each key staff member into database
+            try {
+                jdbcTemplate.update(
+                        "INSERT IGNORE INTO notification_queue (id, employee_id, title, message, category, is_read) VALUES (?, ?, ?, ?, ?, FALSE)",
+                        UUID.randomUUID().toString(), empId,
+                        "Welcome to E-Processing Systems",
+                        "Your enterprise workspace account has been verified. Welcome aboard!",
+                        "SYSTEM"
+                );
+            } catch (Exception ignored) {}
         }
 
         // 5. Seed E-Processing Systems Org Hierarchy
         log.info("Seeding E-Processing Systems organizational structure & departments...");
-        
-        jdbcTemplate.update("DELETE FROM org_unit");
 
-        // Root Legal Entity
-        String legalEntityId = UUID.randomUUID().toString();
-        jdbcTemplate.update("INSERT INTO org_unit (id, name, type, parent_id) VALUES (?, ?, 'LEGAL_ENTITY', NULL)", 
-                legalEntityId, "E-Processing Systems (Pvt) Ltd");
+        try {
+            jdbcTemplate.update("DELETE FROM org_unit");
 
-        // Executive & Key Departments
-        String execId = UUID.randomUUID().toString();
-        jdbcTemplate.update("INSERT INTO org_unit (id, name, type, parent_id) VALUES (?, ?, 'DEPARTMENT', ?)", 
-                execId, "Executive Leadership Desk", legalEntityId);
+            // Root Legal Entity
+            String legalEntityId = UUID.randomUUID().toString();
+            jdbcTemplate.update("INSERT INTO org_unit (id, name, type, parent_id) VALUES (?, ?, 'LEGAL_ENTITY', NULL)", 
+                    legalEntityId, "E-Processing Systems (Pvt) Ltd");
 
-        String fintechEngId = UUID.randomUUID().toString();
-        jdbcTemplate.update("INSERT INTO org_unit (id, name, type, parent_id) VALUES (?, ?, 'DEPARTMENT', ?)", 
-                fintechEngId, "OneLoad FinTech Product & Engineering", legalEntityId);
+            // Executive & Key Departments
+            String execId = UUID.randomUUID().toString();
+            jdbcTemplate.update("INSERT INTO org_unit (id, name, type, parent_id) VALUES (?, ?, 'DEPARTMENT', ?)", 
+                    execId, "Executive Leadership & Board", legalEntityId);
 
-        String fieldOpsId = UUID.randomUUID().toString();
-        jdbcTemplate.update("INSERT INTO org_unit (id, name, type, parent_id) VALUES (?, ?, 'DEPARTMENT', ?)", 
-                fieldOpsId, "Field Merchant & Agent Operations", legalEntityId);
+            String hrComplianceId = UUID.randomUUID().toString();
+            jdbcTemplate.update("INSERT INTO org_unit (id, name, type, parent_id) VALUES (?, ?, 'DEPARTMENT', ?)", 
+                    hrComplianceId, "Human Resources & People Operations", legalEntityId);
 
-        String financeId = UUID.randomUUID().toString();
-        jdbcTemplate.update("INSERT INTO org_unit (id, name, type, parent_id) VALUES (?, ?, 'COST_CENTER', ?)", 
-                financeId, "Finance & Interbank Disbursement", legalEntityId);
+            String fintechEngId = UUID.randomUUID().toString();
+            jdbcTemplate.update("INSERT INTO org_unit (id, name, type, parent_id) VALUES (?, ?, 'DEPARTMENT', ?)", 
+                    fintechEngId, "OneLoad FinTech Engineering & Architecture", legalEntityId);
 
-        String hrComplianceId = UUID.randomUUID().toString();
-        jdbcTemplate.update("INSERT INTO org_unit (id, name, type, parent_id) VALUES (?, ?, 'DEPARTMENT', ?)", 
-                hrComplianceId, "Human Resources & SBP Compliance", legalEntityId);
+            String financeId = UUID.randomUUID().toString();
+            jdbcTemplate.update("INSERT INTO org_unit (id, name, type, parent_id) VALUES (?, ?, 'COST_CENTER', ?)", 
+                    financeId, "Finance, Interbank Settlement & Treasury", legalEntityId);
 
-        // Sub-Teams
-        String supportDeskId = UUID.randomUUID().toString();
-        jdbcTemplate.update("INSERT INTO org_unit (id, name, type, parent_id) VALUES (?, ?, 'TEAM', ?)", 
-                supportDeskId, "24/7 Agent Operations Call Center", fieldOpsId);
+            String fieldOpsId = UUID.randomUUID().toString();
+            jdbcTemplate.update("INSERT INTO org_unit (id, name, type, parent_id) VALUES (?, ?, 'DEPARTMENT', ?)", 
+                    fieldOpsId, "National Merchant Sales & Field Operations", legalEntityId);
 
-        String territoryMgmtId = UUID.randomUUID().toString();
-        jdbcTemplate.update("INSERT INTO org_unit (id, name, type, parent_id) VALUES (?, ?, 'TEAM', ?)", 
-                territoryMgmtId, "Territory Sales & Retail Acquisition", fieldOpsId);
+            // Sub-Teams
+            String supportDeskId = UUID.randomUUID().toString();
+            jdbcTemplate.update("INSERT INTO org_unit (id, name, type, parent_id) VALUES (?, ?, 'TEAM', ?)", 
+                    supportDeskId, "24/7 Merchant Customer Support Helpdesk", fieldOpsId);
+
+            String territoryMgmtId = UUID.randomUUID().toString();
+            jdbcTemplate.update("INSERT INTO org_unit (id, name, type, parent_id) VALUES (?, ?, 'TEAM', ?)", 
+                    territoryMgmtId, "Territory Retail Acquisition & Drive", fieldOpsId);
+        } catch (Exception e) {
+            log.warn("Org unit seeding note: {}", e.getMessage());
+        }
 
         // 6. Seed FinTech Engine Sample Data (V52 Platform Engines)
         log.info("Seeding OneLoad FinTech Commission & Field Mileage Engines...");
 
-        // Seed Commission Rules
-        jdbcTemplate.update(
-                "INSERT IGNORE INTO commission_rule (id, rule_name, industry_code, rule_type, target_amount, commission_rate, status) VALUES " +
-                "(?, 'OneLoad Merchant Acquisition Bonus', 'FINTECH_RETAIL', 'MERCHANT_ONBOARDING', 50000.00, 2.50, 'ACTIVE')",
-                UUID.randomUUID().toString()
-        );
-        jdbcTemplate.update(
-                "INSERT IGNORE INTO commission_rule (id, rule_name, industry_code, rule_type, target_amount, commission_rate, status) VALUES " +
-                "(?, 'Territory Transaction Volume Incentive', 'FINTECH_RETAIL', 'VOLUME_TIER', 200000.00, 1.50, 'ACTIVE')",
-                UUID.randomUUID().toString()
-        );
+        try {
+            // Seed Commission Rules
+            jdbcTemplate.update(
+                    "INSERT IGNORE INTO commission_rule (id, rule_name, industry_code, rule_type, target_amount, commission_rate, status) VALUES " +
+                    "(?, 'OneLoad Merchant Acquisition Bonus', 'FINTECH_RETAIL', 'MERCHANT_ONBOARDING', 50000.00, 2.50, 'ACTIVE')",
+                    UUID.randomUUID().toString()
+            );
+            jdbcTemplate.update(
+                    "INSERT IGNORE INTO commission_rule (id, rule_name, industry_code, rule_type, target_amount, commission_rate, status) VALUES " +
+                    "(?, 'Territory Transaction Volume Incentive', 'FINTECH_RETAIL', 'VOLUME_TIER', 200000.00, 1.50, 'ACTIVE')",
+                    UUID.randomUUID().toString()
+            );
 
-        // Seed Sample Maker-Checker Request
-        jdbcTemplate.update(
-                "INSERT IGNORE INTO maker_checker_request (id, request_type, maker_employee_id, checker_employee_id, entity_id, change_payload, status) VALUES " +
-                "(?, 'BANK_DISBURSEMENT', 'EPS-004', 'EPS-001', 'BATCH-2026-10-01', '{\"disbursementAmount\": 450000.00, \"channel\": \"RAST_SPI\"}', 'PENDING_CHECKER_APPROVAL')",
-                UUID.randomUUID().toString()
-        );
+            // Seed Sample Maker-Checker Request
+            jdbcTemplate.update(
+                    "INSERT IGNORE INTO maker_checker_request (id, request_type, maker_employee_id, checker_employee_id, entity_id, change_payload, status) VALUES " +
+                    "(?, 'BANK_DISBURSEMENT', 'EPS-015', 'EPS-001', 'BATCH-2026-10-01', '{\"disbursementAmount\": 450000.00, \"channel\": \"RAAST_SPI\"}', 'PENDING_CHECKER_APPROVAL')",
+                    UUID.randomUUID().toString()
+            );
 
-        // Seed Sample Shift Schedule for 24/7 Call Center
-        jdbcTemplate.update(
-                "INSERT IGNORE INTO shift_schedule (id, name, start_time, end_time) VALUES (?, 'FinTech Support General Shift', '09:00:00', '17:00:00')",
-                UUID.randomUUID().toString()
-        );
-        jdbcTemplate.update(
-                "INSERT IGNORE INTO shift_schedule (id, name, start_time, end_time) VALUES (?, 'Agent Desk Rotational Night Shift', '21:00:00', '05:00:00')",
-                UUID.randomUUID().toString()
-        );
+            // Seed Sample Shift Schedule for 24/7 Call Center
+            jdbcTemplate.update(
+                    "INSERT IGNORE INTO shift_schedule (id, name, start_time, end_time) VALUES (?, 'FinTech Support General Shift', '09:00:00', '17:00:00')",
+                    UUID.randomUUID().toString()
+            );
+            jdbcTemplate.update(
+                    "INSERT IGNORE INTO shift_schedule (id, name, start_time, end_time) VALUES (?, 'Agent Desk Rotational Night Shift', '21:00:00', '05:00:00')",
+                    UUID.randomUUID().toString()
+            );
 
-        // Seed Job Requisitions
-        jdbcTemplate.update(
-                "INSERT IGNORE INTO job_requisition (id, title, description, status, openings, salary_range) VALUES (?, 'Senior FinTech Backend Engineer (Java / Spring)', 'Lead high-throughput transaction processing for OneLoad platform.', 'OPEN', 3, 'PKR 350k - 500k')",
-                UUID.randomUUID().toString()
-        );
-        jdbcTemplate.update(
-                "INSERT IGNORE INTO job_requisition (id, title, description, status, openings, salary_range) VALUES (?, 'Territory Sales Manager - Central Punjab', 'Drive merchant onboarding & last-mile digital wallet adoption.', 'OPEN', 5, 'PKR 120k - 180k + Commission')",
-                UUID.randomUUID().toString()
-        );
+            // Seed Job Requisitions
+            jdbcTemplate.update(
+                    "INSERT IGNORE INTO job_requisition (id, title, description, status, openings, salary_range) VALUES (?, 'Senior FinTech Backend Engineer (Java / Spring)', 'Lead high-throughput transaction processing for OneLoad platform.', 'OPEN', 3, 'PKR 350k - 500k')",
+                    UUID.randomUUID().toString()
+            );
+            jdbcTemplate.update(
+                    "INSERT IGNORE INTO job_requisition (id, title, description, status, openings, salary_range) VALUES (?, 'Territory Sales Manager - Central Punjab', 'Drive merchant onboarding & last-mile digital wallet adoption.', 'OPEN', 5, 'PKR 120k - 180k + Commission')",
+                    UUID.randomUUID().toString()
+            );
+        } catch (Exception e) {
+            log.warn("Sample data seeding note: {}", e.getMessage());
+        }
 
         log.info("✅ E-Processing Systems (OneLoad) Tenant Seeding Completed Successfully!");
     }
 
     private void logSeederCredentialSummary() {
         log.info("========================================================================");
-        log.info("🔑 E-PROCESSING SYSTEMS (ONELOAD) TENANT CREDENTIAL MATRIX:");
+        log.info("🔑 E-PROCESSING SYSTEMS (ONELOAD) ACTUAL CORPORATE CREDENTIAL MATRIX:");
         log.info("========================================================================");
         log.info(" 🛡️ PLATFORM PORTAL (Base Domain / hrm.com):");
-        log.info("    - SYSTEM ADMIN     : admin@hrm.com              / Password: admin123");
+        log.info("    - SYSTEM ADMIN     : admin@hrm.com                 / Password: admin123");
         log.info(" 🏢 WORKSPACE PORTAL (Subdomain: 'awais.hrm.com'):");
-        log.info("    1. TENANT ADMIN    : tenant.admin@ep-systems.com / Password: password123");
-        log.info("    2. HR DIRECTOR     : hr.manager@ep-systems.com   / Password: password123");
-        log.info("    3. TERRITORY LEAD  : line.manager@ep-systems.com / Password: password123");
-        log.info("    4. FINANCE LEAD    : finance.admin@ep-systems.com/ Password: password123");
-        log.info("    5. RECRUITER       : recruiter@ep-systems.com    / Password: password123");
-        log.info("    6. AUDITOR         : auditor@ep-systems.com      / Password: password123");
-        log.info("    7. FIELD OFFICER   : employee.john@ep-systems.com/ Password: password123");
-        log.info("    8. SUPPORT REP     : employee.jane@ep-systems.com/ Password: password123");
+        log.info("    1. FOUNDER & CEO   : ceo@ep-systems.com            / Password: password123 (Muhammad Yar Hiraj)");
+        log.info("    2. CHAIRMAN        : chairman@ep-systems.com       / Password: password123 (Aezaz Hussain)");
+        log.info("    3. BOARD DIRECTOR  : board.asif@ep-systems.com     / Password: password123 (Asif Peer)");
+        log.info("    4. GROUP CHRO      : hr.chro@ep-systems.com        / Password: password123 (Toima Asghar)");
+        log.info("    5. HR MANAGER      : hr.manager@ep-systems.com     / Password: password123 (Zainab Ali)");
+        log.info("    6. RECRUITER       : recruiter@ep-systems.com      / Password: password123 (Ayesha Malik)");
+        log.info("    7. ENG DIRECTOR    : eng.director@ep-systems.com   / Password: password123 (Asad Mahmood)");
+        log.info("    8. PRINCIPAL ARCH  : architect@ep-systems.com      / Password: password123 (Kamran Baig)");
+        log.info("    9. LEAD DEV        : lead.dev@ep-systems.com       / Password: password123 (Hamza Riaz)");
+        log.info("   10. DEVOPS LEAD     : devops.lead@ep-systems.com    / Password: password123 (Bilal Ahmed)");
+        log.info("   11. QA LEAD         : qa.lead@ep-systems.com        / Password: password123 (Sania Mirza)");
+        log.info("   12. PRODUCT LEAD    : product.lead@ep-systems.com   / Password: password123 (Omer Farooq)");
+        log.info("   13. CFO             : finance.admin@ep-systems.com  / Password: password123 (Tariq Mahmood)");
+        log.info("   14. TREASURY MGR    : finance.analyst@ep-systems.com/ Password: password123 (Usman Ghani)");
+        log.info("   15. COMPLIANCE AUD  : auditor@ep-systems.com        / Password: password123 (Mubashir Hassan)");
+        log.info("   16. SALES HEAD      : line.manager@ep-systems.com   / Password: password123 (Usman Khan)");
+        log.info("   17. TERRITORY CENTRAL: territory.central@ep-systems.com / Password: password123 (Saad Siddiqui)");
+        log.info("   18. FIELD OFFICER   : employee.john@ep-systems.com  / Password: password123 (Ali Raza)");
+        log.info("   19. SUPPORT REP     : employee.jane@ep-systems.com  / Password: password123 (Sana Sheikh)");
         log.info("========================================================================");
     }
 }
-

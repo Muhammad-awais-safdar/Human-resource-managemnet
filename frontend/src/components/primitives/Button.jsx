@@ -14,21 +14,21 @@ export function Button({
   className = '',
   ...props
 }) {
-  const baseStyles = 'inline-flex items-center justify-center font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-900 disabled:opacity-50 disabled:cursor-not-allowed select-none rounded-lg active:scale-[0.98] min-h-[44px] min-w-[44px] cursor-pointer';
+  const baseStyles = 'inline-flex items-center justify-center font-medium transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 focus:ring-offset-white disabled:opacity-50 disabled:cursor-not-allowed select-none rounded-lg cursor-pointer';
 
   const variants = {
-    primary: 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-md shadow-indigo-600/20 border border-indigo-500/30',
-    secondary: 'bg-slate-800 hover:bg-slate-700 text-slate-100 border border-slate-700/60 shadow-sm',
-    outline: 'bg-transparent hover:bg-slate-800/60 text-slate-200 border border-slate-700 hover:border-slate-600',
-    ghost: 'bg-transparent hover:bg-slate-800/50 text-slate-300 hover:text-white',
-    danger: 'bg-rose-600 hover:bg-rose-500 text-white shadow-md shadow-rose-600/20 border border-rose-500/30',
-    success: 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-md shadow-emerald-600/20 border border-emerald-500/30',
+    primary: 'bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white shadow-sm border border-transparent',
+    secondary: 'bg-white hover:bg-slate-50 active:bg-slate-100 text-slate-700 border border-slate-200 shadow-sm',
+    outline: 'bg-transparent hover:bg-slate-50 active:bg-slate-100 text-slate-700 border border-slate-200',
+    ghost: 'bg-transparent hover:bg-slate-100 active:bg-slate-200 text-slate-600 hover:text-slate-900',
+    danger: 'bg-red-600 hover:bg-red-700 active:bg-red-800 text-white shadow-sm border border-transparent',
+    success: 'bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white shadow-sm border border-transparent',
   };
 
   const sizes = {
     sm: 'px-3 py-1.5 text-xs gap-1.5 min-h-[36px]',
-    md: 'px-4 py-2.5 text-sm gap-2 min-h-[44px]',
-    lg: 'px-6 py-3.5 text-base gap-2.5 min-h-[48px]',
+    md: 'px-4 py-2 text-sm gap-2 min-h-[40px]',
+    lg: 'px-5 py-2.5 text-base gap-2.5 min-h-[44px]',
   };
 
   const widthStyle = fullWidth ? 'w-full' : '';
@@ -75,7 +75,7 @@ export function IconButton({
       onClick={onClick}
       aria-label={ariaLabel}
       title={ariaLabel}
-      className={`!px-0 !py-0 !w-11 !h-11 ${className}`}
+      className={`!px-0 !py-0 !w-10 !h-10 ${className}`}
       {...props}
     >
       {icon}

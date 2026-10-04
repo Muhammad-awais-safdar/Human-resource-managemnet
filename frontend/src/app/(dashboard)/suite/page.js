@@ -1030,39 +1030,37 @@ export default function SuitePortalPage() {
             
             {/* Forms section */}
             <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
-              <form onSubmit={handleExpenseSubmit} className="form-card" style={{ flex: 1, minWidth: '320px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '16px', padding: '24px' }} noValidate>
-                <h3 style={{ color: '#fff', marginBottom: '16px' }}>File Expense Claim</h3>
+              <form onSubmit={handleExpenseSubmit} className="form-card" style={{ flex: 1, minWidth: '320px' }} noValidate>
+                <h3>File Expense Claim</h3>
                 <div className={styles.formGroup} style={{ marginBottom: '16px' }}>
-                  <label className={styles.label} style={{ color: '#a1a1aa' }}>Reimbursement Amount ($)</label>
+                  <label className={styles.label}>Reimbursement Amount ($)</label>
                   <input 
                     type="number" 
                     className={styles.input} 
                     value={expenseAmount} 
                     onChange={(e) => setExpenseAmount(e.target.value)} 
                     disabled={isPending}
-                    style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff' }}
                   />
                 </div>
                 <div className={styles.formGroup} style={{ marginBottom: '16px' }}>
-                  <label className={styles.label} style={{ color: '#a1a1aa' }}>Expense Description</label>
+                  <label className={styles.label}>Expense Description</label>
                   <input 
                     type="text" 
                     className={styles.input} 
                     value={expenseDesc} 
                     onChange={(e) => setExpenseDesc(e.target.value)} 
                     disabled={isPending}
-                    style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff' }}
                   />
                 </div>
-                <button type="submit" className={`${styles.btn} ${styles.btnPrimary}`} style={{ width: '100%', background: 'linear-gradient(135deg, #6366f1, #a855f7)', border: 'none', color: '#fff' }} disabled={isPending}>
+                <button type="submit" className={`${styles.btn} ${styles.btnPrimary}`} style={{ width: '100%' }} disabled={isPending}>
                   Submit Claim
                 </button>
               </form>
 
-              <form onSubmit={handleTravelSubmit} className="form-card" style={{ flex: 1, minWidth: '320px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '16px', padding: '24px' }} noValidate>
-                <h3 style={{ color: '#fff', marginBottom: '16px' }}>Book Travel Request</h3>
+              <form onSubmit={handleTravelSubmit} className="form-card" style={{ flex: 1, minWidth: '320px' }} noValidate>
+                <h3>Book Travel Request</h3>
                 <div className={styles.formGroup} style={{ marginBottom: '12px' }}>
-                  <label className={styles.label} style={{ color: '#a1a1aa' }}>Destination</label>
+                  <label className={styles.label}>Destination</label>
                   <input 
                     type="text" 
                     className={styles.input} 
@@ -1070,11 +1068,10 @@ export default function SuitePortalPage() {
                     value={travelDest} 
                     onChange={(e) => setTravelDest(e.target.value)} 
                     disabled={isPending}
-                    style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff' }}
                   />
                 </div>
                 <div className={styles.formGroup} style={{ marginBottom: '12px' }}>
-                  <label className={styles.label} style={{ color: '#a1a1aa' }}>Purpose of Travel</label>
+                  <label className={styles.label}>Purpose of Travel</label>
                   <input 
                     type="text" 
                     className={styles.input} 
@@ -1082,34 +1079,31 @@ export default function SuitePortalPage() {
                     value={travelPurpose} 
                     onChange={(e) => setTravelPurpose(e.target.value)} 
                     disabled={isPending}
-                    style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff' }}
                   />
                 </div>
                 <div style={{ display: 'flex', gap: '12px', marginBottom: '16px' }}>
                   <div className={styles.formGroup} style={{ flex: 1 }}>
-                    <label className={styles.label} style={{ color: '#a1a1aa' }}>Start Date</label>
+                    <label className={styles.label}>Start Date</label>
                     <input 
                       type="date" 
                       className={styles.input} 
                       value={travelStart} 
                       onChange={(e) => setTravelStart(e.target.value)} 
                       disabled={isPending}
-                      style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff' }}
                     />
                   </div>
                   <div className={styles.formGroup} style={{ flex: 1 }}>
-                    <label className={styles.label} style={{ color: '#a1a1aa' }}>End Date</label>
+                    <label className={styles.label}>End Date</label>
                     <input 
                       type="date" 
                       className={styles.input} 
                       value={travelEnd} 
                       onChange={(e) => setTravelEnd(e.target.value)} 
                       disabled={isPending}
-                      style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff' }}
                     />
                   </div>
                 </div>
-                <button type="submit" className={`${styles.btn} ${styles.btnPrimary}`} style={{ width: '100%', background: 'linear-gradient(135deg, #6366f1, #a855f7)', border: 'none', color: '#fff' }} disabled={isPending}>
+                <button type="submit" className={`${styles.btn} ${styles.btnPrimary}`} style={{ width: '100%' }} disabled={isPending}>
                   Request Travel
                 </button>
               </form>
