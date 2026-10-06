@@ -7,6 +7,7 @@ The platform supports 65 fully-integrated functional modules ranging from core o
 > 🧪 **FEATURING COMPREHENSIVE TESTING & COMPARISON GUIDES**:  
 > • Step-by-Step Feature Test Matrix: [FEATURE_TESTING_GUIDE.md](file:///home/awais/awais/projects/spring-boot/Human-resource-managemnet/FEATURE_TESTING_GUIDE.md)  
 > • Leave & Approval Delegation Guide: [LEAVE_APPROVAL_WORKFLOW_GUIDE.md](file:///home/awais/awais/projects/spring-boot/Human-resource-managemnet/LEAVE_APPROVAL_WORKFLOW_GUIDE.md)  
+> • Modules & Role Hierarchy Architecture Guide: [MODULE_ROLES_HIERARCHY.md](file:///home/awais/awais/projects/spring-boot/Human-resource-managemnet/MODULE_ROLES_HIERARCHY.md)  
 > • HRMS Benchmark vs. Top 10 Pakistan & Global Software: [HRMS_PLATFORM_COMPARISON.md](file:///home/awais/awais/projects/spring-boot/Human-resource-managemnet/HRMS_PLATFORM_COMPARISON.md)  
 > • Seeded Corporate Credentials & URLs: [SEEDER_CREDENTIALS_AND_URLS.md](file:///home/awais/awais/projects/spring-boot/Human-resource-managemnet/SEEDER_CREDENTIALS_AND_URLS.md)
 
