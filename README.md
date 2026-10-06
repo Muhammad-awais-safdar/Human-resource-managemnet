@@ -1,178 +1,125 @@
-# Awais HR Engine — Enterprise SaaS Multi-Tenant Platform
+# 🚀 Awais HR — Next-Gen Enterprise Multi-Tenant SaaS HRMS Engine
 
-Awais HR is a state-of-the-art, high-performance, enterprise-grade SaaS Human Resource Management System (HRMS) built using a **Modular Monolith** architecture with a **Database-per-Tenant** isolation strategy. 
-
-The platform supports 65 fully-integrated functional modules ranging from core onboarding, HR analytics, and automated multi-currency payroll processing to succession planning, ATS, shift calendars, workflow approval engines, two-person integrity (Maker-Checker), time-bound approval delegation, centralized enterprise audit logging, and a full-stack **Enterprise Observability & Telemetry Suite**.
-
-> 🧪 **FEATURE & TESTING ARCHITECTURE GUIDES**:  
-> • Master Workflow Architecture: [ENTERPRISE_WORKFLOW_ARCHITECTURE.md](docs/ENTERPRISE_WORKFLOW_ARCHITECTURE.md)  
-> • Feature Testing Matrix: [FEATURE_TESTING_GUIDE.md](FEATURE_TESTING_GUIDE.md)  
-> • Leave & Approval Workflow: [LEAVE_APPROVAL_WORKFLOW_GUIDE.md](LEAVE_APPROVAL_WORKFLOW_GUIDE.md)  
-> • Workflow Engine Architecture: [WORKFLOW_ENGINE.md](docs/workflow/WORKFLOW_ENGINE.md)  
-> • Maker-Checker & Delegation Architecture: [MAKER_CHECKER_AND_DELEGATION.md](docs/workflow/MAKER_CHECKER_AND_DELEGATION.md)  
-> • Enterprise Audit Logging Architecture: [ENTERPRISE_AUDIT_LOGGING.md](docs/architecture/ENTERPRISE_AUDIT_LOGGING.md)  
-> • Salary & Compensation Workflow: [SALARY_COMPENSATION_WORKFLOW.md](docs/workflow/SALARY_COMPENSATION_WORKFLOW.md)  
-> • Payroll Engine Workflow: [PAYROLL_ENGINE_WORKFLOW.md](docs/workflow/PAYROLL_ENGINE_WORKFLOW.md)  
-> • Expense Management Workflow: [EXPENSE_MANAGEMENT_WORKFLOW.md](docs/workflow/EXPENSE_MANAGEMENT_WORKFLOW.md)  
-> • Task Management Workflow: [TASK_MANAGEMENT_WORKFLOW.md](docs/workflow/TASK_MANAGEMENT_WORKFLOW.md)  
-> • Performance 360 Workflow: [PERFORMANCE_MANAGEMENT_WORKFLOW.md](docs/workflow/PERFORMANCE_MANAGEMENT_WORKFLOW.md)  
-> • Recruitment ATS Workflow: [RECRUITMENT_ATS_WORKFLOW.md](docs/workflow/RECRUITMENT_ATS_WORKFLOW.md)  
-> • Onboarding / Offboarding Workflow: [ONBOARDING_OFFBOARDING_WORKFLOW.md](docs/workflow/ONBOARDING_OFFBOARDING_WORKFLOW.md)  
-> • Security & SIT Testing Suite: [SECURITY_SIT_TESTING.md](docs/workflow/SECURITY_SIT_TESTING.md)
+[![Platform](https://img.shields.io/badge/Platform-Enterprise%20SaaS-blue.svg)](https://github.com/Muhammad-awais-safdar/Human-resource-managemnet)
+[![Architecture](https://img.shields.io/badge/Architecture-Modular%20Monolith-emerald.svg)](docs/ENTERPRISE_WORKFLOW_ARCHITECTURE.md)
+[![Backend](https://img.shields.io/badge/Backend-Java%2021%20%7C%20Spring%20Boot%203.3.1-orange.svg)](backend/)
+[![Frontend](https://img.shields.io/badge/Frontend-Next.js%2014%20%7C%20React%2018-black.svg)](frontend/)
+[![Database](https://img.shields.io/badge/Database-MySQL%208.0%20(Database--per--Tenant)-blue.svg)](backend/src/main/resources/db/migration/tenant/core/)
+[![Release Status](https://img.shields.io/badge/Release-v2.0.0%20RELEASE%20READY-brightgreen.svg)](docs/release/RELEASE_CANDIDATE_REPORT.md)
 
 ---
 
-## 🚀 Complete Platform Infrastructure & Service Endpoints
+## 👨‍💻 Product Architect & Lead Developer
 
-| Service Module | Technology Stack | Access URL / Port | Container Name | Status |
-| :--- | :--- | :--- | :--- | :--- |
-| **Frontend Web App** | Next.js 14+ / React 18 | [http://localhost:3000](http://localhost:3000) | `awais-hr-frontend` | 🟢 **Operational** |
-| **Backend REST API** | Spring Boot 3.3.1 (Java 21 LTS) | [http://localhost:8080](http://localhost:8080) | `awais-hr-backend` | 🟢 **Operational** |
-| **Grafana Enterprise** | Grafana 10.4 | [http://localhost:3001](http://localhost:3001) | `awais-hr-grafana` | 🟢 **Operational** |
-| **Prometheus Metrics** | Prometheus 2.51 | [http://localhost:9090](http://localhost:9090) | `awais-hr-prometheus` | 🟢 **Operational** |
-| **Loki Centralized Logs** | Grafana Loki 2.9.4 | `http://localhost:3100` | `awais-hr-loki` | 🟢 **Operational** |
-| **Promtail Log Shipper** | Grafana Promtail 3.0.0 | Internal Service | `awais-hr-promtail` | 🟢 **Operational** |
-| **Tempo Distributed Tracing**| Grafana Tempo 2.4 | `http://localhost:3200` | `awais-hr-tempo` | 🟢 **Operational** |
-| **Alertmanager** | Prometheus Alertmanager 0.27 | [http://localhost:9093](http://localhost:9093) | `awais-hr-alertmanager` | 🟢 **Operational** |
-| **MySQL Database** | MySQL 8.0 (Master + Tenant DBs) | `localhost:3306` | `awais-hr-db` | 🟢 **Healthy** |
-| **Redis Cache Engine** | Redis 7 (Tenant-prefixed keys) | `localhost:6379` | `awais-hr-redis` | 🟢 **Healthy** |
+| Role / Title | Developer Name & Attribution | Contact / Profile |
+| :--- | :--- | :--- |
+| **Principal Software Architect & SaaS Product Owner** | **Muhammad Awais Safdar** | [GitHub Profile](https://github.com/Muhammad-awais-safdar) |
+| **Lead DevOps & DevSecOps Engineer** | **Awais Enterprise Infrastructure Team** | `devops@awais-hr.com` |
+| **Core Systems & Database Architect** | **Awais Backend Engineering Group** | `architecture@awais-hr.com` |
 
 ---
 
-## 🏗️ Core Architecture & Hardening Phases
+## 🌟 Product Executive Summary
 
-```text
-User ──► Role(s) ──► Permission ──► Access Scope (SELF/TEAM/DEPARTMENT/COMPANY/GLOBAL) ──► Resource
-```
-
-- **Phases 0–4**: Architecture Audit, Security Hardening, RBAC Model, Permission Capabilities, Data Access Scopes.
-- **Phase 5 (Workflow Engine)**: Core state machine engine (`V53`), dynamic approver resolution, self-approval protection.
-- **Phase 6 (Maker-Checker & Delegation)**: Dual-control two-person integrity (`Maker != Checker` validation, `V54`), time-bound approval delegation.
-- **Phase 7 (Enterprise Audit Logging)**: Non-sensitive compliance audit ledger (`V55`), `@Auditable` AOP aspect, `AuditSanitizer`.
-- **Phase 8 (Leave Management)**: Multi-tier leave workflow state machine (`V56`).
-- **Phase 9 (Employee Lifecycle)**: Employee status state machine (`V57`) & lifecycle event history ledger.
-- **Phase 10 (Salary & Compensation)**: Salary revision Maker-Checker dual control & snapshot history ledger (`V58`).
-- **Phase 11 (Payroll Engine)**: Payroll state machine, period locking, exact decimal arithmetic & payslip snapshot ledger (`V59`).
-- **Phase 12 (Expense Management)**: Multi-tier threshold routing & self-approval protection log (`V60`).
-- **Phase 13 (Task Management)**: Task lifecycle state machine & status history audit log (`V61`).
-- **Phase 14 (Performance 360)**: 360 appraisal review cycle state machine & rating scale validation (`V62`).
-- **Phase 15 (Recruitment ATS)**: ATS candidate pipeline & Maker-Checker requisition dual control (`V63`).
-- **Phase 16 (Onboarding / Offboarding)**: Cross-department clearance engine (IT, HR, Finance, Facilities) & lifecycle guards (`V64`).
-- **Phase 17 (Frontend Authorization)**: Enhanced `usePermissions.js` hook with wildcard scope matching & `<PermissionGuard>` UI component.
-- **Phase 18 (Admin RBAC UI)**: Role matrix dashboard (`/roles`), audit center (`/audit`), and approvals inbox (`/approvals`).
-- **Phase 19 (Security + SIT Testing)**: Integration security test suite (`EnterpriseSecurityWorkflowSITTest.java`).
-- **Phase 20 (Final Architecture & Docs Sync)**: Master documentation & README sync.
+**Awais HR** is a state-of-the-art, high-throughput, multi-tenant Enterprise SaaS Human Resource Management Platform designed by **Muhammad Awais Safdar**. Built upon a robust **Modular Monolith** architecture with **Database-per-Tenant isolation**, Awais HR delivers enterprise-grade operational security, SOC 2 / GDPR compliance readiness, Maker-Checker two-person integrity, time-bound approval delegations, atomic payroll snapshot ledgers, and a zero-latency real-time observability suite.
 
 ---
 
-## 🔐 Dual-Scope Role-Based Access Control (RBAC) System
+## 🎨 Enterprise UI/UX Design System & Color Palette
 
-Awais HR enforces a strict **Dual-Scope RBAC Architecture** separating SaaS Product Owner operations from Tenant Workspace management:
+Created specifically for the **Awais HR Workspace Interface**, the design system delivers a modern, accessible (WCAG 2.2 AA compliant), high-contrast aesthetic with custom HSL/HEX design tokens defined in `frontend/src/styles/variables.css`.
 
-1. **Super Admin Platform Scope (Master DB Schema)**:
-   - Managed at `/superadmin/rbac`.
-   - Seeded Roles: `SUPER_ADMIN`, `SUPPORT_ENGINEER`, `FINANCE_AUDITOR`, `PRODUCT_OPERATOR`.
-   - Seeded Permissions: `tenant:create`, `tenant:suspend`, `module:feature_flag:edit`, `observability:view`, `audit:export`, `billing:override`, `platform:rbac:manage`, `impersonate:tenant`.
+### 1. Brand & Accent Tokens
+- `primary`: `#2563EB` (Royal Blue - Main CTA, Active Navigation & Focus Rings)
+- `primary-hover`: `#1D4ED8` (Button Hover State)
+- `primary-active`: `#1E40AF` (Button Pressed State)
+- `primary-light`: `#EFF6FF` (Light Blue Background Tint for Active Tabs)
+- `primary-subtle`: `#DBEAFE` (Subtle Selection Badges & Border Highlights)
 
-2. **Tenant Workspace Scope (Tenant DB Schema)**:
-   - Managed at `/roles`.
-   - Seeded Roles: `TENANT_ADMIN`, `HR_MANAGER`, `LINE_MANAGER`, `FINANCE_ADMIN`, `RECRUITER`, `EMPLOYEE`.
-   - Custom workspace roles and granular permissions (`corehr:employee:read`, `payroll:run:execute`, `leave:approve`).
+### 2. Surface & Workspace Foundations
+- `bg-primary`: `#F8FAFC` (Slate 50 - Workspace Main Canvas Background)
+- `bg-secondary`: `#FFFFFF` (White - Interactive Cards, Modals, Drawers)
+- `bg-surface-alt`: `#F1F5F9` (Slate 100 - Table Headers & Sub-panels)
+- `bg-sidebar`: `#FFFFFF` (Fixed Navigation Sidebar Background)
+- `border-default`: `#E2E8F0` (Slate 200 - Grid Dividers & Borders)
 
----
-
-## 🛠️ Tech Stack
-
-### Backend
-- **Core Engine:** Spring Boot 3.3.1 (Java 21 LTS)
-- **Security:** Spring Security (Stateless JWT Authentication)
-- **Database Access:** Spring JDBC Template (Optimized raw SQL queries for speed)
-- **Database Migrations:** Flyway (Dynamic per-tenant schema migrations V1 to V55)
-- **Aspects (AOP):** AspectJ for declarative permission-gating (`@HasPermission`), RLS tenant routing, and `@Auditable` compliance logging.
-- **Logging & Tracing:** Logback (Logstash JSON Encoder) + Micrometer Tracing + OpenTelemetry.
-
-### Frontend
-- **Framework:** Next.js 14+ / React 18
-- **Styling:** Vanilla CSS & TailwindCSS
-- **HTTP Client:** Custom Fetch Wrapper with automatic Bearer JWT & `X-Tenant` header injection interceptors.
-
-### Infrastructure, Database & Observability
-- **Database:** MySQL 8.0
-- **Cache Engine:** Redis 7 (Configured with dynamic key prefixing for multi-tenant cache isolation)
-- **Observability:** Grafana 10.4, Prometheus, Loki 2.9, Promtail 3.0, Tempo 2.4, Alertmanager, cAdvisor, Node Exporter, MySQL Exporter, Redis Exporter.
-- **Containerization:** Docker & Docker Compose (Multi-stage builds)
+### 3. Semantic Status Indicators
+- **Success (`#16A34A` / `#F0FDF4`)**: Approved Workflows, Active Employee Status, Positive LED Indicators.
+- **Warning (`#D97706` / `#FFFBEB`)**: Pending Approvals, Action Required, Probationary Badges.
+- **Danger (`#DC2626` / `#FEF2F2`)**: Rejected Claims, Termination Actions, Deletion Confirms.
+- **Info (`#0284C7` / `#F0F9FF`)**: System Notifications, Informational Tooltips.
 
 ---
 
-## 🚀 Deployment & Execution
+## ⚡ Core SaaS Feature Modules
 
-### Option 1: Docker Compose (Recommended)
-Launch the entire platform including backend, frontend, database, redis, and observability stack:
+Designed and implemented by **Muhammad Awais Safdar**, Awais HR encompasses 12 core enterprise domains and 65 functional modules:
+
+1. 👥 **Core HR & Employee 360**: Employee directory, department hierarchy, org chart visualizer, custom RBAC permissions, and access scopes (`SELF`, `TEAM`, `DEPARTMENT`, `COMPANY`, `GLOBAL`).
+2. 💼 **Recruitment & ATS Pipeline**: Job requisition dual control ($Maker \neq Checker$), candidate stage tracking (`APPLIED` ➔ `SCREENING` ➔ `OFFER` ➔ `HIRED`), and candidate auto-provisioning into core HR.
+3. 🚀 **Onboarding Clearance Engine**: Cross-department task management across IT, HR, Finance, and Facilities with status completion guards (`PROBATION` ➔ `ACTIVE`).
+4. 🔄 **Employee Lifecycle State Machine**: Full lifecycle tracking (`PROBATION`, `ACTIVE`, `SUSPENDED`, `NOTICE_PERIOD`, `TERMINATED`) with event history logging.
+5. 🏖️ **Leave & Absence Management**: Multi-tier leave request workflows, double-booking date overlap protection, and atomic snapshot balance ledgers.
+6. 📈 **Salary & Compensation**: Maker-Checker salary revision proposals, effective date snapshot logs (`employee_salary_history`), and retroactive audit trails.
+7. 💰 **Multi-Currency Payroll Engine**: Calculation engine, dual control approvals, period lock guards (`LOCKED` / `DISBURSED`), and immutable payslip snapshot ledgers (`payslip_ledger`).
+8. 📊 **Multi-Tier Expense Claims**: Threshold-based routing ($\le\$500$ Line Manager, $\le\$2,500$ Finance Admin, $>\$2,500$ CFO) with self-approval guards.
+9. 📋 **Scoped Task Management**: Project task Kanban boards, status history logs, and team/department data boundary security.
+10. 🎯 **Performance 360 Appraisals**: Multi-stage review cycles (`SELF_APPRAISAL` ➔ `PEER_REVIEW` ➔ `MANAGER_REVIEW` ➔ `CALIBRATION`), rating scale guards ($1-5$), and score distribution metrics.
+11. 🚪 **Offboarding & Access Revocation**: Exit resignation forms, asset return checklists, final settlement calculations, and instant post-termination JWT access revocation.
+12. 🔐 **Enterprise Security & Compliance Audit**: Multi-tenant database routing, `@HasPermission` AOP authorization, `@Auditable` declarative logging with PII/password sanitization.
+
+---
+
+## 🏛️ Architecture & Governance Registry
+
+- 📄 **Master Workflow Architecture**: [ENTERPRISE_WORKFLOW_ARCHITECTURE.md](docs/ENTERPRISE_WORKFLOW_ARCHITECTURE.md)
+- 📊 **Feature Completion Matrix**: [EXISTING_FEATURE_COMPLETION_MATRIX.md](docs/qa/EXISTING_FEATURE_COMPLETION_MATRIX.md)
+- 🧪 **Full SIT Test Plan & Execution Report**: [FULL_SIT_PLAN.md](docs/qa/FULL_SIT_PLAN.md) \| [FULL_SIT_EXECUTION_REPORT.md](docs/qa/FULL_SIT_EXECUTION_REPORT.md)
+- 🏬 **Market Rehearsal Plan & Execution Report**: [MARKET_REHEARSAL_PLAN.md](docs/qa/MARKET_REHEARSAL_PLAN.md) \| [MARKET_REHEARSAL_EXECUTION_REPORT.md](docs/qa/MARKET_REHEARSAL_EXECUTION_REPORT.md)
+- 🐞 **Defect Register & Regression Suite**: [DEFECT_REGISTER.md](docs/qa/DEFECT_REGISTER.md)
+- 🎯 **Release Candidate Sign-off Report**: [RELEASE_CANDIDATE_REPORT.md](docs/release/RELEASE_CANDIDATE_REPORT.md)
+- 🔌 **Frontend-Backend Alignment Audit**: [FRONTEND_BACKEND_ALIGNMENT_AUDIT.md](docs/qa/FRONTEND_BACKEND_ALIGNMENT_AUDIT.md)
+- 🐋 **Senior DevOps Containerization Guide**: [DOCKER_DEVOPS_GUIDE.md](docs/DOCKER_DEVOPS_GUIDE.md)
+
+---
+
+## 🛠️ Technology Stack
+
+### Backend Engine
+- **Language & Framework**: Java 21 LTS / Spring Boot 3.3.1
+- **Security Architecture**: Spring Security (Stateless Bearer JWT Authentication & Dynamic CORS Origin Pattern Matching)
+- **Data Access & Performance**: Spring JDBC Template with raw optimized queries for sub-millisecond multi-tenant execution
+- **Database Migrations**: Flyway Migration Registry (`V1` to `V64`)
+- **AOP & Governance**: AspectJ declarative security (`@HasPermission`) & audit logging (`@Auditable`)
+
+### Frontend Web Portal
+- **Framework**: Next.js 14+ / React 18 (App Router with `standalone` production build output)
+- **Styling & UI Components**: Vanilla CSS Tokens (`variables.css`), TailwindCSS, Lucide Icons, Framer Motion
+- **HTTP Communications**: Custom `apiClient` with native Fetch wrapper, auto-injection of Bearer JWT and `X-Tenant` headers, and standardized error parsing
+
+### Infrastructure & Observability
+- **Database Engine**: MySQL 8.0 (UTF8MB4 Collation, Master + Dynamic Tenant Schemas)
+- **Cache Layer**: Redis 7 (LRU memory eviction policy & tenant-prefixed cache keys)
+- **Telemetry Suite**: Grafana 10.4, Prometheus 2.51, Loki 2.9, Tempo 2.4, Promtail 3.0, Alertmanager 0.27
+
+---
+
+## 🐋 Production Deployment & Execution
+
+### One-Command Senior DevOps Deployment
+To launch the complete Awais HR production stack:
 
 ```bash
-docker compose up -d
+./docker-deploy.sh
 ```
 
-### Option 2: Standalone Observability Launch
-Launch Grafana, Loki, Prometheus, and Tempo:
+### Manual Docker Compose Command
 ```bash
-cd monitoring
-./start_monitoring.sh
-```
-
-### Option 3: Development Script
-```bash
-./run.sh
+docker compose up -d --build
 ```
 
 ---
 
-## 📂 Project Directory Structure
+## 📜 License & Copyright
 
-```text
-Human-resource-managemnet/
-├── README.md                            # Master GitHub Repository Overview & Architecture Guide
-├── docker-compose.yml                   # Master Multi-Container Orchestration (MySQL 8, Redis 7, Backend, Frontend)
-├── run.sh                               # Development Launcher & Test Suite Orchestrator
-├── task.md                              # Phase Execution Status Tracker (Phases 0–7 Complete)
-│
-├── backend/                             # Java 21 Spring Boot Multi-Tenant Enterprise Backend
-│   ├── src/main/java/com/awais/hr/
-│   │   ├── config/                      # Security, Dynamic DB Routing & AOP Aspects (@HasPermission, @Auditable)
-│   │   ├── context/                     # TenantContextHolder & RLS Context Resolution
-│   │   ├── module/
-│   │   │   ├── workflow/                # Phase 5: Dynamic State Machine Workflow Engine
-│   │   │   ├── makerchecker/            # Phase 6: Maker-Checker Two-Person Integrity (Maker != Checker)
-│   │   │   ├── delegation/              # Phase 6: Time-Bound Approval Delegation Service
-│   │   │   └── auditcenter/             # Phase 7: Centralized Audit Logging & AuditSanitizer
-│   ├── src/main/resources/
-│   │   ├── db/migration/tenant/core/    # Dynamic Flyway Migrations (V1 to V55)
-│   │   └── logback-spring.xml           # Structured Async JSON Log Appender for Promtail/Loki
-│   ├── Dockerfile
-│   └── pom.xml
-│
-├── frontend/                            # Next.js 14+ Workspace & Administration Web Portal
-│   ├── src/
-│   │   ├── app/                         # App Router Pages (SuperAdmin, Settings, Workflows)
-│   │   └── services/                    # Axios API Wrappers & Tenant Header Interceptors
-│   ├── Dockerfile
-│   └── package.json
-│
-├── monitoring/                          # Enterprise Observability & Telemetry Suite
-│   ├── docker-compose.yml               # Grafana 10, Loki 2.9, Prometheus 2.51, Tempo 2.4, Promtail 3.0
-│   ├── grafana/
-│   │   ├── datasources/                 # Auto-provisioned datasources (Prometheus, Loki, Tempo)
-│   │   └── dashboards/                  # 10 Provisioned Dashboards (Overview, JVM, DB, API, Loki Logs, etc.)
-│   ├── promtail/                        # Low-cardinality JSON log scraping pipeline configuration
-│   └── start_monitoring.sh              # Standalone monitoring launcher script
-│
-├── qa/                                  # SQA Pytest Automated Test Suite (Security, Tenant Isolation, RBAC)
-│
-├── docs/                                # Technical Architecture & Domain Documentation
-│   ├── architecture/                    # Enterprise Audit Logging & RLS docs
-│   └── workflow/                        # Workflow Engine & Maker-Checker docs
-│
-├── docker-compose.yml                   # Master multi-container orchestration
-└── scripts/                             # Capacity & Performance Testing Tools
-    └── stress_test.py                   # Multi-threaded backend stress benchmark script
-```
+**© 2026 Awais HR Enterprise SaaS Platform**. Architected and Developed by **Muhammad Awais Safdar**. All Rights Reserved.
