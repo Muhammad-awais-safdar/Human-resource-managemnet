@@ -18,11 +18,20 @@ public class LeaveServiceImpl implements LeaveService {
         this.dataSource = dataSource;
     }
 
-    private boolean isSuperAdmin(JdbcTemplate jdbcTemplate, String employeeId) {
-        return jdbcTemplate.queryForObject(
-                "SELECT EXISTS(SELECT 1 FROM employee_role er JOIN role r ON er.role_id = r.id WHERE er.employee_id = ? AND r.name = 'SUPER_ADMIN')",
-                Boolean.class, employeeId
+    private boolean canApproveLeave(JdbcTemplate jdbcTemplate, String employeeId) {
+        Boolean result = jdbcTemplate.queryForObject(
+                "SELECT EXISTS(" +
+                "  SELECT 1 FROM employee_role er JOIN role r ON er.role_id = r.id " +
+                "  WHERE er.employee_id = ? AND r.name IN ('SUPER_ADMIN', 'TENANT_ADMIN', 'SYSTEM_ADMIN', 'HR_MANAGER', 'LINE_MANAGER') " +
+                "  UNION " +
+                "  SELECT 1 FROM employee_role er " +
+                "  JOIN role_permission rp ON er.role_id = rp.role_id " +
+                "  JOIN permission p ON rp.permission_id = p.id " +
+                "  WHERE er.employee_id = ? AND p.name = 'leave:request:approve'" +
+                ")",
+                Boolean.class, employeeId, employeeId
         );
+        return Boolean.TRUE.equals(result);
     }
 
     @Override
@@ -101,13 +110,14 @@ public class LeaveServiceImpl implements LeaveService {
         JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
         String empId = jdbcTemplate.queryForObject("SELECT id FROM employee WHERE email = ?", String.class, email);
         
-        if (isSuperAdmin(jdbcTemplate, empId)) {
+        if (canApproveLeave(jdbcTemplate, empId)) {
             return jdbcTemplate.queryForList(
                     "SELECT r.id, r.start_date, r.end_date, r.reason, r.status, r.approved_by, r.deleted, " +
                     "p.name as policy_name, e.first_name, e.last_name, e.email " +
                     "FROM leave_request r " +
                     "JOIN leave_policy p ON r.leave_policy_id = p.id " +
                     "JOIN employee e ON r.employee_id = e.id " +
+                    "WHERE r.deleted = FALSE " +
                     "ORDER BY r.start_date DESC"
             );
         } else {
@@ -117,8 +127,9 @@ public class LeaveServiceImpl implements LeaveService {
                     "FROM leave_request r " +
                     "JOIN leave_policy p ON r.leave_policy_id = p.id " +
                     "JOIN employee e ON r.employee_id = e.id " +
-                    "WHERE r.deleted = FALSE " +
-                    "ORDER BY r.start_date DESC"
+                    "WHERE r.employee_id = ? AND r.deleted = FALSE " +
+                    "ORDER BY r.start_date DESC",
+                    empId
             );
         }
     }
@@ -198,6 +209,18 @@ public class LeaveServiceImpl implements LeaveService {
     @Override
     public void updateRequestStatus(String approverEmail, String id, LeaveStatusUpdateDTO dto) {
         JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+        String approverEmpId = jdbcTemplate.queryForObject("SELECT id FROM employee WHERE email = ?", String.class, approverEmail);
+
+        if (!canApproveLeave(jdbcTemplate, approverEmpId)) {
+            throw new SecurityException("Forbidden: You do not have permission to approve or reject leave requests.");
+        }
+
+        // Prevent self-approval
+        String applicantEmpId = jdbcTemplate.queryForObject("SELECT employee_id FROM leave_request WHERE id = ?", String.class, id);
+        if (approverEmpId.equals(applicantEmpId)) {
+            throw new IllegalArgumentException("Self-approval prohibited: You cannot approve or reject your own leave request.");
+        }
+
         jdbcTemplate.update(
                 "UPDATE leave_request SET status = ?, approved_by = ? WHERE id = ?",
                 dto.getStatus(), approverEmail, id
