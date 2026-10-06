@@ -257,46 +257,75 @@ public class DataSeeder implements CommandLineRunner {
             } catch (Exception ignored) {}
         }
 
-        // 5. Seed E-Processing Systems Org Hierarchy
-        log.info("Seeding E-Processing Systems organizational structure & departments...");
+        // 5. Seed E-Processing Systems Org Hierarchy & Link Employees
+        log.info("Seeding E-Processing Systems organizational structure & linking employees to departments...");
 
         try {
+            // Ensure org_unit_id column exists on employee table
+            try {
+                jdbcTemplate.execute("ALTER TABLE employee ADD COLUMN org_unit_id VARCHAR(50)");
+            } catch (Exception ignored) {}
+
             jdbcTemplate.update("DELETE FROM org_unit");
+
+            // Helper to get employee ID safely
+            java.util.function.Function<String, String> getEmpId = (email) -> {
+                List<String> ids = jdbcTemplate.queryForList("SELECT id FROM employee WHERE email = ?", String.class, email);
+                return ids.isEmpty() ? null : ids.get(0);
+            };
+
+            String ceoId = getEmpId.apply("ceo@ep-systems.com");
+            String chroId = getEmpId.apply("hr.chro@ep-systems.com");
+            String engDirId = getEmpId.apply("eng.director@ep-systems.com");
+            String cfoId = getEmpId.apply("finance.admin@ep-systems.com");
+            String salesHeadId = getEmpId.apply("line.manager@ep-systems.com");
+            String supportLeadId = getEmpId.apply("employee.jane@ep-systems.com");
+            String territoryLeadId = getEmpId.apply("territory.central@ep-systems.com");
 
             // Root Legal Entity
             String legalEntityId = UUID.randomUUID().toString();
-            jdbcTemplate.update("INSERT INTO org_unit (id, name, type, parent_id) VALUES (?, ?, 'LEGAL_ENTITY', NULL)", 
-                    legalEntityId, "E-Processing Systems (Pvt) Ltd");
+            jdbcTemplate.update("INSERT INTO org_unit (id, name, type, parent_id, manager_id) VALUES (?, ?, 'LEGAL_ENTITY', NULL, ?)", 
+                    legalEntityId, "E-Processing Systems (Pvt) Ltd", ceoId);
 
             // Executive & Key Departments
             String execId = UUID.randomUUID().toString();
-            jdbcTemplate.update("INSERT INTO org_unit (id, name, type, parent_id) VALUES (?, ?, 'DEPARTMENT', ?)", 
-                    execId, "Executive Leadership & Board", legalEntityId);
+            jdbcTemplate.update("INSERT INTO org_unit (id, name, type, parent_id, manager_id) VALUES (?, ?, 'DEPARTMENT', ?, ?)", 
+                    execId, "Executive Leadership & Board", legalEntityId, ceoId);
+            jdbcTemplate.update("UPDATE employee SET org_unit_id = ? WHERE email IN ('ceo@ep-systems.com', 'chairman@ep-systems.com', 'board.asif@ep-systems.com', 'tenant.admin@ep-systems.com')", execId);
 
             String hrComplianceId = UUID.randomUUID().toString();
-            jdbcTemplate.update("INSERT INTO org_unit (id, name, type, parent_id) VALUES (?, ?, 'DEPARTMENT', ?)", 
-                    hrComplianceId, "Human Resources & People Operations", legalEntityId);
+            jdbcTemplate.update("INSERT INTO org_unit (id, name, type, parent_id, manager_id) VALUES (?, ?, 'DEPARTMENT', ?, ?)", 
+                    hrComplianceId, "Human Resources & People Operations", legalEntityId, chroId);
+            jdbcTemplate.update("UPDATE employee SET org_unit_id = ? WHERE email IN ('hr.chro@ep-systems.com', 'hr.manager@ep-systems.com', 'recruiter@ep-systems.com', 'hr.bp@ep-systems.com')", hrComplianceId);
 
             String fintechEngId = UUID.randomUUID().toString();
-            jdbcTemplate.update("INSERT INTO org_unit (id, name, type, parent_id) VALUES (?, ?, 'DEPARTMENT', ?)", 
-                    fintechEngId, "OneLoad FinTech Engineering & Architecture", legalEntityId);
+            jdbcTemplate.update("INSERT INTO org_unit (id, name, type, parent_id, manager_id) VALUES (?, ?, 'DEPARTMENT', ?, ?)", 
+                    fintechEngId, "OneLoad FinTech Engineering & Architecture", legalEntityId, engDirId);
+            jdbcTemplate.update("UPDATE employee SET org_unit_id = ? WHERE email IN ('eng.director@ep-systems.com', 'architect@ep-systems.com', 'lead.dev@ep-systems.com', 'devops.lead@ep-systems.com', 'qa.lead@ep-systems.com', 'product.lead@ep-systems.com')", fintechEngId);
 
             String financeId = UUID.randomUUID().toString();
-            jdbcTemplate.update("INSERT INTO org_unit (id, name, type, parent_id) VALUES (?, ?, 'COST_CENTER', ?)", 
-                    financeId, "Finance, Interbank Settlement & Treasury", legalEntityId);
+            jdbcTemplate.update("INSERT INTO org_unit (id, name, type, parent_id, manager_id) VALUES (?, ?, 'COST_CENTER', ?, ?)", 
+                    financeId, "Finance, Interbank Settlement & Treasury", legalEntityId, cfoId);
+            jdbcTemplate.update("UPDATE employee SET org_unit_id = ? WHERE email IN ('finance.admin@ep-systems.com', 'finance.analyst@ep-systems.com', 'auditor@ep-systems.com')", financeId);
 
             String fieldOpsId = UUID.randomUUID().toString();
-            jdbcTemplate.update("INSERT INTO org_unit (id, name, type, parent_id) VALUES (?, ?, 'DEPARTMENT', ?)", 
-                    fieldOpsId, "National Merchant Sales & Field Operations", legalEntityId);
+            jdbcTemplate.update("INSERT INTO org_unit (id, name, type, parent_id, manager_id) VALUES (?, ?, 'DEPARTMENT', ?, ?)", 
+                    fieldOpsId, "National Merchant Sales & Field Operations", legalEntityId, salesHeadId);
+            jdbcTemplate.update("UPDATE employee SET org_unit_id = ? WHERE email IN ('line.manager@ep-systems.com', 'territory.south@ep-systems.com', 'employee.john@ep-systems.com')", fieldOpsId);
 
             // Sub-Teams
             String supportDeskId = UUID.randomUUID().toString();
-            jdbcTemplate.update("INSERT INTO org_unit (id, name, type, parent_id) VALUES (?, ?, 'TEAM', ?)", 
-                    supportDeskId, "24/7 Merchant Customer Support Helpdesk", fieldOpsId);
+            jdbcTemplate.update("INSERT INTO org_unit (id, name, type, parent_id, manager_id) VALUES (?, ?, 'TEAM', ?, ?)", 
+                    supportDeskId, "24/7 Merchant Customer Support Helpdesk", fieldOpsId, supportLeadId);
+            jdbcTemplate.update("UPDATE employee SET org_unit_id = ? WHERE email IN ('employee.jane@ep-systems.com')", supportDeskId);
 
             String territoryMgmtId = UUID.randomUUID().toString();
-            jdbcTemplate.update("INSERT INTO org_unit (id, name, type, parent_id) VALUES (?, ?, 'TEAM', ?)", 
-                    territoryMgmtId, "Territory Retail Acquisition & Drive", fieldOpsId);
+            jdbcTemplate.update("INSERT INTO org_unit (id, name, type, parent_id, manager_id) VALUES (?, ?, 'TEAM', ?, ?)", 
+                    territoryMgmtId, "Territory Retail Acquisition & Drive", fieldOpsId, territoryLeadId);
+            jdbcTemplate.update("UPDATE employee SET org_unit_id = ? WHERE email IN ('territory.central@ep-systems.com')", territoryMgmtId);
+
+            // Fallback for any unassigned employees
+            jdbcTemplate.update("UPDATE employee SET org_unit_id = ? WHERE org_unit_id IS NULL", execId);
         } catch (Exception e) {
             log.warn("Org unit seeding note: {}", e.getMessage());
         }
@@ -345,6 +374,73 @@ public class DataSeeder implements CommandLineRunner {
             );
         } catch (Exception e) {
             log.warn("Sample data seeding note: {}", e.getMessage());
+        }
+
+        // 7. Seed Sample Employee Leave Requests Across Statuses
+        log.info("Seeding realistic sample leave requests across statuses (APPROVED, PENDING, REJECTED)...");
+
+        try {
+            jdbcTemplate.update("DELETE FROM leave_request");
+
+            // Look up leave policies
+            String annualPolId = jdbcTemplate.queryForList("SELECT id FROM leave_policy WHERE name LIKE '%Annual%'", String.class).stream().findFirst().orElse(null);
+            String sickPolId = jdbcTemplate.queryForList("SELECT id FROM leave_policy WHERE name LIKE '%Sick%'", String.class).stream().findFirst().orElse(null);
+            String casualPolId = jdbcTemplate.queryForList("SELECT id FROM leave_policy WHERE name LIKE '%Casual%'", String.class).stream().findFirst().orElse(null);
+            String fieldPolId = jdbcTemplate.queryForList("SELECT id FROM leave_policy WHERE name LIKE '%Field%'", String.class).stream().findFirst().orElse(null);
+
+            // Look up employees
+            String hamzaId = jdbcTemplate.queryForList("SELECT id FROM employee WHERE email = 'lead.dev@ep-systems.com'", String.class).stream().findFirst().orElse(null);
+            String aliRazaId = jdbcTemplate.queryForList("SELECT id FROM employee WHERE email = 'employee.john@ep-systems.com'", String.class).stream().findFirst().orElse(null);
+            String zainabId = jdbcTemplate.queryForList("SELECT id FROM employee WHERE email = 'hr.manager@ep-systems.com'", String.class).stream().findFirst().orElse(null);
+            String usmanGhaniId = jdbcTemplate.queryForList("SELECT id FROM employee WHERE email = 'finance.analyst@ep-systems.com'", String.class).stream().findFirst().orElse(null);
+
+            int currentYear = java.time.LocalDate.now().getYear();
+
+            if (annualPolId != null && hamzaId != null) {
+                // Hamza Riaz: 1 Approved Annual Vacation (3 days deducted)
+                jdbcTemplate.update(
+                        "INSERT INTO leave_request (id, employee_id, leave_policy_id, start_date, end_date, reason, status, approved_by) VALUES (?, ?, ?, CAST(? AS DATE), CAST(? AS DATE), ?, 'APPROVED', ?)",
+                        UUID.randomUUID().toString(), hamzaId, annualPolId, currentYear + "-03-10", currentYear + "-03-12", "Spring Vacation with Family", "eng.director@ep-systems.com"
+                );
+                // Hamza Riaz: 1 Pending Annual Vacation (2 days pending)
+                jdbcTemplate.update(
+                        "INSERT INTO leave_request (id, employee_id, leave_policy_id, start_date, end_date, reason, status) VALUES (?, ?, ?, CAST(? AS DATE), CAST(? AS DATE), ?, 'PENDING')",
+                        UUID.randomUUID().toString(), hamzaId, annualPolId, currentYear + "-11-15", currentYear + "-11-16", "Upcoming Tech Conference"
+                );
+            }
+
+            if (casualPolId != null && aliRazaId != null) {
+                // Ali Raza: 1 Approved Casual Leave (2 days deducted)
+                jdbcTemplate.update(
+                        "INSERT INTO leave_request (id, employee_id, leave_policy_id, start_date, end_date, reason, status, approved_by) VALUES (?, ?, ?, CAST(? AS DATE), CAST(? AS DATE), ?, 'APPROVED', ?)",
+                        UUID.randomUUID().toString(), aliRazaId, casualPolId, currentYear + "-04-05", currentYear + "-04-06", "Family Medical Urgent Care", "hr.manager@ep-systems.com"
+                );
+                // Ali Raza: 1 Pending Field Duty Leave
+                if (fieldPolId != null) {
+                    jdbcTemplate.update(
+                            "INSERT INTO leave_request (id, employee_id, leave_policy_id, start_date, end_date, reason, status) VALUES (?, ?, ?, CAST(? AS DATE), CAST(? AS DATE), ?, 'PENDING')",
+                            UUID.randomUUID().toString(), aliRazaId, fieldPolId, currentYear + "-10-20", currentYear + "-10-21", "Weekend Merchant Acquisition Compensatory Leave"
+                    );
+                }
+            }
+
+            if (sickPolId != null && zainabId != null) {
+                // Zainab Ali: 1 Approved Sick Leave (1 day deducted)
+                jdbcTemplate.update(
+                        "INSERT INTO leave_request (id, employee_id, leave_policy_id, start_date, end_date, reason, status, approved_by) VALUES (?, ?, ?, CAST(? AS DATE), CAST(? AS DATE), ?, 'APPROVED', ?)",
+                        UUID.randomUUID().toString(), zainabId, sickPolId, currentYear + "-02-14", currentYear + "-02-14", "Dental Surgery & Recovery", "hr.chro@ep-systems.com"
+                );
+            }
+
+            if (annualPolId != null && usmanGhaniId != null) {
+                // Usman Ghani: 1 Rejected Leave
+                jdbcTemplate.update(
+                        "INSERT INTO leave_request (id, employee_id, leave_policy_id, start_date, end_date, reason, status, approved_by) VALUES (?, ?, ?, CAST(? AS DATE), CAST(? AS DATE), ?, 'REJECTED', ?)",
+                        UUID.randomUUID().toString(), usmanGhaniId, annualPolId, currentYear + "-06-01", currentYear + "-06-05", "Personal Break during Audit Peak", "finance.admin@ep-systems.com"
+                );
+            }
+        } catch (Exception e) {
+            log.warn("Leave requests seeding note: {}", e.getMessage());
         }
 
         log.info("✅ E-Processing Systems (OneLoad) Tenant Seeding Completed Successfully!");

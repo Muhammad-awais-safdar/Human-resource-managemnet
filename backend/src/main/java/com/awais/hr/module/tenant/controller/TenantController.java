@@ -18,10 +18,14 @@ import java.util.Optional;
 import java.util.List;
 import java.util.ArrayList;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 @RestController
 @RequestMapping("/tenants")
 @RequiredArgsConstructor
 @Slf4j
+@Tag(name = "Tenant & Multi-Tenancy Engine", description = "Endpoints for tenant onboarding, workspace subdomain lookup, industry capability packs, and active module provisioning")
 public class TenantController {
 
     private final TenantService tenantService;
@@ -35,7 +39,7 @@ public class TenantController {
                     .body(Map.of("exists", false, "message", "Subdomain parameter is required."));
         }
 
-        Optional<Tenant> tenantOpt = tenantRepository.findBySubdomain(subdomain.toLowerCase().trim());
+        Optional<Tenant> tenantOpt = safeFindTenant(subdomain);
         if (tenantOpt.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(Map.of("exists", false, "message", "Workspace subdomain '" + subdomain + "' is not registered on this platform."));
@@ -57,14 +61,22 @@ public class TenantController {
             return Optional.empty();
         }
         String key = identifier.toLowerCase().trim();
-        Optional<Tenant> tenantOpt = tenantRepository.findBySubdomain(key);
-        if (tenantOpt.isPresent()) {
-            return tenantOpt;
-        }
+        String currentCtx = com.awais.hr.context.TenantContextHolder.getCurrentTenant();
         try {
-            return tenantRepository.findById(identifier);
-        } catch (Exception e) {
-            return Optional.empty();
+            com.awais.hr.context.TenantContextHolder.clear();
+            Optional<Tenant> tenantOpt = tenantRepository.findBySubdomain(key);
+            if (tenantOpt.isPresent()) {
+                return tenantOpt;
+            }
+            try {
+                return tenantRepository.findById(identifier);
+            } catch (Exception e) {
+                return Optional.empty();
+            }
+        } finally {
+            if (currentCtx != null) {
+                com.awais.hr.context.TenantContextHolder.setCurrentTenant(currentCtx);
+            }
         }
     }
 
@@ -140,7 +152,15 @@ public class TenantController {
             if (tenantOpt.isPresent()) {
                 Tenant tenant = tenantOpt.get();
                 tenant.setIndustryType(targetIndustry);
-                tenantRepository.save(tenant);
+                String currentCtx = com.awais.hr.context.TenantContextHolder.getCurrentTenant();
+                try {
+                    com.awais.hr.context.TenantContextHolder.clear();
+                    tenantRepository.save(tenant);
+                } finally {
+                    if (currentCtx != null) {
+                        com.awais.hr.context.TenantContextHolder.setCurrentTenant(currentCtx);
+                    }
+                }
             }
         }
 

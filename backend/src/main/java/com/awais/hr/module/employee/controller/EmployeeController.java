@@ -6,9 +6,13 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import java.util.Map;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 @RestController
 @RequestMapping("/employee")
 @CrossOrigin(origins = "*")
+@Tag(name = "Employee Profile & Self-Service", description = "Endpoints for employee profile management, personal information updates, and self-service queries")
 public class EmployeeController {
 
     private final EmployeeInfoService employeeInfoService;
@@ -18,6 +22,7 @@ public class EmployeeController {
     }
 
     @GetMapping("/{id}/info")
+    @Operation(summary = "Get Employee Personal Information", description = "Retrieves employee profile details. Pass 'me' as ID to fetch the current authenticated user's profile.")
     public ApiResponse<Map<String, Object>> getEmployeeInfo(@PathVariable String id) {
         String queryId = id;
         if ("me".equalsIgnoreCase(id)) {
@@ -32,6 +37,7 @@ public class EmployeeController {
     }
 
     @PutMapping("/{id}/info")
+    @Operation(summary = "Update Employee Information", description = "Updates personal profile information for an employee or current user ('me')")
     public ApiResponse<Map<String, Object>> updateEmployeeInfo(@PathVariable String id, @RequestBody Map<String, Object> body) {
         String updateId = id;
         if ("me".equalsIgnoreCase(id)) {

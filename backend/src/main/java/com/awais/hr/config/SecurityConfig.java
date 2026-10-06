@@ -37,6 +37,8 @@ public class SecurityConfig {
             .csrf(AbstractHttpConfigurer::disable)
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
+                // Allow Swagger UI & OpenAPI Docs
+                .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**", "/api/*/swagger-ui/**", "/api/*/v3/api-docs/**").permitAll()
                 // Allow dynamic properties API version context paths
                 .requestMatchers("/tenants/register", "/api/*/tenants/register").permitAll()
                 .requestMatchers("/auth/**", "/api/*/auth/**").permitAll()

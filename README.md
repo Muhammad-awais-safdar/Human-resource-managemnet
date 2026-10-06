@@ -4,6 +4,12 @@ Awais HR is a state-of-the-art, high-performance, enterprise-grade SaaS Human Re
 
 The platform supports 65 fully-integrated functional modules ranging from core onboarding, HR analytics, and automated multi-currency payroll processing to succession planning, ATS, shift calendars, asset management, AI resume parsing, an **Enterprise Payment Integration Framework**, and a full-stack **Enterprise Observability & Telemetry Suite**.
 
+> 🧪 **FEATURING COMPREHENSIVE TESTING & COMPARISON GUIDES**:  
+> • Step-by-Step Feature Test Matrix: [FEATURE_TESTING_GUIDE.md](file:///home/awais/awais/projects/spring-boot/Human-resource-managemnet/FEATURE_TESTING_GUIDE.md)  
+> • Leave & Approval Delegation Guide: [LEAVE_APPROVAL_WORKFLOW_GUIDE.md](file:///home/awais/awais/projects/spring-boot/Human-resource-managemnet/LEAVE_APPROVAL_WORKFLOW_GUIDE.md)  
+> • HRMS Benchmark vs. Top 10 Pakistan & Global Software: [HRMS_PLATFORM_COMPARISON.md](file:///home/awais/awais/projects/spring-boot/Human-resource-managemnet/HRMS_PLATFORM_COMPARISON.md)  
+> • Seeded Corporate Credentials & URLs: [SEEDER_CREDENTIALS_AND_URLS.md](file:///home/awais/awais/projects/spring-boot/Human-resource-managemnet/SEEDER_CREDENTIALS_AND_URLS.md)
+
 ---
 
 ## 🚀 Complete Platform Infrastructure & Service Endpoints

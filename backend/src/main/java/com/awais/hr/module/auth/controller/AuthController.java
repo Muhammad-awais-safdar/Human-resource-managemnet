@@ -23,9 +23,13 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 @RestController
 @RequestMapping("/auth")
 @CrossOrigin(origins = "*")
+@Tag(name = "Authentication & Security", description = "Endpoints for user authentication, employee registration, JWT token generation, and account recovery")
 public class AuthController {
 
     private static final Logger log = LoggerFactory.getLogger(AuthController.class);
@@ -50,6 +54,7 @@ public class AuthController {
     }
 
     @PostMapping({"/register", "/register-employee"})
+    @Operation(summary = "Register Employee Account", description = "Creates a new employee account in the active tenant workspace and issues security role credentials")
     public ResponseEntity<?> registerEmployee(@RequestBody Map<String, String> body) {
         String tenantId = TenantContextHolder.getCurrentTenant();
         if (tenantId == null) {

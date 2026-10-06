@@ -9,11 +9,16 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.time.Instant;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 @RestController
 @RequestMapping("/api/v1/health")
+@Tag(name = "Platform Health & Diagnostics", description = "Endpoints for uptime monitoring, cluster health checks, and API readiness probes")
 public class HealthCheckController {
 
     @GetMapping
+    @Operation(summary = "Check Backend Engine Health", description = "Probes system status, database connectivity readiness, and API engine runtime uptime")
     public ResponseEntity<ApiResponse<HealthCheckResponse>> checkHealth() {
         HealthCheckResponse response = new HealthCheckResponse(
             "UP",

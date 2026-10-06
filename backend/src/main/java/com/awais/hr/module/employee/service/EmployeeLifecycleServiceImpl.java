@@ -64,13 +64,35 @@ public class EmployeeLifecycleServiceImpl implements EmployeeLifecycleService {
     @Override
     public List<Map<String, Object>> listEmployees() {
         JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-        return jdbcTemplate.queryForList(
-                "SELECT e.id, e.employee_code, e.first_name, e.last_name, e.email, e.status, " +
+        List<Map<String, Object>> list = jdbcTemplate.queryForList(
+                "SELECT e.id, e.employee_code, e.first_name, e.last_name, e.email, e.status, e.org_unit_id, " +
+                "ou.name as db_department_name, " +
                 "r.id as role_id, r.name as role_name " +
                 "FROM employee e " +
                 "LEFT JOIN employee_role er ON e.id = er.employee_id " +
-                "LEFT JOIN role r ON er.role_id = r.id"
+                "LEFT JOIN role r ON er.role_id = r.id " +
+                "LEFT JOIN org_unit ou ON e.org_unit_id = ou.id"
         );
+        for (Map<String, Object> emp : list) {
+            String dbDeptName = (String) emp.get("db_department_name");
+            String dept = dbDeptName;
+            if (dept == null || dept.isBlank()) {
+                String roleName = (String) emp.get("role_name");
+                dept = "Engineering";
+                if (roleName != null) {
+                    String r = roleName.toUpperCase();
+                    if (r.contains("HR")) dept = "Human Resources";
+                    else if (r.contains("FINANCE") || r.contains("PAYROLL") || r.contains("AUDIT")) dept = "Finance";
+                    else if (r.contains("TENANT_ADMIN") || r.contains("SYSTEM_ADMIN") || r.contains("EXECUTIVE")) dept = "Executive Board";
+                    else if (r.contains("RECRUITER") || r.contains("TALENT")) dept = "Human Resources";
+                    else if (r.contains("MARKETING") || r.contains("SALES")) dept = "Marketing";
+                    else dept = "Engineering";
+                }
+            }
+            emp.put("department", dept);
+            emp.put("departmentName", dept);
+        }
+        return list;
     }
 
     @Override
