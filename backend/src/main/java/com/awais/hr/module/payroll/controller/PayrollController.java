@@ -36,6 +36,7 @@ public class PayrollController {
     }
 
     @PostMapping("/run")
+    @com.awais.hr.config.HasPermission("payroll:salary:process")
     public ApiResponse<Map<String, Object>> runPayroll() {
         try {
             Map<String, Object> result = payrollService.runPayroll(getAuthenticatedUserEmail());
@@ -46,6 +47,7 @@ public class PayrollController {
     }
 
     @GetMapping("/all")
+    @com.awais.hr.config.HasPermission("payroll:salary:read")
     public ApiResponse<List<Map<String, Object>>> getAllPayslips() {
         try {
             return ApiResponse.success(payrollService.getAllPayslips());

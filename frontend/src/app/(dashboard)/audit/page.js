@@ -3,8 +3,25 @@
 import React, { useEffect, useState, useTransition } from 'react';
 import * as auditService from '../../../services/auditCenterService';
 import styles from '../../../modules/auth/styles/register.module.css';
+import PermissionGuard from '@/components/auth/PermissionGuard';
 
 export default function AuditCenterPage() {
+  return (
+    <PermissionGuard
+      permission="audit:read"
+      fallback={
+        <div style={{ padding: '32px', textAlign: 'center', background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', borderRadius: '12px', border: '1px solid #fca5a5' }}>
+          <h2>403 Forbidden</h2>
+          <p style={{ fontSize: '0.85rem', marginTop: '8px' }}>You do not have required permissions (audit:read) to inspect system compliance audit logs.</p>
+        </div>
+      }
+    >
+      <AuditCenterContent />
+    </PermissionGuard>
+  );
+}
+
+function AuditCenterContent() {
   const [logs, setLogs] = useState([]);
   const [actorEmail, setActorEmail] = useState('sec.audit@workforceos.com');
   const [actionType, setActionType] = useState('UPDATE');

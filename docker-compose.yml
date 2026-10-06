@@ -40,6 +40,8 @@ services:
       - JWT_EXPIRATION_MS=${JWT_EXPIRATION_MS:-86400000}
     ports:
       - "${BACKEND_PORT:-8080}:8080"
+    volumes:
+      - app_logs:/tmp/app-logs
     depends_on:
       mysql:
         condition: service_healthy
@@ -91,6 +93,7 @@ services:
 
 volumes:
   mysql_data:
+  app_logs:
 
 networks:
   awais-hr-network:

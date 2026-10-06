@@ -1,46 +1,86 @@
 package com.awais.hr.module.leave.service;
 
+import com.awais.hr.module.auditcenter.Auditable;
 import com.awais.hr.module.leave.dto.LeaveRequestDTO;
 import com.awais.hr.module.leave.dto.LeaveStatusUpdateDTO;
+import com.awais.hr.module.workflow.service.WorkflowEngineService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
 import javax.sql.DataSource;
+import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 
 @Service
 @Transactional
 public class LeaveServiceImpl implements LeaveService {
 
+    private static final Logger log = LoggerFactory.getLogger(LeaveServiceImpl.class);
     private final DataSource dataSource;
+    private final WorkflowEngineService workflowEngineService;
 
-    public LeaveServiceImpl(DataSource dataSource) {
+    public LeaveServiceImpl(DataSource dataSource, WorkflowEngineService workflowEngineService) {
         this.dataSource = dataSource;
+        this.workflowEngineService = workflowEngineService;
     }
 
     private boolean canApproveLeave(JdbcTemplate jdbcTemplate, String employeeId) {
         Boolean result = jdbcTemplate.queryForObject(
                 "SELECT EXISTS(" +
-                "  SELECT 1 FROM employee_role er JOIN role r ON er.role_id = r.id " +
-                "  WHERE er.employee_id = ? AND r.name IN ('SUPER_ADMIN', 'TENANT_ADMIN', 'SYSTEM_ADMIN', 'HR_MANAGER', 'LINE_MANAGER') " +
-                "  UNION " +
-                "  SELECT 1 FROM employee_role er " +
-                "  JOIN role_permission rp ON er.role_id = rp.role_id " +
-                "  JOIN permission p ON rp.permission_id = p.id " +
-                "  WHERE er.employee_id = ? AND p.name = 'leave:request:approve'" +
-                ")",
+                        "  SELECT 1 FROM employee_role er JOIN role r ON er.role_id = r.id " +
+                        "  WHERE er.employee_id = ? AND r.name IN ('SUPER_ADMIN', 'TENANT_ADMIN', 'SYSTEM_ADMIN', 'HR_MANAGER', 'LINE_MANAGER') " +
+                        "  UNION " +
+                        "  SELECT 1 FROM employee_role er " +
+                        "  JOIN role_permission rp ON er.role_id = rp.role_id " +
+                        "  JOIN permission p ON rp.permission_id = p.id " +
+                        "  WHERE er.employee_id = ? AND p.name IN ('leave:request:approve', 'leave:approve')" +
+                        ")",
                 Boolean.class, employeeId, employeeId
         );
         return Boolean.TRUE.equals(result);
     }
 
+    private void ensureLeaveBalanceRecord(JdbcTemplate jdbc, String employeeId, String policyId, int year) {
+        Integer count = jdbc.queryForObject(
+                "SELECT COUNT(*) FROM employee_leave_balance WHERE employee_id = ? AND leave_policy_id = ? AND year = ?",
+                Integer.class, employeeId, policyId, year
+        );
+
+        if (count == null || count == 0) {
+            Integer allowance = jdbc.queryForObject(
+                    "SELECT allowance FROM leave_policy WHERE id = ?", Integer.class, policyId
+            );
+            int initAllowance = allowance != null ? allowance : 0;
+            String balanceId = UUID.randomUUID().toString();
+
+            jdbc.update(
+                    "INSERT INTO employee_leave_balance (id, employee_id, leave_policy_id, year, allocated_days, remaining_days) " +
+                            "VALUES (?, ?, ?, ?, ?, ?)",
+                    balanceId, employeeId, policyId, year, initAllowance, initAllowance
+            );
+
+            // Log initial accrual transaction
+            jdbc.update(
+                    "INSERT INTO leave_balance_ledger (id, employee_id, leave_policy_id, transaction_type, days, reason, performed_by) " +
+                            "VALUES (?, ?, ?, 'ACCRUAL', ?, 'Initial annual policy allocation', 'SYSTEM')",
+                    UUID.randomUUID().toString(), employeeId, policyId, initAllowance
+            );
+        }
+    }
+
     @Override
+    @Transactional(readOnly = true)
     public List<Map<String, Object>> getPolicies() {
         JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
         return jdbcTemplate.queryForList("SELECT id, name, allowance, description FROM leave_policy");
     }
 
     @Override
+    @Auditable(action = "LEAVE_POLICY_CREATE", entity = "LeavePolicy")
     public void createPolicy(Map<String, Object> body) {
         JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
         String id = UUID.randomUUID().toString();
@@ -56,6 +96,7 @@ public class LeaveServiceImpl implements LeaveService {
     }
 
     @Override
+    @Auditable(action = "LEAVE_POLICY_UPDATE", entity = "LeavePolicy")
     public void updatePolicy(String id, Map<String, Object> body) {
         JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
         String name = (String) body.get("name");
@@ -70,35 +111,33 @@ public class LeaveServiceImpl implements LeaveService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<Map<String, Object>> getLeaveBalances(String email) {
         JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
         String empId = jdbcTemplate.queryForObject("SELECT id FROM employee WHERE email = ?", String.class, email);
+        int currentYear = LocalDate.now().getYear();
 
         List<Map<String, Object>> policies = jdbcTemplate.queryForList("SELECT id, name, allowance, description FROM leave_policy");
         List<Map<String, Object>> balances = new ArrayList<>();
 
         for (Map<String, Object> p : policies) {
             String policyId = (String) p.get("id");
-            String policyName = (String) p.get("name");
-            int allowance = p.get("allowance") != null ? ((Number) p.get("allowance")).intValue() : 0;
+            ensureLeaveBalanceRecord(jdbcTemplate, empId, policyId, currentYear);
 
-            // Filter approved leave days by current calendar year for annual balance reset on New Year
-            Integer used = jdbcTemplate.queryForObject(
-                    "SELECT COALESCE(SUM(DATEDIFF(end_date, start_date) + 1), 0) FROM leave_request " +
-                    "WHERE employee_id = ? AND leave_policy_id = ? AND status = 'APPROVED' AND deleted = FALSE " +
-                    "AND YEAR(start_date) = YEAR(CURRENT_DATE())",
-                    Integer.class, empId, policyId
+            Map<String, Object> balRow = jdbcTemplate.queryForMap(
+                    "SELECT allocated_days, used_days, pending_days, remaining_days FROM employee_leave_balance " +
+                            "WHERE employee_id = ? AND leave_policy_id = ? AND year = ?",
+                    empId, policyId, currentYear
             );
-            int usedDays = used != null ? used : 0;
-            int remainingDays = Math.max(0, allowance - usedDays);
 
             Map<String, Object> balance = new HashMap<>();
             balance.put("policyId", policyId);
-            balance.put("policyName", policyName);
-            balance.put("allowance", allowance);
-            balance.put("usedDays", usedDays);
-            balance.put("remainingDays", remainingDays);
-            balance.put("year", java.time.LocalDate.now().getYear());
+            balance.put("policyName", p.get("name"));
+            balance.put("allowance", balRow.get("allocated_days"));
+            balance.put("usedDays", balRow.get("used_days"));
+            balance.put("pendingDays", balRow.get("pending_days"));
+            balance.put("remainingDays", balRow.get("remaining_days"));
+            balance.put("year", currentYear);
             balance.put("description", p.get("description"));
             balances.add(balance);
         }
@@ -106,107 +145,91 @@ public class LeaveServiceImpl implements LeaveService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<Map<String, Object>> getRequests(String email) {
         JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
         String empId = jdbcTemplate.queryForObject("SELECT id FROM employee WHERE email = ?", String.class, email);
-        
+
         if (canApproveLeave(jdbcTemplate, empId)) {
             return jdbcTemplate.queryForList(
                     "SELECT r.id, r.start_date, r.end_date, r.reason, r.status, r.approved_by, r.deleted, " +
-                    "p.name as policy_name, e.first_name, e.last_name, e.email " +
-                    "FROM leave_request r " +
-                    "JOIN leave_policy p ON r.leave_policy_id = p.id " +
-                    "JOIN employee e ON r.employee_id = e.id " +
-                    "WHERE r.deleted = FALSE " +
-                    "ORDER BY r.start_date DESC"
+                            "p.name as policy_name, e.first_name, e.last_name, e.email " +
+                            "FROM leave_request r " +
+                            "JOIN leave_policy p ON r.leave_policy_id = p.id " +
+                            "JOIN employee e ON r.employee_id = e.id " +
+                            "WHERE r.deleted = FALSE " +
+                            "ORDER BY r.start_date DESC"
             );
         } else {
             return jdbcTemplate.queryForList(
                     "SELECT r.id, r.start_date, r.end_date, r.reason, r.status, r.approved_by, " +
-                    "p.name as policy_name, e.first_name, e.last_name, e.email " +
-                    "FROM leave_request r " +
-                    "JOIN leave_policy p ON r.leave_policy_id = p.id " +
-                    "JOIN employee e ON r.employee_id = e.id " +
-                    "WHERE r.employee_id = ? AND r.deleted = FALSE " +
-                    "ORDER BY r.start_date DESC",
+                            "p.name as policy_name, e.first_name, e.last_name, e.email " +
+                            "FROM leave_request r " +
+                            "JOIN leave_policy p ON r.leave_policy_id = p.id " +
+                            "JOIN employee e ON r.employee_id = e.id " +
+                            "WHERE r.employee_id = ? AND r.deleted = FALSE " +
+                            "ORDER BY r.start_date DESC",
                     empId
             );
         }
     }
 
     @Override
+    @Auditable(action = "LEAVE_SUBMISSION", entity = "LeaveRequest")
     public void submitRequest(String email, LeaveRequestDTO dto) {
         JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-        
-        java.time.LocalDate start = java.time.LocalDate.parse(dto.getStartDate());
-        java.time.LocalDate end = java.time.LocalDate.parse(dto.getEndDate());
-        long requestedDays = java.time.temporal.ChronoUnit.DAYS.between(start, end) + 1;
-        
+        LocalDate start = LocalDate.parse(dto.getStartDate());
+        LocalDate end = LocalDate.parse(dto.getEndDate());
+        long requestedDays = ChronoUnit.DAYS.between(start, end) + 1;
+
         if (requestedDays <= 0) {
             throw new IllegalArgumentException("Invalid date range: start date must be before or equal to end date");
         }
 
-        Integer allowance = jdbcTemplate.queryForObject(
-                "SELECT allowance FROM leave_policy WHERE id = ?",
-                Integer.class,
-                dto.getPolicyId()
-        );
-
         String employeeId = jdbcTemplate.queryForObject("SELECT id FROM employee WHERE email = ?", String.class, email);
-
-        // Calculate total approved leave days taken in the target request year
         int requestYear = start.getYear();
-        Integer usedDaysObj = jdbcTemplate.queryForObject(
-                "SELECT COALESCE(SUM(DATEDIFF(end_date, start_date) + 1), 0) FROM leave_request " +
-                "WHERE employee_id = ? AND leave_policy_id = ? AND status = 'APPROVED' AND deleted = FALSE " +
-                "AND YEAR(start_date) = ?",
-                Integer.class, employeeId, dto.getPolicyId(), requestYear
+
+        // 1. Double-Booking Overlap Prevention Check
+        Integer overlapCount = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM leave_request " +
+                        "WHERE employee_id = ? AND deleted = FALSE AND status IN ('PENDING', 'SUBMITTED', 'APPROVED') " +
+                        "AND (start_date <= ? AND end_date >= ?)",
+                Integer.class, employeeId, dto.getEndDate(), dto.getStartDate()
         );
-        int usedDays = usedDaysObj != null ? usedDaysObj : 0;
-        
-        if (allowance != null && (usedDays + requestedDays) > allowance) {
-            int remaining = Math.max(0, allowance - usedDays);
-            throw new IllegalArgumentException("Requested " + requestedDays + " days exceeds your remaining " + requestYear + " quota of " + remaining + " days (Policy Allowance: " + allowance + " days, Used: " + usedDays + " days)");
+
+        if (overlapCount != null && overlapCount > 0) {
+            throw new IllegalArgumentException("Double-booking violation: You already have a pending or approved leave request overlapping with the selected dates (" + dto.getStartDate() + " to " + dto.getEndDate() + ").");
+        }
+
+        // 2. Balance Verification & Quota Guard
+        ensureLeaveBalanceRecord(jdbcTemplate, employeeId, dto.getPolicyId(), requestYear);
+        Double remainingDays = jdbcTemplate.queryForObject(
+                "SELECT remaining_days FROM employee_leave_balance WHERE employee_id = ? AND leave_policy_id = ? AND year = ?",
+                Double.class, employeeId, dto.getPolicyId(), requestYear
+        );
+
+        if (remainingDays != null && requestedDays > remainingDays) {
+            throw new IllegalArgumentException("Insufficient leave balance: Requested " + requestedDays + " days exceeds your remaining balance of " + remainingDays + " days.");
         }
 
         String requestId = UUID.randomUUID().toString();
         jdbcTemplate.update(
                 "INSERT INTO leave_request (id, employee_id, leave_policy_id, start_date, end_date, reason, status) " +
-                "VALUES (?, ?, ?, CAST(? AS DATE), CAST(? AS DATE), ?, 'PENDING')",
+                        "VALUES (?, ?, ?, CAST(? AS DATE), CAST(? AS DATE), ?, 'PENDING')",
                 requestId, employeeId, dto.getPolicyId(), dto.getStartDate(), dto.getEndDate(), dto.getReason()
         );
+
+        // Update pending days in balance
+        jdbcTemplate.update(
+                "UPDATE employee_leave_balance SET pending_days = pending_days + ? WHERE employee_id = ? AND leave_policy_id = ? AND year = ?",
+                requestedDays, employeeId, dto.getPolicyId(), requestYear
+        );
+
+        log.info("Leave request submitted: id={} employee={} days={}", requestId, email, requestedDays);
     }
 
     @Override
-    public Map<String, Object> processYearEndReset() {
-        JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-        int currentYear = java.time.LocalDate.now().getYear();
-        int previousYear = currentYear - 1;
-
-        // Verify or create yearly audit reset log table if needed
-        try {
-            jdbcTemplate.execute(
-                    "CREATE TABLE IF NOT EXISTS employee_yearly_leave_reset (" +
-                    "id VARCHAR(50) PRIMARY KEY, " +
-                    "year INT NOT NULL, " +
-                    "reset_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP" +
-                    ")"
-            );
-            jdbcTemplate.update(
-                    "INSERT INTO employee_yearly_leave_reset (id, year) VALUES (?, ?)",
-                    UUID.randomUUID().toString(), currentYear
-            );
-        } catch (Exception ignored) {}
-
-        Map<String, Object> res = new HashMap<>();
-        res.put("success", true);
-        res.put("activeYear", currentYear);
-        res.put("archivedYear", previousYear);
-        res.put("message", "Annual Leave Reset completed successfully. Quotas reset to full policy allowance for calendar year " + currentYear);
-        return res;
-    }
-
-    @Override
+    @Auditable(action = "LEAVE_STATUS_UPDATE", entity = "LeaveRequest")
     public void updateRequestStatus(String approverEmail, String id, LeaveStatusUpdateDTO dto) {
         JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
         String approverEmpId = jdbcTemplate.queryForObject("SELECT id FROM employee WHERE email = ?", String.class, approverEmail);
@@ -215,19 +238,86 @@ public class LeaveServiceImpl implements LeaveService {
             throw new SecurityException("Forbidden: You do not have permission to approve or reject leave requests.");
         }
 
+        Map<String, Object> req = jdbcTemplate.queryForMap(
+                "SELECT employee_id, leave_policy_id, start_date, end_date, status FROM leave_request WHERE id = ?", id
+        );
+
+        String applicantEmpId = (String) req.get("employee_id");
+        String policyId = (String) req.get("leave_policy_id");
+        String currentStatus = (String) req.get("status");
+        String newStatus = dto.getStatus().toUpperCase();
+
         // Prevent self-approval
-        String applicantEmpId = jdbcTemplate.queryForObject("SELECT employee_id FROM leave_request WHERE id = ?", String.class, id);
         if (approverEmpId.equals(applicantEmpId)) {
             throw new IllegalArgumentException("Self-approval prohibited: You cannot approve or reject your own leave request.");
         }
 
+        java.sql.Date startSql = (java.sql.Date) req.get("start_date");
+        java.sql.Date endSql = (java.sql.Date) req.get("end_date");
+        LocalDate start = startSql.toLocalDate();
+        LocalDate end = endSql.toLocalDate();
+        long days = ChronoUnit.DAYS.between(start, end) + 1;
+        int year = start.getYear();
+
+        ensureLeaveBalanceRecord(jdbcTemplate, applicantEmpId, policyId, year);
+
+        // State Machine Balance Ledger Adjustments
+        if ("APPROVED".equals(newStatus) && !"APPROVED".equals(currentStatus)) {
+            // Deduct balance & log ledger entry
+            jdbcTemplate.update(
+                    "UPDATE employee_leave_balance SET used_days = used_days + ?, remaining_days = remaining_days - ?, " +
+                            "pending_days = GREATEST(0, pending_days - ?) WHERE employee_id = ? AND leave_policy_id = ? AND year = ?",
+                    days, days, days, applicantEmpId, policyId, year
+            );
+
+            jdbcTemplate.update(
+                    "INSERT INTO leave_balance_ledger (id, employee_id, leave_policy_id, transaction_type, days, reference_id, reason, performed_by) " +
+                            "VALUES (?, ?, ?, 'DEDUCTION', ?, ?, 'Leave Request Approved', ?)",
+                    UUID.randomUUID().toString(), applicantEmpId, policyId, -days, id, approverEmail
+            );
+        } else if (("REJECTED".equals(newStatus) || "CANCELLED".equals(newStatus) || "REVOKED".equals(newStatus)) && "APPROVED".equals(currentStatus)) {
+            // Revert previously approved leave
+            jdbcTemplate.update(
+                    "UPDATE employee_leave_balance SET used_days = GREATEST(0, used_days - ?), remaining_days = remaining_days + ? " +
+                            "WHERE employee_id = ? AND leave_policy_id = ? AND year = ?",
+                    days, days, applicantEmpId, policyId, year
+            );
+
+            jdbcTemplate.update(
+                    "INSERT INTO leave_balance_ledger (id, employee_id, leave_policy_id, transaction_type, days, reference_id, reason, performed_by) " +
+                            "VALUES (?, ?, ?, 'REVERSAL', ?, ?, 'Leave Request Reverted/Cancelled', ?)",
+                    UUID.randomUUID().toString(), applicantEmpId, policyId, days, id, approverEmail
+            );
+        } else if ("REJECTED".equals(newStatus) && "PENDING".equals(currentStatus)) {
+            jdbcTemplate.update(
+                    "UPDATE employee_leave_balance SET pending_days = GREATEST(0, pending_days - ?) " +
+                            "WHERE employee_id = ? AND leave_policy_id = ? AND year = ?",
+                    days, applicantEmpId, policyId, year
+            );
+        }
+
         jdbcTemplate.update(
                 "UPDATE leave_request SET status = ?, approved_by = ? WHERE id = ?",
-                dto.getStatus(), approverEmail, id
+                newStatus, approverEmail, id
         );
+
+        log.info("Leave request status updated: id={} status={} by={}", id, newStatus, approverEmail);
     }
 
     @Override
+    public Map<String, Object> processYearEndReset() {
+        JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+        int currentYear = LocalDate.now().getYear();
+
+        Map<String, Object> res = new HashMap<>();
+        res.put("success", true);
+        res.put("activeYear", currentYear);
+        res.put("message", "Annual Leave Reset completed successfully.");
+        return res;
+    }
+
+    @Override
+    @Auditable(action = "LEAVE_DELETE", entity = "LeaveRequest")
     public void deleteRequest(String id) {
         JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
         jdbcTemplate.update("UPDATE leave_request SET deleted = TRUE WHERE id = ?", id);

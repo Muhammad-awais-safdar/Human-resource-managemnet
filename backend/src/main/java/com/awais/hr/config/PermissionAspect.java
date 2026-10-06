@@ -21,17 +21,18 @@ import java.lang.reflect.Method;
 public class PermissionAspect {
 
     private static final Logger log = LoggerFactory.getLogger(PermissionAspect.class);
-    private final DataSource dataSource;
+    private final AuthorizationService authorizationService;
     private final ObjectProvider<ObservabilityService> observabilityServiceProvider;
 
     public PermissionAspect(DataSource dataSource) {
-        this(dataSource, null);
+        this(dataSource, null, new AuthorizationServiceImpl(dataSource));
     }
 
     @org.springframework.beans.factory.annotation.Autowired
-    public PermissionAspect(DataSource dataSource, ObjectProvider<ObservabilityService> observabilityServiceProvider) {
+    public PermissionAspect(DataSource dataSource, ObjectProvider<ObservabilityService> observabilityServiceProvider, AuthorizationService authorizationService) {
         this.dataSource = dataSource;
         this.observabilityServiceProvider = observabilityServiceProvider;
+        this.authorizationService = authorizationService;
     }
 
     @Before("@annotation(com.awais.hr.config.HasPermission)")
@@ -64,32 +65,7 @@ public class PermissionAspect {
             throw new SecurityException("Unauthorized: Tenant context not resolved.");
         }
 
-        // Admin role bypass check
-        if (authentication.getAuthorities() != null) {
-            boolean isAdmin = authentication.getAuthorities().stream()
-                    .anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()) ||
-                                   "ROLE_SYSTEM_ADMIN".equals(a.getAuthority()) ||
-                                   "ROLE_SUPER_ADMIN".equals(a.getAuthority()) ||
-                                   "ADMIN".equals(a.getAuthority()) ||
-                                   "SYSTEM_ADMIN".equals(a.getAuthority()) ||
-                                   "SUPER_ADMIN".equals(a.getAuthority()));
-            if (isAdmin) {
-                return;
-            }
-        }
-
-        // Query the database to check if the user has the required permission mapping and active role
-        JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-        String sql = "SELECT COUNT(*) FROM employee e " +
-                     "JOIN employee_role er ON e.id = er.employee_id " +
-                     "JOIN role r ON er.role_id = r.id " +
-                     "JOIN role_permission rp ON r.id = rp.role_id " +
-                     "JOIN permission p ON rp.permission_id = p.id " +
-                     "WHERE e.email = ? AND p.name = ? AND e.status = 'ACTIVE' AND COALESCE(r.status, 'ACTIVE') = 'ACTIVE'";
-
-        Integer count = jdbcTemplate.queryForObject(sql, Integer.class, email, requiredPermission);
-
-        if (count == null || count == 0) {
+        if (!authorizationService.hasPermission(email, requiredPermission)) {
             String errorMsg = "Forbidden: User " + email + " missing required permission '" + requiredPermission + "'";
             log.warn("[SECURITY REJECTION] {}", errorMsg);
             if (observabilityServiceProvider != null) {

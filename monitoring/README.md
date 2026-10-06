@@ -46,7 +46,7 @@ All dashboards are provisioned automatically into the **HRM — Production** fol
 | HRM — API Performance | `hrm-api` | Latency, throughput, top endpoints |
 | HRM — Logs | `hrm-logs` | Loki log viewer with filters |
 | HRM — Infrastructure | `hrm-infrastructure` | Host + container metrics |
-| HRM — Database & Redis | `hrm-datastore` | PostgreSQL + Redis |
+| HRM — Database & Redis | `hrm-datastore` | MySQL + Redis |
 | HRM — Troubleshooting | `hrm-troubleshoot` | "Something is broken. Start here." |
 
 ---

@@ -141,14 +141,30 @@ public class DataSeeder implements CommandLineRunner {
             }
         }
 
-        // Bind Permissions to Roles with Access Scopes
-        for (String roleName : roleIdMap.keySet()) {
+        // Bind Permissions to Roles with Access Scopes (Role-Specific Granular Mapping)
+        Map<String, List<String>> rolePermissionMap = Map.of(
+                "SYSTEM_ADMIN", permList.stream().map(PermMeta::name).toList(),
+                "TENANT_ADMIN", permList.stream().map(PermMeta::name).toList(),
+                "HR_MANAGER", List.of("corehr:employee:read", "corehr:employee:write", "corehr:org:write", "corehr:settings:write", "leave:request:read", "leave:request:approve", "recruitment:job:write", "attendance:log:read", "attendance:log:write"),
+                "LINE_MANAGER", List.of("corehr:employee:read", "leave:request:read", "leave:request:approve", "attendance:log:read"),
+                "FINANCE_ADMIN", List.of("payroll:salary:read", "payroll:salary:write", "payroll:salary:approve", "payroll:salary:process", "audit:read"),
+                "RECRUITER", List.of("recruitment:job:write", "corehr:employee:read"),
+                "AUDITOR", List.of("audit:read", "corehr:employee:read", "payroll:salary:read"),
+                "EMPLOYEE", List.of("corehr:employee:read", "leave:request:read", "attendance:log:read", "payroll:salary:read")
+        );
+
+        for (Map.Entry<String, List<String>> entry : rolePermissionMap.entrySet()) {
+            String roleName = entry.getKey();
             String rId = roleIdMap.get(roleName);
-            for (String pId : permIdMap.values()) {
-                jdbcTemplate.update(
-                        "INSERT IGNORE INTO role_permission (role_id, permission_id, access_scope) VALUES (?, ?, 'COMPANY')",
-                        rId, pId
-                );
+            if (rId == null) continue;
+            for (String permName : entry.getValue()) {
+                String pId = permIdMap.get(permName);
+                if (pId != null) {
+                    jdbcTemplate.update(
+                            "INSERT IGNORE INTO role_permission (role_id, permission_id, access_scope) VALUES (?, ?, 'COMPANY')",
+                            rId, pId
+                    );
+                }
             }
         }
 

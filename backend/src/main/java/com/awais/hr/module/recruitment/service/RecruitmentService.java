@@ -12,4 +12,10 @@ public interface RecruitmentService {
     void updateCandidateStage(String id, CandidateStageUpdateDTO dto);
     void deleteCandidate(String id);
     void applyToJob(Map<String, String> application);
+
+    // ATS & Job Requisition Workflow Methods
+    void createJobRequisition(JobRequisitionRequestDTO dto, String creatorEmail);
+    void approveJobRequisition(String requisitionId, String approverEmail);
+    void updateCandidateStageWithLog(String candidateId, String newStage, String comment, String actorEmail);
+    List<Map<String, Object>> getCandidateLogs(String candidateId);
 }

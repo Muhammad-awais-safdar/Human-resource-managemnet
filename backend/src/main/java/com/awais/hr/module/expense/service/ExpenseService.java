@@ -11,4 +11,6 @@ public interface ExpenseService {
     void uploadReceipt(String expenseId, String receiptUrl);
     void approveExpense(String expenseId, String email);
     void rejectExpense(String expenseId, String email);
+    void disburseExpense(String expenseId, String email);
+    List<Map<String, Object>> getExpenseLogs(String expenseId);
 }

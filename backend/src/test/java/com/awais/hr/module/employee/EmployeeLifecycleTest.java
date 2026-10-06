@@ -1,29 +1,42 @@
 package com.awais.hr.module.employee;
 
+import com.awais.hr.module.employee.service.EmployeeLifecycleServiceImpl;
+import com.awais.hr.module.makerchecker.service.MakerCheckerService;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.assertFalse;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
-public class EmployeeLifecycleTest {
+import javax.sql.DataSource;
 
-    private boolean isValidTransition(String currentStatus, String targetStatus) {
-        if (currentStatus == null || targetStatus == null) return false;
-        
-        if ("PROBATION".equals(currentStatus) && "ACTIVE".equals(targetStatus)) return true;
-        if ("ACTIVE".equals(currentStatus) && "SUSPENDED".equals(targetStatus)) return true;
-        if ("ACTIVE".equals(currentStatus) && "TERMINATED".equals(targetStatus)) return true;
-        return false;
+import static org.junit.jupiter.api.Assertions.*;
+
+class EmployeeLifecycleTest {
+
+    @Mock
+    private DataSource dataSource;
+
+    @Mock
+    private PasswordEncoder passwordEncoder;
+
+    @Mock
+    private MakerCheckerService makerCheckerService;
+
+    private EmployeeLifecycleServiceImpl lifecycleService;
+
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
+        lifecycleService = new EmployeeLifecycleServiceImpl(dataSource, passwordEncoder, makerCheckerService);
     }
 
     @Test
-    public void isValidTransition_shouldAcceptValidTransitions() {
-        assertTrue(isValidTransition("PROBATION", "ACTIVE"));
-        assertTrue(isValidTransition("ACTIVE", "TERMINATED"));
-    }
-
-    @Test
-    public void isValidTransition_shouldRejectInvalidTransitions() {
-        assertFalse(isValidTransition("TERMINATED", "ACTIVE"));
-        assertFalse(isValidTransition("SUSPENDED", "PROBATION"));
+    @DisplayName("Employee Lifecycle: Invalid state transition throws IllegalArgumentException")
+    void testTransitionEmployeeState_invalidState_throwsException() {
+        assertThrows(IllegalArgumentException.class, () -> {
+            lifecycleService.transitionEmployeeState("emp-101", "SUPER_ACTIVE", "PROMOTION", "2026-10-10", "Invalid target status test", "admin@ep-systems.com");
+        });
     }
 }

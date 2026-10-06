@@ -9,4 +9,5 @@ public interface CompensationService {
     List<Map<String, Object>> getSalaryReviews();
     void submitReview(String requesterEmail, Map<String, Object> body);
     void actionReview(String reviewerEmail, String reviewId, String status);
+    List<Map<String, Object>> getSalaryHistory(String employeeId);
 }

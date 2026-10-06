@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 
-// Decodes JWT base64url payload client-side without third party dependencies
+// Decodes JWT base64url payload client-side cleanly
 const decodeJwt = (token) => {
   try {
     const base64Url = token.split('.')[1];
@@ -17,9 +17,13 @@ const decodeJwt = (token) => {
   }
 };
 
+const SUPERUSER_ROLES = ['SUPER_ADMIN', 'SYSTEM_ADMIN', 'TENANT_ADMIN', 'ADMIN'];
+
 export default function usePermissions() {
   const [roles, setRoles] = useState([]);
+  const [permissions, setPermissions] = useState([]);
   const [email, setEmail] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -27,27 +31,69 @@ export default function usePermissions() {
       if (token) {
         const payload = decodeJwt(token);
         if (payload) {
-          const rolesStr = payload.roles || '';
-          setTimeout(() => {
-            setRoles(rolesStr.split(',').map((r) => r.trim().toUpperCase()));
-            setEmail(payload.sub || '');
-          }, 0);
+          const rolesStr = payload.roles || payload.authorities || '';
+          const rolesList = Array.isArray(rolesStr)
+            ? rolesStr
+            : String(rolesStr).split(',').map((r) => r.trim().toUpperCase());
+
+          const permsStr = payload.permissions || payload.scopes || '';
+          const permsList = Array.isArray(permsStr)
+            ? permsStr
+            : String(permsStr).split(',').map((p) => p.trim());
+
+          setRoles(rolesList);
+          setPermissions(permsList);
+          setEmail(payload.sub || payload.email || '');
         }
       }
+      setIsLoading(false);
     }
   }, []);
 
   const hasRole = (roleName) => {
-    return roles.includes(roleName.toUpperCase());
+    if (!roleName) return true;
+    return roles.some((r) => r.toUpperCase() === String(roleName).toUpperCase());
+  };
+
+  const isSuperUser = () => {
+    return roles.some((r) => SUPERUSER_ROLES.includes(r.toUpperCase()));
   };
 
   const hasPermission = (permissionName) => {
-    // Admins hold full system privileges by default
-    if (hasRole('ADMIN') || hasRole('SYSTEM_ADMIN')) {
-      return true;
-    }
+    if (!permissionName) return true;
+    if (isSuperUser()) return true;
+
+    const targetPerm = String(permissionName).trim();
+    if (permissions.includes(targetPerm)) return true;
+
+    // Check wildcard scope matches e.g. "payroll:*" matches "payroll:run"
+    const domain = targetPerm.split(':')[0];
+    if (domain && permissions.includes(`${domain}:*`)) return true;
+
     return false;
   };
 
-  return { roles, email, hasRole, hasPermission };
+  const hasAnyPermission = (requiredPermissions = []) => {
+    if (!requiredPermissions || requiredPermissions.length === 0) return true;
+    if (isSuperUser()) return true;
+    return requiredPermissions.some((perm) => hasPermission(perm));
+  };
+
+  const hasAllPermissions = (requiredPermissions = []) => {
+    if (!requiredPermissions || requiredPermissions.length === 0) return true;
+    if (isSuperUser()) return true;
+    return requiredPermissions.every((perm) => hasPermission(perm));
+  };
+
+  return {
+    roles,
+    permissions,
+    email,
+    isLoading,
+    hasRole,
+    isSuperUser,
+    hasPermission,
+    hasAnyPermission,
+    hasAllPermissions,
+  };
 }

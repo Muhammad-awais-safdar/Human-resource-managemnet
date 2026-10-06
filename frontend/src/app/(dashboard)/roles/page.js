@@ -7,8 +7,25 @@ import { Input, Select } from '@/components/primitives/Input';
 import { Badge } from '@/components/primitives/Badge';
 import { Dialog } from '@/components/primitives/Dialog';
 import { ContextualHelpPopover } from '@/components/help/ContextualHelpPopover';
+import PermissionGuard from '@/components/auth/PermissionGuard';
 
 export default function RolesDashboardPage() {
+  return (
+    <PermissionGuard
+      permission="role:manage"
+      fallback={
+        <div className="p-8 max-w-xl mx-auto mt-12 bg-red-50 border border-red-200 rounded-2xl text-center">
+          <h2 className="text-xl font-bold text-red-700">403 Forbidden</h2>
+          <p className="text-xs text-red-600 mt-2">You do not have required permissions (role:manage) to configure enterprise RBAC roles and matrices.</p>
+        </div>
+      }
+    >
+      <RolesDashboardContent />
+    </PermissionGuard>
+  );
+}
+
+function RolesDashboardContent() {
   const [activeTab, setActiveTab] = useState('matrix');
   const [roles, setRoles] = useState([]);
   const [allPermissions, setAllPermissions] = useState([]);
