@@ -68,22 +68,6 @@ const customFetch = async (url, options = {}) => {
     headers,
   });
 
-  // Handle unauthorized (401) and forbidden (403) authentication responses
-  if (response.status === 401 || response.status === 403) {
-    if (typeof window !== 'undefined') {
-      const currentPath = window.location.pathname;
-      const isAuthPage = currentPath.startsWith('/login') || 
-                         currentPath.startsWith('/register') || 
-                         currentPath.startsWith('/accept-invite');
-      if (!isAuthPage) {
-        localStorage.removeItem('auth_token');
-        localStorage.removeItem('user');
-        window.location.href = '/login';
-      }
-    }
-    throw new Error(response.status === 401 ? 'Unauthorized session' : 'Access forbidden');
-  }
-
   // Parse JSON response body safely
   const text = await response.text();
   let data;
@@ -91,6 +75,25 @@ const customFetch = async (url, options = {}) => {
     data = text ? JSON.parse(text) : {};
   } catch (e) {
     data = text;
+  }
+
+  // Handle unauthorized (401) and forbidden (403) authentication responses
+  if (response.status === 401 || response.status === 403) {
+    if (typeof window !== 'undefined') {
+      const currentPath = window.location.pathname;
+      const isAuthPage = currentPath.startsWith('/login') || 
+                         currentPath.startsWith('/register') || 
+                         currentPath.startsWith('/accept-invite');
+      if (!isAuthPage && response.status === 401) {
+        localStorage.removeItem('auth_token');
+        localStorage.removeItem('user');
+        window.location.href = '/login';
+      }
+    }
+    const err = new Error(data?.message || (response.status === 401 ? 'Unauthorized session' : 'Access forbidden'));
+    err.statusCode = response.status;
+    err.errorCode = data?.errorCode || (response.status === 401 ? 'UNAUTHORIZED' : 'ACCESS_DENIED');
+    throw err;
   }
 
   // Unpack unified ApiResponse envelope if present
@@ -101,16 +104,22 @@ const customFetch = async (url, options = {}) => {
         const isAuthPage = currentPath.startsWith('/login') || 
                            currentPath.startsWith('/register') || 
                            currentPath.startsWith('/accept-invite');
-        if (!isAuthPage) {
+        if (!isAuthPage && data.statusCode === 401) {
           localStorage.removeItem('auth_token');
           localStorage.removeItem('user');
           window.location.href = '/login';
         }
       }
-      throw new Error(data.statusMessage || 'Authentication required');
+      const err = new Error(data.statusMessage || 'Authentication required');
+      err.statusCode = data.statusCode;
+      err.errorCode = data?.errorCode || 'UNAUTHORIZED';
+      throw err;
     }
     if (data.statusCode !== 200) {
-      throw new Error(data.statusMessage || 'API Error');
+      const err = new Error(data.statusMessage || 'API Error');
+      err.statusCode = data.statusCode;
+      err.errorCode = data?.errorCode || 'API_ERROR';
+      throw err;
     }
     const unpacked = convertKeysToCamel(data.result);
     if (Array.isArray(unpacked)) {
@@ -138,7 +147,12 @@ const customFetch = async (url, options = {}) => {
 
   // Check HTTP response status
   if (!response.ok) {
-    throw new Error(data?.message || response.statusText || 'Request failed');
+    const errorMsg = data?.message || data?.statusMessage || response.statusText || 'Request failed';
+    const err = new Error(errorMsg);
+    err.statusCode = response.status;
+    err.errorCode = data?.errorCode || `HTTP_${response.status}`;
+    err.errors = data?.errors || null;
+    throw err;
   }
 
   return convertKeysToCamel(data);

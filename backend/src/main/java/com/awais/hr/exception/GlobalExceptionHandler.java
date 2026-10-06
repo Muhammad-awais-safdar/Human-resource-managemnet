@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -54,13 +55,23 @@ public class GlobalExceptionHandler {
         } catch (Exception ignored) {}
     }
 
+    private Map<String, Object> buildErrorResponse(HttpStatus status, String errorCode, String message) {
+        Map<String, Object> body = new HashMap<>();
+        body.put("success", false);
+        body.put("statusCode", status.value());
+        body.put("errorCode", errorCode);
+        body.put("message", message);
+        body.put("timestamp", Instant.now().toEpochMilli());
+        body.put("path", MDC.get("requestUri"));
+        body.put("traceId", MDC.get("traceId"));
+        return body;
+    }
+
     @ExceptionHandler(TenantAlreadyExistsException.class)
     public ResponseEntity<Map<String, Object>> handleTenantAlreadyExists(TenantAlreadyExistsException ex) {
         log.warn("[TENANT CONFLICT] {}", ex.getMessage());
         logExceptionToDb(ex, "TenantManagement");
-        Map<String, Object> body = new HashMap<>();
-        body.put("success", false);
-        body.put("message", ex.getMessage());
+        Map<String, Object> body = buildErrorResponse(HttpStatus.CONFLICT, "TENANT_ALREADY_EXISTS", ex.getMessage());
         return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
     }
 
@@ -68,9 +79,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, Object>> handleInvalidTenant(InvalidTenantException ex) {
         log.warn("[INVALID TENANT] {}", ex.getMessage());
         logExceptionToDb(ex, "TenantManagement");
-        Map<String, Object> body = new HashMap<>();
-        body.put("success", false);
-        body.put("message", ex.getMessage());
+        Map<String, Object> body = buildErrorResponse(HttpStatus.BAD_REQUEST, "INVALID_TENANT", ex.getMessage());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
     }
 
@@ -78,8 +87,6 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, Object>> handleValidationExceptions(MethodArgumentNotValidException ex) {
         log.warn("[VALIDATION FAILURE] Payload validation failed for incoming request");
         logExceptionToDb(ex, "ValidationService");
-        Map<String, Object> body = new HashMap<>();
-        body.put("success", false);
         
         Map<String, String> fieldErrors = new HashMap<>();
         ex.getBindingResult().getAllErrors().forEach((error) -> {
@@ -87,19 +94,33 @@ public class GlobalExceptionHandler {
             String errorMessage = error.getDefaultMessage();
             fieldErrors.put(fieldName, errorMessage);
         });
-        
-        body.put("message", "Validation failed for incoming payload");
+
+        Map<String, Object> body = buildErrorResponse(HttpStatus.BAD_REQUEST, "VALIDATION_FAILED", "Validation failed for incoming payload");
         body.put("errors", fieldErrors);
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<Map<String, Object>> handleIllegalArgument(IllegalArgumentException ex) {
+        log.warn("[INVALID ARGUMENT] {}", ex.getMessage());
+        logExceptionToDb(ex, "ValidationService");
+        Map<String, Object> body = buildErrorResponse(HttpStatus.BAD_REQUEST, "INVALID_ARGUMENT", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
+    }
+
+    @ExceptionHandler(IllegalStateException.class)
+    public ResponseEntity<Map<String, Object>> handleIllegalState(IllegalStateException ex) {
+        log.warn("[STATE CONFLICT] {}", ex.getMessage());
+        logExceptionToDb(ex, "WorkflowState");
+        Map<String, Object> body = buildErrorResponse(HttpStatus.CONFLICT, "STATE_CONFLICT", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
     }
 
     @ExceptionHandler(SecurityException.class)
     public ResponseEntity<Map<String, Object>> handleSecurityException(SecurityException ex) {
         log.warn("[SECURITY VIOLATION] {}", ex.getMessage());
         logExceptionToDb(ex, "SecurityService");
-        Map<String, Object> body = new HashMap<>();
-        body.put("success", false);
-        body.put("message", ex.getMessage());
+        Map<String, Object> body = buildErrorResponse(HttpStatus.FORBIDDEN, "ACCESS_DENIED", ex.getMessage());
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(body);
     }
 
@@ -109,12 +130,8 @@ public class GlobalExceptionHandler {
         log.error("[UNCAUGHT EXCEPTION] [TraceID: {}] Root Cause: {} - {}", traceId, ex.getClass().getName(), ex.getMessage(), ex);
         logExceptionToDb(ex, "UncaughtService");
 
-        Map<String, Object> body = new HashMap<>();
-        body.put("success", false);
-        body.put("message", "An unexpected server-side error occurred: " + ex.getMessage());
-        body.put("traceId", traceId);
+        Map<String, Object> body = buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "INTERNAL_SERVER_ERROR", 
+                "An unexpected server-side error occurred: " + ex.getMessage());
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(body);
     }
 }
-
-

@@ -25,6 +25,11 @@
 | Phase 18 | Admin RBAC UI | [x] Complete | Roles & permission matrix dashboard (`/roles`), audit center dashboard (`/audit`), approvals dashboard (`/approvals`) guarded by `<PermissionGuard>`, & documentation (`ADMIN_RBAC_UI.md`). |
 | Phase 19 | Security + SIT Testing | [x] Complete | End-to-end security suite & penetration tests (`EnterpriseSecurityWorkflowSITTest.java`), dual control validation, lock guards, & documentation (`SECURITY_SIT_TESTING.md`). |
 | Phase 20 | Final Architecture & Docs | [x] Complete | Master workflow architecture guide (`ENTERPRISE_WORKFLOW_ARCHITECTURE.md`), Flyway registry (`V53`–`V64`), & root `README.md` sync. |
+| Phase 21 | Existing Feature Completion | [x] Complete | Complete Feature Matrix (`EXISTING_FEATURE_COMPLETION_MATRIX.md`), fixed integration gaps across 9 core journeys. |
+| Phase 22 | Full System SIT | [x] Complete | End-to-end SIT execution completed (`FULL_SIT_PLAN.md`, `FULL_SIT_EXECUTION_REPORT.md` - 27/27 PASSED). |
+| Phase 23 | Market Rehearsal (MR) | [x] Complete | Enterprise simulation, failure injections, financial & data reconciliation completed (`MARKET_REHEARSAL_EXECUTION_REPORT.md` - 0% Variance). |
+| Phase 24 | Defect Resolution & Regression | [x] Complete | Resolved SIT/MR defects (`DEFECT_REGISTER.md` - 0 Open Defects), full regression verified. |
+| Phase 25 | Release Candidate Sign-off | [x] Complete | Final production readiness sign-off & release decision matrix (`RELEASE_CANDIDATE_REPORT.md` - RELEASE READY). |
 
 ---
 
