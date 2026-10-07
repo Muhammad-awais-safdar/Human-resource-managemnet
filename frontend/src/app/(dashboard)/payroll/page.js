@@ -60,7 +60,7 @@ export default function PayrollPage() {
       </div>
 
       {message && (
-        <div className={`p-3 border rounded-lg text-xs flex items-center gap-2 ${message.startsWith('✅') ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' : 'bg-rose-500/10 border-rose-500/20 text-rose-400'}`}>
+        <div className={`alert ${message.startsWith('✅') ? 'alert-success' : 'alert-danger'} flex items-center gap-2`}>
           {message.startsWith('✅') ? <CheckCircle2 className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
           <span>{message}</span>
         </div>
@@ -156,7 +156,7 @@ export default function PayrollPage() {
                           <td className="py-3 px-4 text-[var(--text-secondary)]">{p.email}</td>
                         )}
                         <td className="py-3 px-4 font-mono text-[var(--text-primary)]">{p.pay_period}</td>
-                        <td className="py-3 px-4 font-bold text-emerald-400 font-mono">{formatCurrency(p.net_salary)}</td>
+                        <td className="py-3 px-4 font-bold font-mono" style={{color:'var(--success)'}}>{formatCurrency(p.net_salary)}</td>
                         <td className="py-3 px-4">
                           <Badge variant={p.status === 'PAID' ? 'success' : 'warning'}>
                             {p.status}

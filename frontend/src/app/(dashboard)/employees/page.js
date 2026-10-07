@@ -115,7 +115,7 @@ export default function EmployeeDirectoryPage() {
 
       {/* ERROR BANNER */}
       {error && (
-        <div className="p-4 bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-xl text-xs flex justify-between items-center">
+        <div className="alert alert-danger flex justify-between items-center">
           <span>{error}</span>
           <button onClick={() => setError('')} className="underline text-xs">Dismiss</button>
         </div>
@@ -148,7 +148,7 @@ export default function EmployeeDirectoryPage() {
                   <tr key={emp.id || emp.email} className="hover:bg-[var(--bg-surface-l2)]/50 transition-colors">
                     <td className="py-3 px-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-indigo-500/20 text-indigo-400 font-bold flex items-center justify-center border border-indigo-500/30 text-xs shrink-0">
+                        <div className="w-8 h-8 rounded-full font-bold flex items-center justify-center text-xs shrink-0" style={{background:'var(--primary-light)',color:'var(--primary)',border:'1px solid var(--primary-subtle)'}}>
                           {(emp.firstName || emp.name || emp.email || 'E').charAt(0).toUpperCase()}
                         </div>
                         <div>
@@ -196,7 +196,7 @@ export default function EmployeeDirectoryPage() {
           </DialogHeader>
 
           {inviteSuccess && (
-            <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-lg text-xs flex items-center gap-2">
+            <div className="alert alert-success flex items-center gap-2">
               <CheckCircle2 className="w-4 h-4 shrink-0" />
               <span>{inviteSuccess}</span>
             </div>
@@ -224,7 +224,7 @@ export default function EmployeeDirectoryPage() {
               <select
                 value={inviteRole}
                 onChange={(e) => setInviteRole(e.target.value)}
-                className="w-full h-9 bg-[var(--bg-surface-l2)] text-xs text-[var(--text-primary)] border border-[var(--border-subtle)] rounded-lg px-3 focus:outline-none focus:border-[var(--accent-primary)]"
+                className="w-full h-9 text-xs rounded-lg px-3" style={{background:'var(--bg-secondary)',color:'var(--text-primary)',border:'1px solid var(--border-strong)'}}
               >
                 <option value="EMPLOYEE">Employee (ESS)</option>
                 <option value="HR_MANAGER">HR Department Manager</option>

@@ -1,110 +1,233 @@
 /* ===================================================================
- * ENTERPRISE SAAS DESIGN SYSTEM TOKENS
- * Clean Enterprise Workspace Standard
+ * AWAIS HR — UNIFIED ENTERPRISE COLOR SYSTEM
+ * One Brand. One Surface. One Design Language.
+ * Architect: Muhammad Awais Safdar
+ * WCAG 2.2 AA Compliant
  * =================================================================== */
 
 :root {
-  /* Brand */
-  --primary: #2563EB;
-  --primary-hover: #1D4ED8;
-  --primary-active: #1E40AF;
-  --primary-light: #EFF6FF;
-  --primary-subtle: #DBEAFE;
 
-  /* Foundation */
-  --bg-primary: #F8FAFC;
-  --bg-secondary: #FFFFFF;
-  --bg-surface: #FFFFFF;
-  --bg-surface-alt: #F1F5F9;
-  --bg-surface-hover: #F8FAFC;
-  --bg-surface-muted: #F1F5F9;
-  --bg-sidebar: #FFFFFF;
+  /* =========================
+     BRAND
+     All primary actions, active states, navigation,
+     links, focus rings, progress, and CTAs.
+     ========================= */
 
-  /* Text */
-  --text-primary: #0F172A;
-  --text-secondary: #475569;
-  --text-muted: #64748B;
-  --text-disabled: #94A3B8;
-  --text-inverse: #FFFFFF;
+  --primary:            #2563EB;   /* Royal Blue 600 */
+  --primary-hover:      #1D4ED8;   /* Royal Blue 700 */
+  --primary-active:     #1E40AF;   /* Royal Blue 800 */
+  --primary-light:      #EFF6FF;   /* Blue 50 — active nav bg, selected tabs */
+  --primary-subtle:     #DBEAFE;   /* Blue 100 — badge borders, focus ring fill */
+  --primary-foreground: #FFFFFF;   /* White — text on primary bg */
 
-  /* Borders */
-  --border-default: #E2E8F0;
-  --border-subtle: #F1F5F9;
-  --border-light: #E2E8F0;
-  --border-strong: #CBD5E1;
-  --border-focus: #2563EB;
+  /* =========================
+     SURFACES
+     All application page surfaces, cards, and panels.
+     ========================= */
 
-  /* Semantic */
-  --success: #16A34A;
-  --success-hover: #15803D;
-  --success-light: #F0FDF4;
+  --bg-primary:         #F8FAFC;   /* Slate 50  — workspace canvas */
+  --bg-secondary:       #FFFFFF;   /* White     — cards, modals, drawers */
+  --bg-surface-alt:     #F1F5F9;   /* Slate 100 — table headers, filter bars, sub-panels */
+  --bg-sidebar:         #FFFFFF;   /* White     — left sidebar */
+  --bg-header:          #FFFFFF;   /* White     — top navigation header */
 
-  --warning: #D97706;
-  --warning-hover: #B45309;
-  --warning-light: #FFFBEB;
+  /* Backward compatibility aliases */
+  --bg-surface:         var(--bg-secondary);
+  --bg-surface-hover:   var(--bg-primary);
+  --bg-surface-muted:   var(--bg-surface-alt);
 
-  --danger: #DC2626;
-  --danger-hover: #B91C1C;
-  --danger-light: #FEF2F2;
+  /* Interactive surface states */
+  --surface-hover:      #F8FAFC;   /* Slate 50  — row/item hover */
+  --surface-selected:   #EFF6FF;   /* Blue 50   — selected row/card */
+  --surface-disabled:   #F1F5F9;   /* Slate 100 — disabled element bg */
 
-  --info: #0284C7;
-  --info-hover: #0369A1;
-  --info-light: #F0F9FF;
+  /* Code/Technical surfaces (terminals, JSON viewers — intentionally dark) */
+  --code-bg:            #0F172A;   /* Slate 900 */
+  --code-text:          #38BDF8;   /* Sky 400 */
+  --code-border:        #334155;   /* Slate 700 */
 
-  --disabled: #E2E8F0;
-  --disabled-text: #94A3B8;
+  /* =========================
+     BORDERS
+     Consistent borders across all components.
+     ========================= */
 
-  /* Backward Compatibility & Component Aliases */
-  --accent-primary: var(--primary);
-  --accent-secondary: var(--primary);
-  --accent-success: var(--success);
-  --accent-warning: var(--warning);
-  --accent-danger: var(--danger);
-  --accent-info: var(--info);
+  --border-default:     #E2E8F0;   /* Slate 200 — cards, inputs, dividers */
+  --border-subtle:      #F1F5F9;   /* Slate 100 — subtle inner separators */
+  --border-strong:      #CBD5E1;   /* Slate 300 — focused inputs, dropdowns */
+  --border-focus:       #2563EB;   /* Royal Blue — focus outline */
+  --border-selected:    #2563EB;   /* Royal Blue — selected state border */
+  --border-light:       #E2E8F0;   /* Same as default */
 
-  /* Typography */
+  /* =========================
+     TYPOGRAPHY
+     Consistent type hierarchy across all pages.
+     ========================= */
+
+  --text-primary:       #0F172A;   /* Slate 900 — headings, body, table cells */
+  --text-secondary:     #475569;   /* Slate 600 — subtitles, labels, descriptions */
+  --text-muted:         #64748B;   /* Slate 500 — placeholders, timestamps, metadata */
+  --text-disabled:      #94A3B8;   /* Slate 400 — disabled text */
+  --text-inverse:       #FFFFFF;   /* White     — text on dark/colored backgrounds */
+
+  /* =========================
+     SEMANTIC — SUCCESS
+     Approved, Completed, Active, Operational, Hired, Disbursed.
+     ========================= */
+
+  --success:            #16A34A;   /* Emerald 600 */
+  --success-hover:      #15803D;   /* Emerald 700 */
+  --success-bg:         #F0FDF4;   /* Emerald 50  */
+  --success-border:     #BBF7D0;   /* Emerald 200 */
+  --success-text:       #15803D;   /* Emerald 700 */
+
+  /* Backward compat */
+  --success-light:      var(--success-bg);
+  --accent-success:     var(--success);
+
+  /* =========================
+     SEMANTIC — WARNING
+     Pending, Probation, Attention, Overdue, Locked, In Review.
+     ========================= */
+
+  --warning:            #D97706;   /* Amber 600 */
+  --warning-hover:      #B45309;   /* Amber 700 */
+  --warning-bg:         #FFFBEB;   /* Amber 50  */
+  --warning-border:     #FDE68A;   /* Amber 200 */
+  --warning-text:       #B45309;   /* Amber 700 */
+
+  /* Backward compat */
+  --warning-light:      var(--warning-bg);
+  --accent-warning:     var(--warning);
+
+  /* =========================
+     SEMANTIC — DANGER
+     Rejected, Terminated, Destructive, Critical, Access Revocation.
+     ========================= */
+
+  --danger:             #DC2626;   /* Red 600 */
+  --danger-hover:       #B91C1C;   /* Red 700 */
+  --danger-bg:          #FEF2F2;   /* Red 50  */
+  --danger-border:      #FECACA;   /* Red 200 */
+  --danger-text:        #B91C1C;   /* Red 700 */
+
+  /* Backward compat */
+  --danger-light:       var(--danger-bg);
+  --accent-danger:      var(--danger);
+
+  /* =========================
+     SEMANTIC — INFO
+     Informational, System Announcements, Draft, Screening.
+     ========================= */
+
+  --info:               #0284C7;   /* Sky 600 */
+  --info-hover:         #0369A1;   /* Sky 700 */
+  --info-bg:            #F0F9FF;   /* Sky 50  */
+  --info-border:        #BAE6FD;   /* Sky 200 */
+  --info-text:          #0369A1;   /* Sky 700 */
+
+  /* Backward compat */
+  --info-light:         var(--info-bg);
+  --accent-info:        var(--info);
+
+  /* =========================
+     SEMANTIC — NEUTRAL
+     Inactive, Draft, Archived, Unassigned, Applied.
+     ========================= */
+
+  --neutral:            #64748B;   /* Slate 500 */
+  --neutral-bg:         #F1F5F9;   /* Slate 100 */
+  --neutral-border:     #E2E8F0;   /* Slate 200 */
+  --neutral-text:       #475569;   /* Slate 600 */
+
+  /* Disabled state */
+  --disabled:           #E2E8F0;
+  --disabled-text:      #94A3B8;
+
+  /* =========================
+     INTERACTIVE — FOCUS RING
+     ========================= */
+
+  --focus-ring:         0 0 0 3px rgba(37, 99, 235, 0.16);
+  --shadow-focus:       0 0 0 3px rgba(37, 99, 235, 0.16);
+
+  /* =========================
+     SHADOWS
+     Prefer borders over heavy shadows.
+     ========================= */
+
+  --shadow-xs:          0 1px 2px rgba(15, 23, 42, 0.04);
+  --shadow-sm:          0 1px 3px rgba(15, 23, 42, 0.06);
+  --shadow-md:          0 4px 12px rgba(15, 23, 42, 0.08);
+  --shadow-lg:          0 10px 25px rgba(15, 23, 42, 0.10);
+  --shadow-premium:     var(--shadow-md);
+
+  /* =========================
+     CHARTS & DATA VIZ
+     Restrained, intentional palette.
+     ========================= */
+
+  --chart-primary:      #2563EB;   /* Primary series */
+  --chart-secondary:    #64748B;   /* Secondary / neutral series */
+  --chart-success:      #16A34A;   /* Positive trend */
+  --chart-warning:      #D97706;   /* Warning trend */
+  --chart-danger:       #DC2626;   /* Negative trend */
+  --chart-grid:         #E2E8F0;   /* Grid lines */
+
+  /* =========================
+     BACKWARD COMPATIBILITY
+     ========================= */
+
+  --accent-primary:     var(--primary);
+  --accent-secondary:   var(--primary);
+
+  /* =========================
+     TYPOGRAPHY STACK
+     ========================= */
+
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
   --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
 
-  --fs-display: 2.25rem;
-  --fs-h1: 1.75rem;
-  --fs-h2: 1.375rem;
-  --fs-h3: 1.125rem;
-  --fs-body: 0.9375rem;
-  --fs-small: 0.8125rem;
-  --fs-caption: 0.75rem;
+  --fs-display:  2.25rem;
+  --fs-h1:       1.75rem;
+  --fs-h2:       1.375rem;
+  --fs-h3:       1.125rem;
+  --fs-body:     0.9375rem;
+  --fs-small:    0.8125rem;
+  --fs-caption:  0.75rem;
 
-  --fw-regular: 400;
-  --fw-medium: 500;
+  --fw-regular:  400;
+  --fw-medium:   500;
   --fw-semibold: 600;
-  --fw-bold: 700;
+  --fw-bold:     700;
 
-  /* Spacing Scale */
+  /* =========================
+     SPACING SCALE
+     ========================= */
+
   --space-2xs: 2px;
-  --space-xs: 4px;
-  --space-sm: 8px;
-  --space-md: 16px;
-  --space-lg: 24px;
-  --space-xl: 32px;
+  --space-xs:  4px;
+  --space-sm:  8px;
+  --space-md:  16px;
+  --space-lg:  24px;
+  --space-xl:  32px;
   --space-2xl: 48px;
 
-  /* Border Radius */
-  --radius-sm: 6px;
-  --radius-md: 8px;
-  --radius-lg: 10px;
-  --radius-xl: 12px;
+  /* =========================
+     BORDER RADIUS
+     ========================= */
+
+  --radius-sm:   6px;
+  --radius-md:   8px;
+  --radius-lg:   10px;
+  --radius-xl:   12px;
   --radius-pill: 9999px;
 
-  /* Elevation & Shadows */
-  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.05);
-  --shadow-md: 0 4px 12px rgba(15, 23, 42, 0.08);
-  --shadow-lg: 0 10px 24px rgba(15, 23, 42, 0.10);
-  --shadow-focus: 0 0 0 3px rgba(37, 99, 235, 0.16);
-  --shadow-premium: var(--shadow-md);
+  /* =========================
+     MOTION & TRANSITIONS
+     ========================= */
 
-  /* Motion & Transitions */
-  --motion-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
-  --motion-normal: 200ms cubic-bezier(0.4, 0, 0.2, 1);
-  --motion-slow: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+  --motion-fast:      150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --motion-normal:    200ms cubic-bezier(0.4, 0, 0.2, 1);
+  --motion-slow:      300ms cubic-bezier(0.4, 0, 0.2, 1);
   --transition-smooth: all var(--motion-normal);
 }

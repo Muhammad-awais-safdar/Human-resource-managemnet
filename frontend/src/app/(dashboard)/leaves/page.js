@@ -122,13 +122,13 @@ export default function LeavesPage() {
       </div>
 
       {error && (
-        <div className="p-3 bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-lg text-xs">
+        <div className="alert alert-danger">
           {error}
         </div>
       )}
 
       {message && (
-        <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-lg text-xs">
+        <div className="alert alert-success">
           {message}
         </div>
       )}
@@ -188,7 +188,7 @@ export default function LeavesPage() {
                 </div>
 
                 <div className="text-xs text-[var(--text-secondary)]">
-                  Policy: <span className="text-[var(--text-primary)] font-semibold">{req.policyName}</span> | Range: <span className="font-mono text-indigo-400">{req.startDate}</span> to <span className="font-mono text-indigo-400">{req.endDate}</span>
+                  Policy: <span className="text-[var(--text-primary)] font-semibold">{req.policyName}</span> | Range: <span className="font-mono" style={{color:'var(--primary)'}}>{req.startDate}</span> to <span className="font-mono" style={{color:'var(--primary)'}}>{req.endDate}</span>
                 </div>
 
                 {req.reason && (
@@ -260,7 +260,7 @@ export default function LeavesPage() {
               <div key={idx} className="min-h-20 border border-[var(--border-subtle)] rounded-lg p-2 bg-[var(--bg-surface-l1)]/50">
                 <span className="text-[10px] font-mono text-[var(--text-muted)]">October {dayNum}</span>
                 {activeLeavesOnDay.map(l => (
-                  <div key={l.id} className="text-[9px] bg-indigo-500/15 text-indigo-300 border border-indigo-500/20 px-1.5 py-1 rounded mt-1 font-semibold truncate flex items-center gap-1">
+                  <div key={l.id} className="text-[9px] px-1.5 py-1 rounded mt-1 font-semibold truncate flex items-center gap-1" style={{background:'var(--primary-light)',color:'var(--primary)',border:'1px solid var(--primary-subtle)'}}>
                     <Plane className="w-2.5 h-2.5 shrink-0" />
                     <span className="truncate">{l.firstName}</span>
                   </div>
@@ -291,7 +291,7 @@ export default function LeavesPage() {
                 <select 
                   value={selectedPolicyId}
                   onChange={(e) => setSelectedPolicyId(e.target.value)}
-                  className="w-full bg-[var(--bg-surface-l2)] border border-[var(--border-subtle)] rounded-lg px-3 py-2 text-xs text-[var(--text-primary)] focus:outline-none focus:border-sky-500"
+                  className="w-full rounded-lg px-3 py-2 text-xs" style={{background:'var(--bg-secondary)',border:'1px solid var(--border-strong)',color:'var(--text-primary)'}}
                   required
                 >
                   <option value="">-- Select Leave Policy --</option>

@@ -1,15 +1,16 @@
-# ==========================================
-# 1. Dependency Resolution & Caching Stage
-# ==========================================
+# ===================================================================
+# AWAIS HR — OPTIMIZED ENTERPRISE FRONTEND DOCKERFILE
+# Multi-stage Standalone Next.js Build for Minimal Image Footprint
+# ===================================================================
+
+# Stage 1: Dependencies Stage
 FROM node:20-alpine AS deps
-RUN apk add --no-libc6-compat
+RUN apk add --no-cache libc6-compat
 WORKDIR /app
 COPY package*.json ./
-RUN npm ci
+RUN npm ci --only=production --ignore-scripts || npm ci
 
-# ==========================================
-# 2. Next.js Standalone Build Stage
-# ==========================================
+# Stage 2: Standalone Next.js Builder Stage
 FROM node:20-alpine AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
@@ -23,9 +24,7 @@ ENV NEXT_TELEMETRY_DISABLED=1
 
 RUN npm run build
 
-# ==========================================
-# 3. Production Runtime Stage (Non-Root User)
-# ==========================================
+# Stage 3: Production Hardened Runtime Stage
 FROM node:20-alpine AS runner
 WORKDIR /app
 
@@ -34,13 +33,11 @@ ENV NEXT_TELEMETRY_DISABLED=1
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
-# Senior DevOps Security: Unprivileged system node user execution
+# Security: Unprivileged system user execution (UID 1001)
 RUN addgroup --system --gid 1001 nodejs \
     && adduser --system --uid 1001 nextjs
 
 COPY --from=builder /app/public ./public
-
-# Automatically leverage standalone output traces to reduce image size
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
@@ -48,7 +45,7 @@ USER nextjs
 
 EXPOSE 3000
 
-HEALTHCHECK --interval=15s --timeout=5s --start-period=20s --retries=3 \
+HEALTHCHECK --interval=15s --timeout=5s --start-period=15s --retries=3 \
   CMD wget --no-verbose --tries=1 --spider http://localhost:3000/ || exit 1
 
 CMD ["node", "server.js"]
