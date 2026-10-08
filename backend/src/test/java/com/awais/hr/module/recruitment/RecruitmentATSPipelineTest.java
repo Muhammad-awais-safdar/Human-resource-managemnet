@@ -1,6 +1,6 @@
 package com.awais.hr.module.recruitment;
 
-import com.awais.hr.module.makerchecker.service.MakerCheckerService;
+import com.awais.hr.module.makerchecker.MakerCheckerService;
 import com.awais.hr.module.recruitment.service.RecruitmentServiceImpl;
 import com.awais.hr.module.recruitment.service.ResumeParserService;
 import org.junit.jupiter.api.BeforeEach;

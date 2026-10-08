@@ -29,7 +29,7 @@ class MultiTierExpenseTest {
     @DisplayName("Multi-Tier Expense: Non-positive amount throws IllegalArgumentException")
     void testSubmitExpense_invalidAmount_throwsException() {
         ExpenseClaimRequestDTO dto = new ExpenseClaimRequestDTO();
-        dto.setAmount(-50.0);
+        dto.setAmount(java.math.BigDecimal.valueOf(-50.0));
         dto.setDescription("Invalid negative expense");
 
         assertThrows(IllegalArgumentException.class, () -> {

@@ -54,5 +54,14 @@ EXECUTE stmt3;
 DEALLOCATE PREPARE stmt3;
 
 -- Performance Indexes
-CREATE INDEX idx_maker_checker_status ON maker_checker_request (status, maker_employee_id);
-CREATE INDEX idx_approval_delegation_active ON approval_delegation (delegator_email, delegatee_email, status);
+SET @idx_exist := (SELECT COUNT(*) FROM information_schema.statistics WHERE table_schema = DATABASE() AND table_name = 'maker_checker_request' AND index_name = 'idx_maker_checker_status');
+SET @sql_idx := IF(@idx_exist = 0, 'CREATE INDEX idx_maker_checker_status ON maker_checker_request (status, maker_employee_id)', 'SELECT 1');
+PREPARE stmt_idx FROM @sql_idx;
+EXECUTE stmt_idx;
+DEALLOCATE PREPARE stmt_idx;
+
+SET @idx_exist2 := (SELECT COUNT(*) FROM information_schema.statistics WHERE table_schema = DATABASE() AND table_name = 'approval_delegation' AND index_name = 'idx_approval_delegation_active');
+SET @sql_idx2 := IF(@idx_exist2 = 0, 'CREATE INDEX idx_approval_delegation_active ON approval_delegation (delegator_email, delegatee_email, status)', 'SELECT 1');
+PREPARE stmt_idx2 FROM @sql_idx2;
+EXECUTE stmt_idx2;
+DEALLOCATE PREPARE stmt_idx2;

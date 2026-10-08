@@ -13,13 +13,14 @@ import static org.junit.jupiter.api.Assertions.*;
 class PayrollServiceImplTest {
 
     @Mock private DataSource dataSource;
+    @Mock private com.awais.hr.module.makerchecker.MakerCheckerService makerCheckerService;
 
     private PayrollServiceImpl service;
 
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
-        service = new PayrollServiceImpl(dataSource);
+        service = new PayrollServiceImpl(dataSource, makerCheckerService);
     }
 
     @Test

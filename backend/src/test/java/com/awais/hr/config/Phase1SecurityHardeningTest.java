@@ -20,13 +20,15 @@ class Phase1SecurityHardeningTest {
 
     @Mock
     private DataSource dataSource;
+    @Mock
+    private com.awais.hr.module.makerchecker.MakerCheckerService makerCheckerService;
 
     private EmployeeLifecycleServiceImpl employeeLifecycleService;
 
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
-        employeeLifecycleService = new EmployeeLifecycleServiceImpl(dataSource, null);
+        employeeLifecycleService = new EmployeeLifecycleServiceImpl(dataSource, null, makerCheckerService);
     }
 
     @Test

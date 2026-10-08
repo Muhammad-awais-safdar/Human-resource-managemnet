@@ -3,7 +3,7 @@ package com.awais.hr.module.employee.service;
 import com.awais.hr.module.auditcenter.Auditable;
 import com.awais.hr.module.employee.dto.ClearanceApprovalRequestDTO;
 import com.awais.hr.module.employee.dto.TimelineEventRequestDTO;
-import com.awais.hr.module.makerchecker.service.MakerCheckerService;
+import com.awais.hr.module.makerchecker.MakerCheckerService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.core.JdbcTemplate;

@@ -28,7 +28,7 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 
     @Override
     public boolean hasPermission(String email, String permissionCode) {
-        if (email == null || permissionCode == null || permissionCode.isBlank()) {
+        if (email == null || email.isBlank() || permissionCode == null || permissionCode.isBlank()) {
             return false;
         }
 
@@ -37,16 +37,21 @@ public class AuthorizationServiceImpl implements AuthorizationService {
             return true;
         }
 
-        JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-        String sql = "SELECT COUNT(*) FROM employee e " +
-                     "JOIN employee_role er ON e.id = er.employee_id " +
-                     "JOIN role r ON er.role_id = r.id " +
-                     "JOIN role_permission rp ON r.id = rp.role_id " +
-                     "JOIN permission p ON rp.permission_id = p.id " +
-                     "WHERE e.email = ? AND p.name = ? AND e.status = 'ACTIVE' AND COALESCE(r.status, 'ACTIVE') = 'ACTIVE'";
+        try {
+            JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+            String sql = "SELECT COUNT(*) FROM employee e " +
+                         "JOIN employee_role er ON e.id = er.employee_id " +
+                         "JOIN role r ON er.role_id = r.id " +
+                         "JOIN role_permission rp ON r.id = rp.role_id " +
+                         "JOIN permission p ON rp.permission_id = p.id " +
+                         "WHERE e.email = ? AND p.name = ? AND e.status = 'ACTIVE' AND COALESCE(r.status, 'ACTIVE') = 'ACTIVE'";
 
-        Integer count = jdbcTemplate.queryForObject(sql, Integer.class, email, permissionCode);
-        return count != null && count > 0;
+            Integer count = jdbcTemplate.queryForObject(sql, Integer.class, email, permissionCode);
+            return count != null && count > 0;
+        } catch (Exception e) {
+            log.warn("Failed to check permission for {} / {}: {}", email, permissionCode, e.getMessage());
+            return false;
+        }
     }
 
     @Override
@@ -91,11 +96,16 @@ public class AuthorizationServiceImpl implements AuthorizationService {
             return false;
         }
         List<String> roles = getUserRoles(email);
+        if (roles == null || roles.isEmpty()) {
+            return false;
+        }
         String cleanRoleName = roleName.startsWith("ROLE_") ? roleName.substring(5) : roleName;
-        return roles.stream().anyMatch(r -> {
-            String cleanR = r.startsWith("ROLE_") ? r.substring(5) : r;
-            return cleanR.equalsIgnoreCase(cleanRoleName);
-        });
+        return roles.stream()
+                .filter(Objects::nonNull)
+                .anyMatch(r -> {
+                    String cleanR = r.startsWith("ROLE_") ? r.substring(5) : r;
+                    return cleanR.equalsIgnoreCase(cleanRoleName);
+                });
     }
 
     @Override
@@ -103,13 +113,18 @@ public class AuthorizationServiceImpl implements AuthorizationService {
         if (email == null || email.isBlank()) {
             return List.of();
         }
-        JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-        String sql = "SELECT DISTINCT r.name FROM employee e " +
-                     "JOIN employee_role er ON e.id = er.employee_id " +
-                     "JOIN role r ON er.role_id = r.id " +
-                     "WHERE e.email = ? AND e.status = 'ACTIVE' AND COALESCE(r.status, 'ACTIVE') = 'ACTIVE'";
+        try {
+            JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+            String sql = "SELECT DISTINCT r.name FROM employee e " +
+                         "JOIN employee_role er ON e.id = er.employee_id " +
+                         "JOIN role r ON er.role_id = r.id " +
+                         "WHERE e.email = ? AND e.status = 'ACTIVE' AND COALESCE(r.status, 'ACTIVE') = 'ACTIVE'";
 
-        return jdbcTemplate.queryForList(sql, String.class, email);
+            return jdbcTemplate.queryForList(sql, String.class, email);
+        } catch (Exception e) {
+            log.warn("Failed to fetch user roles for {}: {}", email, e.getMessage());
+            return List.of();
+        }
     }
 
     @Override
@@ -232,6 +247,11 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 
     private boolean isAdminUser(String email) {
         List<String> userRoles = getUserRoles(email);
-        return userRoles.stream().anyMatch(ADMIN_ROLES::contains);
+        if (userRoles == null || userRoles.isEmpty()) {
+            return false;
+        }
+        return userRoles.stream()
+                .filter(Objects::nonNull)
+                .anyMatch(ADMIN_ROLES::contains);
     }
 }

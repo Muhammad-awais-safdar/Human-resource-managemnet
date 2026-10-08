@@ -21,6 +21,7 @@ import java.lang.reflect.Method;
 public class PermissionAspect {
 
     private static final Logger log = LoggerFactory.getLogger(PermissionAspect.class);
+    private final DataSource dataSource;
     private final AuthorizationService authorizationService;
     private final ObjectProvider<ObservabilityService> observabilityServiceProvider;
 

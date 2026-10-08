@@ -62,13 +62,13 @@ public class ExpenseServiceImpl implements ExpenseService {
     @Override
     @Auditable(action = "EXPENSE_SUBMIT", entity = "ExpenseClaim")
     public void submitExpense(String email, ExpenseClaimRequestDTO dto) {
-        JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-        String empId = jdbcTemplate.queryForObject("SELECT id FROM employee WHERE email = ?", String.class, email);
-
-        BigDecimal amount = BigDecimal.valueOf(dto.getAmount());
+        BigDecimal amount = (dto != null && dto.getAmount() != null) ? dto.getAmount() : BigDecimal.ZERO;
         if (amount.compareTo(BigDecimal.ZERO) <= 0) {
             throw new IllegalArgumentException("Expense amount must be greater than zero.");
         }
+
+        JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+        String empId = jdbcTemplate.queryForObject("SELECT id FROM employee WHERE email = ?", String.class, email);
 
         int tierLevel = 1;
         if (amount.compareTo(TIER_2_MAX) > 0) {

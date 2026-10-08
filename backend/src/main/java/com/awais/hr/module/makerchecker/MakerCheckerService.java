@@ -11,6 +11,11 @@ public interface MakerCheckerService {
     Map<String, Object> createRequest(String requestType, String entityId, String changePayload, String makerEmail);
 
     /**
+     * Submit a new dual-control sensitive change request (Maker phase) with entity type and payload object.
+     */
+    Map<String, Object> submitRequest(String requestType, String entityType, String entityId, Object payload, String makerEmail);
+
+    /**
      * Approve a pending maker-checker request (Checker phase).
      * Enforces Maker != Checker rule and authorization.
      */

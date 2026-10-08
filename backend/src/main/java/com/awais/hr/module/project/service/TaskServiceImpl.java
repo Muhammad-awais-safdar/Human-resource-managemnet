@@ -74,12 +74,12 @@ public class TaskServiceImpl implements TaskService {
     @Override
     @Auditable(action = "TASK_CREATE", entity = "Task")
     public void createTask(String creatorEmail, TaskRequestDTO dto) {
-        JdbcTemplate jdbc = new JdbcTemplate(dataSource);
-        String creatorId = getEmployeeId(jdbc, creatorEmail);
-
-        if (dto.getTitle() == null || dto.getTitle().isBlank()) {
+        if (dto == null || dto.getTitle() == null || dto.getTitle().isBlank()) {
             throw new IllegalArgumentException("Task title is required.");
         }
+
+        JdbcTemplate jdbc = new JdbcTemplate(dataSource);
+        String creatorId = getEmployeeId(jdbc, creatorEmail);
 
         String assigneeId = dto.getAssigneeId();
         if (assigneeId == null || assigneeId.isBlank()) {
@@ -108,13 +108,13 @@ public class TaskServiceImpl implements TaskService {
     @Override
     @Auditable(action = "TASK_TRANSITION", entity = "Task")
     public void transitionTaskStatus(String taskId, String newStatus, String comment, String userEmail) {
-        JdbcTemplate jdbc = new JdbcTemplate(dataSource);
-        String actorId = getEmployeeId(jdbc, userEmail);
-
-        String targetStatus = newStatus.toUpperCase().trim();
+        String targetStatus = newStatus != null ? newStatus.toUpperCase().trim() : "";
         if (!VALID_TASK_STATES.contains(targetStatus)) {
             throw new IllegalArgumentException("Invalid target task status: " + newStatus);
         }
+
+        JdbcTemplate jdbc = new JdbcTemplate(dataSource);
+        String actorId = getEmployeeId(jdbc, userEmail);
 
         Map<String, Object> task = jdbc.queryForMap(
                 "SELECT assignee_id, creator_id, status FROM project_task WHERE id = ?", taskId

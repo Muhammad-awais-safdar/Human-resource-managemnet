@@ -59,6 +59,12 @@ public class MakerCheckerServiceImpl implements MakerCheckerService {
     }
 
     @Override
+    public Map<String, Object> submitRequest(String requestType, String entityType, String entityId, Object payload, String makerEmail) {
+        String payloadStr = payload != null ? payload.toString() : "{}";
+        return createRequest(requestType, entityId, payloadStr, makerEmail);
+    }
+
+    @Override
     public Map<String, Object> approveRequest(String requestId, String checkerEmail) {
         JdbcTemplate jdbc = new JdbcTemplate(dataSource);
         String checkerEmpId = getEmployeeIdByEmail(jdbc, checkerEmail);

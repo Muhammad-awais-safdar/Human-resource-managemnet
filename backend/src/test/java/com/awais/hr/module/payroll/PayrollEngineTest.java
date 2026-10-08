@@ -1,6 +1,6 @@
 package com.awais.hr.module.payroll;
 
-import com.awais.hr.module.makerchecker.service.MakerCheckerService;
+import com.awais.hr.module.makerchecker.MakerCheckerService;
 import com.awais.hr.module.payroll.service.PayrollServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

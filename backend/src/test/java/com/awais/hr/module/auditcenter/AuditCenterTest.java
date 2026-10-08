@@ -17,13 +17,13 @@ import static org.junit.jupiter.api.Assertions.*;
 public class AuditCenterTest {
 
     @Mock
-    private DataSource dataSource;
+    private EnterpriseAuditService enterpriseAuditService;
 
     private AuditCenterService auditCenterService;
 
     @BeforeEach
     public void setUp() {
-        auditCenterService = new AuditCenterServiceImpl(dataSource);
+        auditCenterService = new AuditCenterServiceImpl(enterpriseAuditService);
     }
 
     @Test

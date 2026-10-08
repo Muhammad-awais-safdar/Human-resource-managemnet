@@ -1,7 +1,7 @@
 package com.awais.hr.module.compensation;
 
 import com.awais.hr.module.compensation.service.CompensationServiceImpl;
-import com.awais.hr.module.makerchecker.service.MakerCheckerService;
+import com.awais.hr.module.makerchecker.MakerCheckerService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

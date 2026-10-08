@@ -9,19 +9,13 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import javax.sql.DataSource;
 import java.lang.reflect.Method;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -30,13 +24,7 @@ public class PermissionAspectTest {
     @Mock
     private DataSource dataSource;
     @Mock
-    private Connection connection;
-    @Mock
-    private PreparedStatement preparedStatement;
-    @Mock
-    private ResultSet resultSet;
-    @Mock
-    private java.sql.ResultSetMetaData resultSetMetaData;
+    private AuthorizationService authorizationService;
     @Mock
     private JoinPoint joinPoint;
     @Mock
@@ -50,7 +38,7 @@ public class PermissionAspectTest {
 
     @BeforeEach
     public void setUp() throws Exception {
-        permissionAspect = new PermissionAspect(dataSource);
+        permissionAspect = new PermissionAspect(dataSource, null, authorizationService);
         SecurityContextHolder.setContext(securityContext);
         TenantContextHolder.setCurrentTenant("test-tenant-uuid");
     }
@@ -72,14 +60,7 @@ public class PermissionAspectTest {
         when(securityContext.getAuthentication()).thenReturn(authentication);
         when(authentication.getPrincipal()).thenReturn("test@user.com");
 
-        // Arrange database mocks
-        when(dataSource.getConnection()).thenReturn(connection);
-        when(connection.prepareStatement(anyString())).thenReturn(preparedStatement);
-        when(preparedStatement.executeQuery()).thenReturn(resultSet);
-        when(resultSet.getMetaData()).thenReturn(resultSetMetaData);
-        when(resultSetMetaData.getColumnCount()).thenReturn(1);
-        when(resultSet.next()).thenReturn(true, false);
-        when(resultSet.getInt(1)).thenReturn(0); // 0 records found -> missing permission
+        when(authorizationService.hasPermission("test@user.com", "corehr:employee:read")).thenReturn(false);
 
         assertThrows(SecurityException.class, () -> {
             permissionAspect.checkPermission(joinPoint);
@@ -97,19 +78,12 @@ public class PermissionAspectTest {
         when(securityContext.getAuthentication()).thenReturn(authentication);
         when(authentication.getPrincipal()).thenReturn("test@user.com");
 
-        // Arrange database mocks
-        when(dataSource.getConnection()).thenReturn(connection);
-        when(connection.prepareStatement(anyString())).thenReturn(preparedStatement);
-        when(preparedStatement.executeQuery()).thenReturn(resultSet);
-        when(resultSet.getMetaData()).thenReturn(resultSetMetaData);
-        when(resultSetMetaData.getColumnCount()).thenReturn(1);
-        when(resultSet.next()).thenReturn(true, false);
-        when(resultSet.getInt(1)).thenReturn(1); // 1 record found -> holds permission
+        when(authorizationService.hasPermission("test@user.com", "corehr:employee:read")).thenReturn(true);
 
         // Action should execute without throwing exception
         permissionAspect.checkPermission(joinPoint);
 
-        verify(preparedStatement, times(1)).executeQuery();
+        verify(authorizationService, times(1)).hasPermission("test@user.com", "corehr:employee:read");
     }
 
     static class MockController {

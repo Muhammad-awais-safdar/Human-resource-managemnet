@@ -1,7 +1,7 @@
 package com.awais.hr.module.recruitment.service;
 
 import com.awais.hr.module.auditcenter.Auditable;
-import com.awais.hr.module.makerchecker.service.MakerCheckerService;
+import com.awais.hr.module.makerchecker.MakerCheckerService;
 import com.awais.hr.module.recruitment.dto.CandidateStageUpdateDTO;
 import com.awais.hr.module.recruitment.dto.JobRequisitionRequestDTO;
 import org.slf4j.Logger;
