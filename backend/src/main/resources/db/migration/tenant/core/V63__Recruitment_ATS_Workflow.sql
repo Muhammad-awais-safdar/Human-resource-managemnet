@@ -1,7 +1,7 @@
 -- V63: Recruitment & ATS Pipeline Workflow Schema
 
-ALTER TABLE job_requisition ADD COLUMN IF NOT EXISTS created_by VARCHAR(100);
-ALTER TABLE job_requisition ADD COLUMN IF NOT EXISTS approved_by VARCHAR(100);
+ALTER TABLE job_requisition ADD COLUMN created_by VARCHAR(100);
+ALTER TABLE job_requisition ADD COLUMN approved_by VARCHAR(100);
 
 CREATE TABLE IF NOT EXISTS candidate_stage_log (
     id                VARCHAR(36) PRIMARY KEY,

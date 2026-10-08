@@ -18,7 +18,7 @@ services:
       MYSQL_ROOT_PASSWORD: ${MYSQL_PASSWORD:-root}
       MYSQL_DATABASE: ${MYSQL_DATABASE:-awais_hr_master}
     ports:
-      - "${MYSQL_PORT:-3306}:3306"
+      - "${MYSQL_HOST_PORT:-3307}:${MYSQL_PORT:-3306}"
     volumes:
       - mysql_data:/var/lib/mysql
     healthcheck:
@@ -45,7 +45,7 @@ services:
     container_name: awais-hr-redis
     command: redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru --save ""
     ports:
-      - "${REDIS_PORT:-6379}:6379"
+      - "${REDIS_HOST_PORT:-6380}:${REDIS_PORT:-6379}"
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
@@ -74,18 +74,20 @@ services:
     container_name: awais-hr-backend
     environment:
       - PORT=${BACKEND_PORT:-8080}
+      - SERVER_PORT=${BACKEND_PORT:-8080}
       - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-dev}
-      - SPRING_DATASOURCE_URL=${SPRING_DATASOURCE_URL:-jdbc:mysql://mysql:3306/awais_hr_master?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true}
-      - SPRING_DATASOURCE_USERNAME=${MYSQL_USER:-root}
-      - SPRING_DATASOURCE_PASSWORD=${MYSQL_PASSWORD:-root}
-      - OBSERVABILITY_DATASOURCE_URL=${OBSERVABILITY_DATASOURCE_URL:-jdbc:mysql://mysql:3306/awais_hr_observability?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true}
-      - OBSERVABILITY_DATASOURCE_USERNAME=${MYSQL_USER:-root}
-      - OBSERVABILITY_DATASOURCE_PASSWORD=${MYSQL_PASSWORD:-root}
-      - TENANT_DATASOURCE_URL_PREFIX=${TENANT_DATASOURCE_URL_PREFIX:-jdbc:mysql://mysql:3306/}
-      - TENANT_DATASOURCE_USERNAME=${MYSQL_USER:-root}
-      - TENANT_DATASOURCE_PASSWORD=${MYSQL_PASSWORD:-root}
-      - SPRING_DATA_REDIS_HOST=${REDIS_HOST:-redis}
-      - SPRING_DATA_REDIS_PORT=${REDIS_PORT:-6379}
+      - DB_MASTER_URL=${DB_MASTER_URL:-jdbc:mysql://mysql:${MYSQL_PORT:-3306}/awais_hr_master?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC}
+      - DB_MASTER_USERNAME=${MYSQL_USER:-root}
+      - DB_MASTER_PASSWORD=${MYSQL_PASSWORD:-root}
+      - DB_OBSERVABILITY_URL=${DB_OBSERVABILITY_URL:-jdbc:mysql://mysql:${MYSQL_PORT:-3306}/awais_hr_observability?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC}
+      - DB_OBSERVABILITY_USERNAME=${MYSQL_USER:-root}
+      - DB_OBSERVABILITY_PASSWORD=${MYSQL_PASSWORD:-root}
+      - TENANT_DB_URL_PREFIX=${TENANT_DB_URL_PREFIX:-jdbc:mysql://mysql:${MYSQL_PORT:-3306}/}
+      - TENANT_DB_USERNAME=${MYSQL_USER:-root}
+      - TENANT_DB_PASSWORD=${MYSQL_PASSWORD:-root}
+      - REDIS_HOST=${REDIS_HOST:-redis}
+      - REDIS_PORT=${REDIS_PORT:-6379}
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://tempo:4318/v1/traces
       - JWT_SECRET=${JWT_SECRET:-c2VjdXJlX2p3dF9zZWNyZXRfa2V5X2Zvcl9hd2Fpc19oci9lbnRlcnByaXNlX3NhYXNfcGxhdGZvcm0=}
       - JWT_EXPIRATION_MS=${JWT_EXPIRATION_MS:-86400000}
     ports:
@@ -102,8 +104,8 @@ services:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:${BACKEND_PORT:-8080}/api/v1/actuator/health"]
       interval: 10s
       timeout: 5s
-      retries: 5
-      start_period: 30s
+      retries: 6
+      start_period: 60s
     restart: unless-stopped
     deploy:
       resources:
@@ -123,13 +125,14 @@ services:
       dockerfile: Dockerfile
       args:
         PORT: ${FRONTEND_PORT:-3000}
+        BACKEND_API_URL: ${BACKEND_API_URL:-http://backend:8080}
         NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8080}
         NEXT_PUBLIC_API_VERSION: ${NEXT_PUBLIC_API_VERSION:-v1}
     container_name: awais-hr-frontend
     environment:
       - PORT=${FRONTEND_PORT:-3000}
       - NODE_ENV=production
-      - BACKEND_API_URL=${BACKEND_DOCKER_API_URL:-http://backend:8080}
+      - BACKEND_API_URL=${BACKEND_API_URL:-http://backend:8080}
       - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:8080}
       - NEXT_PUBLIC_API_VERSION=${NEXT_PUBLIC_API_VERSION:-v1}
       - NEXT_TELEMETRY_DISABLED=1
@@ -156,13 +159,207 @@ services:
     networks:
       - awais-hr-network
 
+  # ==========================================
+  # 5. Enterprise Observability & Telemetry Suite
+  # ==========================================
+  prometheus:
+    image: prom/prometheus:v2.51.0
+    container_name: awais-hr-prometheus
+    volumes:
+      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./monitoring/prometheus/alerts.yml:/etc/prometheus/alerts.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+      - '--web.enable-lifecycle'
+    ports:
+      - "${PROMETHEUS_PORT:-9090}:9090"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:9090/-/healthy"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+    networks:
+      - awais-hr-network
+
+  grafana:
+    image: grafana/grafana:10.4.0
+    container_name: awais-hr-grafana
+    environment:
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_ADMIN_USER:-admin}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-admin}
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_NEWS_NEWS_FEED_ENABLED=false
+      - GF_ANALYTICS_REPORTING_ENABLED=false
+      - GF_ANALYTICS_CHECK_FOR_UPDATES=false
+      - GF_SECURITY_DISABLE_INITIAL_ADMIN_CREATION=false
+      - GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH=/var/lib/grafana/dashboards/hrm-01-overview.json
+      - GF_DASHBOARDS_MIN_REFRESH_INTERVAL=5s
+      - GF_EXPLORE_ENABLED=true
+    volumes:
+      - ./monitoring/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources:ro
+      - ./monitoring/grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana_data:/var/lib/grafana
+    ports:
+      - "${GRAFANA_PORT:-3001}:${GRAFANA_INTERNAL_PORT:-3000}"
+    depends_on:
+      - prometheus
+      - loki
+      - tempo
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3000/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+    networks:
+      - awais-hr-network
+
+  promtail:
+    image: grafana/promtail:3.0.0
+    container_name: awais-hr-promtail
+    volumes:
+      - ./monitoring/promtail/promtail-config.yml:/etc/promtail/promtail-config.yml:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+    command: -config.file=/etc/promtail/promtail-config.yml
+    depends_on:
+      - loki
+    restart: unless-stopped
+    networks:
+      - awais-hr-network
+
+  loki:
+    image: grafana/loki:2.9.4
+    container_name: awais-hr-loki
+    user: "0:0"
+    volumes:
+      - ./monitoring/loki/loki-config.yml:/etc/loki/loki-config.yml:ro
+      - loki_data:/tmp/loki
+    command: -config.file=/etc/loki/loki-config.yml
+    ports:
+      - "${LOKI_PORT:-3100}:3100"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3100/ready"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+    networks:
+      - awais-hr-network
+
+  tempo:
+    image: grafana/tempo:2.4.0
+    container_name: awais-hr-tempo
+    volumes:
+      - ./monitoring/tempo/tempo-config.yml:/etc/tempo/tempo-config.yml:ro
+      - tempo_data:/tmp/tempo
+    command: -config.file=/etc/tempo/tempo-config.yml
+    ports:
+      - "${TEMPO_PORT:-3200}:3200"
+      - "${TEMPO_OTLP_GRPC_PORT:-4317}:4317"
+      - "${TEMPO_OTLP_HTTP_PORT:-4318}:4318"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3200/ready"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+    networks:
+      - awais-hr-network
+
+  alertmanager:
+    image: prom/alertmanager:v0.27.0
+    container_name: awais-hr-alertmanager
+    volumes:
+      - ./monitoring/alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+      - alertmanager_data:/alertmanager
+    command:
+      - '--config.file=/etc/alertmanager/alertmanager.yml'
+      - '--storage.path=/alertmanager'
+    ports:
+      - "${ALERTMANAGER_PORT:-9093}:9093"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:9093/-/healthy"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+    networks:
+      - awais-hr-network
+
+  node-exporter:
+    image: prom/node-exporter:v1.7.0
+    container_name: awais-hr-node-exporter
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.sysfs=/host/sys'
+      - '--path.rootfs=/rootfs'
+    ports:
+      - "${NODE_EXPORTER_PORT:-9100}:9100"
+    restart: unless-stopped
+    networks:
+      - awais-hr-network
+
+  mysql-exporter:
+    image: prom/mysqld-exporter:v0.15.1
+    container_name: awais-hr-mysql-exporter
+    environment:
+      DATA_SOURCE_NAME: "${MYSQL_USER:-root}:${MYSQL_PASSWORD:-root}@(mysql:3306)/"
+    ports:
+      - "${MYSQL_EXPORTER_PORT:-9104}:9104"
+    restart: unless-stopped
+    networks:
+      - awais-hr-network
+
+  redis-exporter:
+    image: oliver006/redis_exporter:v1.58.0
+    container_name: awais-hr-redis-exporter
+    environment:
+      REDIS_ADDR: "redis://${REDIS_HOST:-redis}:${REDIS_PORT:-6379}"
+    ports:
+      - "${REDIS_EXPORTER_PORT:-9121}:9121"
+    restart: unless-stopped
+    networks:
+      - awais-hr-network
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:v0.49.1
+    container_name: awais-hr-cadvisor
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+    ports:
+      - "${CADVISOR_PORT:-8081}:8080"
+    restart: unless-stopped
+    networks:
+      - awais-hr-network
+
 volumes:
   mysql_data:
     name: awais-hr-mysql-data
   app_logs:
     name: awais-hr-app-logs
+  prometheus_data:
+  grafana_data:
+  loki_data:
+  tempo_data:
+  alertmanager_data:
 
 networks:
   awais-hr-network:
     name: awais-hr-network
     driver: bridge
+  

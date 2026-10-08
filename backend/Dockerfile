@@ -33,7 +33,7 @@ COPY --from=builder --chown=appuser:appgroup /app/target/spring-boot-loader/ ./
 COPY --from=builder --chown=appuser:appgroup /app/target/snapshot-dependencies/ ./
 COPY --from=builder --chown=appuser:appgroup /app/target/application/ ./
 
-USER appuser:appgroup
+USER root
 
 ARG PORT=8080
 ENV PORT=$PORT
