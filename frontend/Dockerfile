@@ -8,7 +8,7 @@ FROM node:20-alpine AS deps
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
 COPY package*.json ./
-RUN npm ci --only=production --ignore-scripts || npm ci
+RUN npm install --legacy-peer-deps
 
 # Stage 2: Standalone Next.js Builder Stage
 FROM node:20-alpine AS builder
@@ -30,7 +30,8 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
-ENV PORT=3000
+ARG PORT=3000
+ENV PORT=$PORT
 ENV HOSTNAME="0.0.0.0"
 
 # Security: Unprivileged system user execution (UID 1001)
@@ -43,9 +44,9 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
 USER nextjs
 
-EXPOSE 3000
+EXPOSE $PORT
 
 HEALTHCHECK --interval=15s --timeout=5s --start-period=15s --retries=3 \
-  CMD wget --no-verbose --tries=1 --spider http://localhost:3000/ || exit 1
+  CMD wget --no-verbose --tries=1 --spider http://localhost:${PORT}/ || exit 1
 
 CMD ["node", "server.js"]

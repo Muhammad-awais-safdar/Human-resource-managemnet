@@ -97,7 +97,7 @@ expense_claim (
 **Target State Machine:**
 ```
 DRAFT → SUBMITTED → MANAGER_REVIEW → FINANCE_REVIEW → APPROVED → PAYMENT_PENDING → PAID
-                               ↘ REJECTED          ↘ REJECTED
+                                ↘ REJECTED          ↘ REJECTED
 CANCELLED (before PAYMENT_PENDING)
 ```
 

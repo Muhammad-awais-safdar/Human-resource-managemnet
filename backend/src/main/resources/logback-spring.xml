@@ -18,9 +18,9 @@
          Promtail picks this up via volume mount or docker socket.
          ================================================================ -->
     <appender name="JSON_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>/tmp/app-logs/app.log</file>
+        <file>/tmp/app-logs/backend.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>/tmp/app-logs/app.%d{yyyy-MM-dd}.log</fileNamePattern>
+            <fileNamePattern>/tmp/app-logs/backend.%d{yyyy-MM-dd}.log</fileNamePattern>
             <maxHistory>7</maxHistory>
             <totalSizeCap>500MB</totalSizeCap>
         </rollingPolicy>

@@ -2,7 +2,6 @@
 
 > **Target Workspace**: E-Processing Systems (Pvt) Ltd — **OneLoad**  
 > **Subdomain**: `awais`  
-> **Default Staff Password**: `password123`  
 
 ---
 

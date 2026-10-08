@@ -35,12 +35,11 @@ COPY --from=builder --chown=appuser:appgroup /app/target/application/ ./
 
 USER appuser:appgroup
 
-EXPOSE 8080
-
-# Production JVM Container Tuning
-ENV JAVA_OPTS="-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -XX:+UseG1GC -XX:+ExitOnOutOfMemoryError -Djava.security.egd=file:/dev/./urandom"
+ARG PORT=8080
+ENV PORT=$PORT
+EXPOSE $PORT
 
 HEALTHCHECK --interval=15s --timeout=5s --start-period=30s --retries=5 \
-  CMD wget --no-verbose --tries=1 --spider http://localhost:8080/api/v1/actuator/health || exit 1
+  CMD wget --no-verbose --tries=1 --spider http://localhost:${PORT}/api/v1/actuator/health || exit 1
 
 ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS org.springframework.boot.loader.launch.JarLauncher"]

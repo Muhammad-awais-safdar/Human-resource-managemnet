@@ -111,4 +111,3 @@ Depending on the authenticated user's role, the system renders specialized dashb
   * **Performance Rating**: Annual OKR performance score percentage.
 * **Featured Widgets**:
   * **Employee Quick Actions**: Quick links to **View My ESS Profile**, **Request Vacation Leave**, and **LMS Learning Courses**.
-
